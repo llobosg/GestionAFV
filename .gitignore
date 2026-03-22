@@ -1,0 +1,16 @@
+# Configuración local
+/includes/config_local.php
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*~
+.vscode/
+
+# Logs
+logs/
+*.log

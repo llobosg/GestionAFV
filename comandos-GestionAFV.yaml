@@ -1,0 +1,45 @@
+comandos-GestionAFV
+
+# Agrega todos los archivos actuales
+git add .
+
+# Haz el primer commit
+git commit -m "feat: estructura inicial de GestionAFV"
+
+# Renombra la rama actual a 'main' (si tu rama se llama 'master' o está sin nombre)
+git branch -M main
+
+# Vincula con GitHub (solo si no lo hiciste antes)
+git remote add origin https://github.com/llobosg/gestionafv.git
+
+# Empuja por primera vez
+git push -u origin main
+
+
+echo "# Gestión AFV" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/llobosg/gestionafv.git
+git push -u origin main
+
+cd /Applications/XAMPP/xamppfiles/htdocs/gestionafv
+git checkout main
+git pull origin main
+
+mysql://root:WugMxfRGVHoNZQzwmNpormqREZxOoHNH@caboose.proxy.rlwy.net:44626/railway
+
+/Applications/XAMPP/xamppfiles/bin/mysql \
+  --host=caboose.proxy.rlwy.net \
+  --port=44626 \
+  --user=root \
+  --password=WugMxfRGVHoNZQzwmNpormqREZxOoHNH \
+  --database=railway \
+  -e "ALTER TABLE detalle_ventas 
+ADD COLUMN tipo_venta ENUM('efectivo', 'tarjeta') NOT NULL DEFAULT 'efectivo' AFTER precio_unitario;"
+
+
+git add .
+git commit -m "elimina parejas5 y inscritos4"
+git push

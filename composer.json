@@ -1,0 +1,15 @@
+{
+  "name": "llobosg/gestionafv",
+  "description": "Sistema de gestión para abarrotes, frutas y verduras",
+  "type": "project",
+  "require": {
+    "php": "^8.0"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Luis Lobos",
+      "email": "luis.lobos.g@gmail.com"
+    }
+  ]
+}
