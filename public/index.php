@@ -109,7 +109,7 @@ if (isset($_SESSION['id_usuario'])) {
       </div>
       <button type="submit" class="btn-login">Iniciar Sesión</button>
     </form>
-    <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+    <a href="recuperar_password.php" class="forgot-link">¿Olvidaste tu contraseña?</a>
   </div>
 </body>
 </html>
