@@ -31,17 +31,28 @@ try {
         ON DUPLICATE KEY UPDATE token = VALUES(token), expires_at = VALUES(expires_at)
     ")->execute([$usuario['id_usuario'], $token, $expires]);
 
-    // Enviar correo (usa Brevo u otro servicio)
-    $link = "https://gestionafv.up.railway.app/restablecer_password.php?token=$token";
 
-    // Aquí integrarías BrevoMailer (similar a CanchaSport)
-    // Por ahora, simulamos el envío
-    error_log("📧 Enviar correo a $email con enlace: $link");
+    // === ENVIAR CORREO REAL CON BREVO ===
+    require_once __DIR__ . '/../includes/BrevoMailer.php';
 
-    echo json_encode(['redirect' => 'recuperar_password.php?mensaje=Si los datos son correctos, recibirás un enlace en tu correo.']);
+    try {
+        $mailer = new BrevoMailer();
+        $mailer->setTo($email, $nombre)
+            ->setSubject('Restablece tu contraseña en Gestión AFV')
+            ->setHtmlBody("
+                <h2>¿Olvidaste tu contraseña?</h2>
+                <p>Hola $nombre,</p>
+                <p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
+                <p><a href='$link' style='display:inline-block;padding:10px 20px;background:#4CAF50;color:white;text-decoration:none;border-radius:5px;'>Restablecer Contraseña</a></p>
+                <p>Si no solicitaste esto, ignora este correo.</p>
+                <p>Equipo Gestión AFV 🥦</p>
+            ")
+            ->send();
 
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(['redirect' => 'recuperar_password.php?error=' . urlencode($e->getMessage())]);
-}
-?>S
+        echo json_encode(['redirect' => 'recuperar_password.php?mensaje=¡Listo! Revisa tu correo para restablecer tu contraseña.']);
+
+    } catch (Exception $e) {
+        error_log("📧 Error al enviar correo: " . $e->getMessage());
+        // Aún así, no revelamos si el usuario existe
+        echo json_encode(['redirect' => 'recuperar_password.php?mensaje=Si los datos son correctos, recibirás un enlace en tu correo.']);
+    }
