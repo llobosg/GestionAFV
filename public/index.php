@@ -100,8 +100,8 @@ if (isset($_SESSION['id_usuario'])) {
 
     <form method="POST" action="../api/login.php">
       <div class="form-group">
-        <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" name="usuario" required>
+        <label for="usuario">Nombre</label>
+        <input type="text" id="usuario" name="usuario" placeholder="Ej: Ana" required>
       </div>
       <div class="form-group">
         <label for="password">Contraseña</label>

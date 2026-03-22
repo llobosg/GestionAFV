@@ -1,0 +1,49 @@
+<?php
+header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/config.php';
+session_start();
+
+try {
+    $nombre = trim($_POST['usuario'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if (empty($nombre) || empty($password)) {
+        throw new Exception('Nombre y contraseña son obligatorios');
+    }
+
+    // Buscar por nombre (de pila) — asume nombres únicos por negocio
+    $stmt = $pdo->prepare("
+        SELECT 
+            u.id_usuario, 
+            u.nombre, 
+            u.apellido, 
+            u.rol, 
+            u.password,
+            n.id_negocio,
+            n.nombre AS nombre_negocio
+        FROM usuarios u
+        JOIN negocios n ON u.id_negocio = n.id_negocio
+        WHERE u.nombre = ? AND u.id_negocio = ?
+    ");
+    $stmt->execute([$nombre, $_SESSION['id_negocio'] ?? 1]); // ← Ajusta según cómo identifiques el negocio
+    $usuario = $stmt->fetch();
+
+    if (!$usuario || !password_verify($password, $usuario['password'])) {
+        throw new Exception('Nombre o contraseña incorrectos');
+    }
+
+    // Guardar en sesión
+    $_SESSION['id_usuario'] = $usuario['id_usuario'];
+    $_SESSION['nombre_usuario'] = $usuario['nombre'];
+    $_SESSION['apellido_usuario'] = $usuario['apellido'];
+    $_SESSION['rol'] = $usuario['rol'];
+    $_SESSION['id_negocio'] = $usuario['id_negocio'];
+    $_SESSION['nombre_negocio'] = $usuario['nombre_negocio'];
+
+    echo json_encode(['success' => true]);
+
+} catch (Exception $e) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+?>
