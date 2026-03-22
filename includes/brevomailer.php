@@ -20,13 +20,13 @@ class BrevoMailer {
         return $this;
     }
 
-    public function setSubject($subject) {
-        $this->subject = $subject;
+    public function setHtmlBody($html) {
+        $this->htmlBody = $html;
         return $this;
     }
 
-    public function setHtmlBody($html) {
-        $this->htmlBody = $html;
+    public function setSubject($subject) {
+        $this->subject = $subject;
         return $this;
     }
 
