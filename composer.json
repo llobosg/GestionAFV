@@ -1,6 +1,6 @@
 {
   "name": "llobosg/gestionafv",
-  "description": "Sistema de gestión para abarrotes, frutas y verduras",
+  "description": "Gestión AFV - actualización forzada",
   "type": "project",
   "require": {
     "php": "^8.2",
@@ -11,7 +11,7 @@
   "authors": [
     {
       "name": "Luis Lobos",
-      "email": "luis.lobos.g@gmail.com"
+      "email": "llobos@gltcomex.com"
     }
   ]
   

@@ -49,10 +49,13 @@ try {
            ")
            ->send();
 
+           error_log("📧 Intentando enviar correo a: " . $email);
+
     echo json_encode(['redirect' => 'recuperar_password.php?mensaje=¡Listo! Revisa tu correo para restablecer tu contraseña.']);
 
 } catch (Exception $e) {
     error_log("Error en enviar_recuperacion.php: " . $e->getMessage());
+    error_log("❌ Error al enviar correo: " . $e->getMessage());
     // No revelar detalles internos
     echo json_encode(['redirect' => 'recuperar_password.php?mensaje=Si los datos son correctos, recibirás un enlace en tu correo.']);
 }

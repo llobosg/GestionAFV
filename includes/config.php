@@ -20,6 +20,10 @@ if ($isRailway) {
     $dbname = 'gestionafv_local';
     $port = '3306';
 }
+// Definir constante para Brevo
+if (!defined('BREVO_API_KEY')) {
+    define('BREVO_API_KEY', $env['BREVO_API_KEY'] ?? '');
+}
 
 // Validación crítica
 if (empty($host) || empty($user) || empty($dbname)) {
