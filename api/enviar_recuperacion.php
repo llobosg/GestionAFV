@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '../includes/config.php';
 
 try {
     $nombre = trim($_POST['nombre'] ?? '');
@@ -34,7 +34,7 @@ try {
     // === ENVIAR CORREO REAL CON BREVO ===
     require_once __DIR__ . '/includes/BrevoMailer.php';
 
-    $link = "https://gestionafv.up.railway.app/restablecer_password.php?token=" . urlencode($token);
+    $link = "https://gestionafv.up.railway.app/public/restablecer_password.php?token=" . urlencode($token);
 
     $mailer = new BrevoMailer();
     $mailer->setTo($email, $nombre)
