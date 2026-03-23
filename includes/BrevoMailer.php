@@ -32,7 +32,7 @@ class BrevoMailer {
 
     public function send() {
         $data = [
-            'sender' => ['name' => 'Gestión AFV', 'email' => 'contacto@gestionafv.com'],
+            'sender' => ['name' => 'NegocioUP', 'email' => 'llobos@gltcomex.com'],
             'to' => [['email' => $this->toEmail, 'name' => $this->toName]],
             'subject' => $this->subject,
             'htmlContent' => $this->htmlBody
