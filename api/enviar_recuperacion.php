@@ -32,7 +32,7 @@ try {
     ")->execute([$usuario['id_usuario'], $token, $expires]);
 
     // === ENVIAR CORREO REAL CON BREVO ===
-    require_once __DIR__ . '/includes/BrevoMailer.php';
+    require_once __DIR__ . '/../includes/BrevoMailer.php';
 
     $link = "https://gestionafv.up.railway.app/public/restablecer_password.php?token=" . urlencode($token);
 
