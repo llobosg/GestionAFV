@@ -34,7 +34,9 @@ try {
     // === ENVIAR CORREO REAL CON BREVO ===
     require_once __DIR__ . '/../includes/BrevoMailer.php';
 
-    $link = "https://gestionafv.up.railway.app/public/restablecer_password.php?token=" . urlencode($token);
+    $link = APP_URL . '/public/restablecer_password.php?token=' . urlencode($token);
+
+    error_log("🔑 BREVO_API_KEY cargada: " . (defined('BREVO_API_KEY') ? (strlen(BREVO_API_KEY) > 10 ? substr(BREVO_API_KEY, 0, 10) . '...' : 'vacía') : 'NO DEFINIDA'));
 
     $mailer = new BrevoMailer();
     $mailer->setTo($email, $nombre)
@@ -50,7 +52,7 @@ try {
            ->send();
 
            error_log("📧 Intentando enviar correo a: " . $email);
-
+    error_log("📧 DEBUG: Enviando correo a $email | Token: $token | Link: $link");
     echo json_encode(['redirect' => 'recuperar_password.php?mensaje=¡Listo! Revisa tu correo para restablecer tu contraseña.']);
 
 } catch (Exception $e) {

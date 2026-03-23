@@ -3,6 +3,7 @@
 
 // Definir raíz del proyecto (para rutas absolutas)
 defined('ROOT_PATH') or define('ROOT_PATH', __DIR__ . '/..');
+define('APP_URL', $_ENV['APP_URL'] ?? getenv('APP_URL') ?? 'http://localhost');
 
 // Configuración de cabeceras CORS (ajusta según tu dominio final)
 header("Access-Control-Allow-Origin: https://gestionafv.up.railway.app");
