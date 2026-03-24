@@ -27,7 +27,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      width: 95%;
+      width: 90%;
       max-width: 1400px;
       display: flex;
       height: 85vh;
@@ -59,7 +59,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       padding: 0.8rem;
       border: 1px solid #ccc;
       border-radius: 8px;
-      width: 100%;
+      width: 80%;
       margin-bottom: 1rem;
       font-size: 1rem;
     }
