@@ -1,23 +1,13 @@
-<<?php
+<?php
 require_once __DIR__ . '/../../includes/config.php';
 
-if ($_SESSION['rol'] !== 'admin') {
-    header('Location: /public/home.php');
-    exit;
-}
-
-// Validar sesión completa
-if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+// Validación segura de sesión
+if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'admin') {
     header('Location: /public/index.php');
     exit;
 }
 
-// Asignar variables seguras
 $id_negocio = $_SESSION['id_negocio'] ?? 1;
-$nombre = $_SESSION['nombre'] ?? 'Admin';
-?>
-
-$id_negocio = $_SESSION['id_negocio'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -82,9 +72,6 @@ $id_negocio = $_SESSION['id_negocio'];
       border-radius: 50%;
       cursor: pointer;
       font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     .filtros {
       padding: 1rem;
@@ -129,7 +116,6 @@ $id_negocio = $_SESSION['id_negocio'];
       font-size: 1.1rem;
       margin: 0 0.3rem;
       opacity: 0.7;
-      transition: opacity 0.2s;
     }
     .acciones button:hover { opacity: 1; }
 
@@ -154,9 +140,14 @@ $id_negocio = $_SESSION['id_negocio'];
       color: #2E7D32;
       font-size: 1.3rem;
     }
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+    }
     .form-group {
       display: flex;
       flex-direction: column;
+      flex: 1;
     }
     .form-group label {
       font-weight: 600;
@@ -190,7 +181,7 @@ $id_negocio = $_SESSION['id_negocio'];
     .btn-save { background: #4CAF50; color: white; }
     .btn-cancel { background: #ccc; color: #333; }
 
-    /* Gráficos fijos */
+    /* Gráficos */
     .graficos-container {
       background: white;
       border-radius: 12px;
@@ -212,36 +203,56 @@ $id_negocio = $_SESSION['id_negocio'];
       color: #2E7D32;
       font-size: 1.1rem;
     }
-    .barra {
-      height: 24px;
-      background: #e0e0e0;
-      border-radius: 4px;
-      position: relative;
-      margin-bottom: 0.4rem;
-    }
-    .barra-fill {
-      height: 100%;
-      background: #4CAF50;
-      border-radius: 4px;
+    /* Barras verticales */
+    .barras-container {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 0.5rem;
-      color: white;
-      font-size: 0.8rem;
-      font-weight: bold;
+      align-items: flex-end;
+      height: 120px;
+      gap: 0.5rem;
+      padding: 0.5rem;
     }
-    .promedio-stock {
+    .barra-vertical {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .barra-fill-v {
+      width: 100%;
+      background: #4CAF50;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s;
+    }
+    .barra-label {
+      font-size: 0.7rem;
+      text-align: center;
+      margin-top: 0.3rem;
+    }
+    /* Semáforo */
+    .semaphore {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .light {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      opacity: 0.3;
+    }
+    .light.active {
+      opacity: 1;
+    }
+    .light.green { background: #4CAF50; }
+    .light.yellow { background: #FFC107; }
+    .light.red { background: #F44336; }
+    .promedio-value {
       font-size: 1.8rem;
       font-weight: bold;
       text-align: center;
       margin-top: 0.5rem;
-      padding: 0.5rem;
-      border-radius: 8px;
     }
-    .stock-verde { background: #e8f5e9; color: #2E7D32; }
-    .stock-amarillo { background: #fff8e1; color: #FF8F00; }
-    .stock-rojo { background: #ffebee; color: #C62828; }
   </style>
 </head>
 <body>
@@ -255,13 +266,10 @@ $id_negocio = $_SESSION['id_negocio'];
     
     <!-- LADO IZQUIERDO -->
     <div class="tabla-container">
-      <!-- Buscador inteligente -->
       <div class="buscador-inteligente">
         <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
         <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
       </div>
-
-      <!-- Filtros -->
       <div class="filtros">
         <select id="filtro-tipo">
           <option value="">Todos los tipos</option>
@@ -277,12 +285,8 @@ $id_negocio = $_SESSION['id_negocio'];
         <input type="text" id="filtro-familia" placeholder="Familia">
         <input type="text" id="filtro-producto" placeholder="Producto">
         <input type="number" id="filtro-stock" placeholder="Stock mínimo">
-        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">
-          🧹 Limpiar
-        </button>
+        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">🧹 Limpiar</button>
       </div>
-
-      <!-- Tabla -->
       <div class="tabla-scroll">
         <table id="tabla-productos">
           <thead>
@@ -311,7 +315,62 @@ $id_negocio = $_SESSION['id_negocio'];
         <form id="producto-form">
           <input type="hidden" id="id_producto">
           <input type="hidden" id="codigo">
+          <!-- Campo producto oculto -->
+          <input type="hidden" id="producto-generado">
 
+          <!-- Fila 1: Familia + Subfamilia -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Familia *</label>
+              <input type="text" id="familia" required>
+            </div>
+            <div class="form-group">
+              <label>Subfamilia *</label>
+              <input type="text" id="subfamilia" required>
+            </div>
+          </div>
+
+          <!-- Fila 2: Unidad Medida + % Utilidad -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unidad de Medida *</label>
+              <select id="unidad_medida" required>
+                <option value="unidad">Unidad</option>
+                <option value="kg">Kilogramo</option>
+                <option value="litro">Litro</option>
+                <option value="paquete">Paquete</option>
+                <option value="caja">Caja</option>
+                <option value="bandeja">Bandeja</option>
+                <option value="docena">Docena</option>
+                <option value="1/2 docena">1/2 docena</option>
+                <option value="pack">Pack</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>% Utilidad *</label>
+              <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
+            </div>
+          </div>
+
+          <!-- Fila 3: Precio Compra + Precio Venta -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Precio Compra ($)*</label>
+              <input type="number" step="0.01" id="precio_compra" required min="0">
+            </div>
+            <div class="form-group readonly">
+              <label>Precio Venta ($)</label>
+              <input type="text" id="precio_venta-generado" readonly>
+            </div>
+          </div>
+
+          <!-- Fila 4: Stock -->
+          <div class="form-group">
+            <label>Stock Actual</label>
+            <input type="number" step="0.01" id="stock_actual" value="0">
+          </div>
+
+          <!-- Tipo -->
           <div class="form-group">
             <label>Tipo *</label>
             <select id="tipo" required>
@@ -327,51 +386,6 @@ $id_negocio = $_SESSION['id_negocio'];
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Familia * (ej: Manzana)</label>
-            <input type="text" id="familia" required>
-          </div>
-
-          <div class="form-group">
-            <label>Subfamilia * (ej: Fuji)</label>
-            <input type="text" id="subfamilia" required>
-          </div>
-
-          <div class="form-group">
-            <label>Unidad de Medida *</label>
-            <select id="unidad_medida" required>
-              <option value="unidad">Unidad</option>
-              <option value="kg">Kilogramo</option>
-              <option value="litro">Litro</option>
-              <option value="paquete">Paquete</option>
-              <option value="caja">Caja</option>
-              <option value="bandeja">Bandeja</option>
-              <option value="docena">Docena</option>
-              <option value="1/2 docena">1/2 docena</option>
-              <option value="pack">Pack</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Precio Compra ($)*</label>
-            <input type="number" step="0.01" id="precio_compra" required min="0">
-          </div>
-
-          <div class="form-group">
-            <label>% Utilidad *</label>
-            <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
-          </div>
-
-          <div class="form-group readonly">
-            <label>Producto generado</label>
-            <input type="text" id="producto-generado" readonly>
-          </div>
-
-          <div class="form-group readonly">
-            <label>Precio Venta ($)</label>
-            <input type="text" id="precio_venta-generado" readonly>
-          </div>
-
           <div class="btn-group">
             <button type="submit" class="btn btn-save">Guardar</button>
             <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
@@ -379,17 +393,20 @@ $id_negocio = $_SESSION['id_negocio'];
         </form>
       </div>
 
-      <!-- Gráficos fijos -->
+      <!-- GRÁFICOS -->
       <div class="graficos-container">
         <div class="grafico">
           <h3>📊 Productos por Tipo</h3>
-          <div id="grafico-tipos">
-            <div style="color:#666; font-style:italic;">Cargando...</div>
-          </div>
+          <div class="barras-container" id="grafico-tipos"></div>
         </div>
         <div class="grafico">
           <h3>📈 Promedio de Stock</h3>
-          <div class="promedio-stock" id="promedio-stock">--</div>
+          <div class="promedio-value" id="promedio-stock">--</div>
+          <div class="semaphore">
+            <div class="light green" id="light-green"></div>
+            <div class="light yellow" id="light-yellow"></div>
+            <div class="light red" id="light-red"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -400,20 +417,16 @@ $id_negocio = $_SESSION['id_negocio'];
     let productosCache = [];
 
     function actualizarGenerados() {
-      const familia = document.getElementById('familia').value || '';
-      const subfamilia = document.getElementById('subfamilia').value || '';
       const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
       const utilidad = parseFloat(document.getElementById('porc_utilidad').value) || 0;
-
-      document.getElementById('producto-generado').value = `${familia} ${subfamilia}`.trim();
       document.getElementById('precio_venta-generado').value = (compra * (1 + utilidad / 100)).toFixed(2);
     }
 
-    ['familia', 'subfamilia', 'precio_compra', 'porc_utilidad'].forEach(id => {
+    ['precio_compra', 'porc_utilidad'].forEach(id => {
       document.getElementById(id).addEventListener('input', actualizarGenerados);
     });
 
-    // Filtros y búsqueda
+    // Filtros
     function aplicarFiltros() {
       const busqueda = document.getElementById('buscador-global').value.toLowerCase();
       const tipo = document.getElementById('filtro-tipo').value;
@@ -452,7 +465,6 @@ $id_negocio = $_SESSION['id_negocio'];
       `).join('');
     }
 
-    // Eventos de filtros
     ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
       document.getElementById(id).addEventListener('input', aplicarFiltros);
     });
@@ -476,22 +488,30 @@ $id_negocio = $_SESSION['id_negocio'];
 
     // Renderizar gráficos
     function renderizarGraficos(productos) {
-      // Promedio de stock con semáforo
+      // Promedio de stock + semáforo
       if (productos.length > 0) {
         const totalStock = productos.reduce((sum, p) => sum + parseFloat(p.stock_actual || 0), 0);
         const promedio = totalStock / productos.length;
-        const promedioEl = document.getElementById('promedio-stock');
-        promedioEl.textContent = promedio.toFixed(2);
-        promedioEl.className = 'promedio-stock';
-        if (promedio >= 50) promedioEl.classList.add('stock-verde');
-        else if (promedio >= 10) promedioEl.classList.add('stock-amarillo');
-        else promedioEl.classList.add('stock-rojo');
+        document.getElementById('promedio-stock').textContent = promedio.toFixed(2);
+
+        // Reset luces
+        document.getElementById('light-green').classList.remove('active');
+        document.getElementById('light-yellow').classList.remove('active');
+        document.getElementById('light-red').classList.remove('active');
+
+        if (promedio >= 50) {
+          document.getElementById('light-green').classList.add('active');
+        } else if (promedio >= 10) {
+          document.getElementById('light-yellow').classList.add('active');
+        } else {
+          document.getElementById('light-red').classList.add('active');
+        }
       } else {
         document.getElementById('promedio-stock').textContent = '0.00';
-        document.getElementById('promedio-stock').className = 'promedio-stock stock-rojo';
+        document.getElementById('light-red').classList.add('active');
       }
 
-      // Productos por TIPO (máx 8)
+      // Barras verticales: Productos por TIPO
       const tipos = {};
       productos.forEach(p => {
         tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
@@ -503,17 +523,15 @@ $id_negocio = $_SESSION['id_negocio'];
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8)
         .forEach(([tipo, count]) => {
-          const pct = (count / maxCount) * 100;
+          const heightPct = (count / maxCount) * 100;
           html += `
-            <div style="margin-bottom:0.6rem;">
-              <div style="font-size:0.85rem;margin-bottom:0.2rem;">${tipo} (${count})</div>
-              <div class="barra">
-                <div class="barra-fill" style="width:${Math.max(pct, 5)}%;">${count}</div>
-              </div>
+            <div class="barra-vertical">
+              <div class="barra-fill-v" style="height: ${Math.max(heightPct, 5)}%;"></div>
+              <div class="barra-label">${tipo}<br>(${count})</div>
             </div>
           `;
         });
-      document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;">No hay productos</div>';
+      document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;text-align:center;width:100%;">Sin datos</div>';
     }
 
     // Formulario
@@ -527,7 +545,8 @@ $id_negocio = $_SESSION['id_negocio'];
         subfamilia: document.getElementById('subfamilia').value,
         unidad_medida: document.getElementById('unidad_medida').value,
         precio_compra: document.getElementById('precio_compra').value,
-        porc_utilidad: document.getElementById('porc_utilidad').value
+        porc_utilidad: document.getElementById('porc_utilidad').value,
+        stock_actual: document.getElementById('stock_actual').value || 0
       };
 
       await fetch('/api/admin/guardar_producto.php', {
@@ -540,7 +559,7 @@ $id_negocio = $_SESSION['id_negocio'];
       cargarProductos();
     });
 
-    // Edición REAL
+    // Edición
     async function editarProducto(id) {
       const producto = productosCache.find(p => p.id_producto == id);
       if (!producto) return;
@@ -552,13 +571,14 @@ $id_negocio = $_SESSION['id_negocio'];
       document.getElementById('unidad_medida').value = producto.unidad_medida;
       document.getElementById('precio_compra').value = producto.precio_compra;
       document.getElementById('porc_utilidad').value = producto.porc_utilidad;
+      document.getElementById('stock_actual').value = producto.stock_actual;
       document.getElementById('form-title').textContent = 'Editar Producto';
       actualizarGenerados();
     }
 
-    // Eliminación REAL
+    // Eliminación
     async function eliminarProducto(id) {
-      if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
+      if (!confirm('¿Eliminar este producto?')) return;
       await fetch('/api/admin/eliminar_producto.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -574,7 +594,6 @@ $id_negocio = $_SESSION['id_negocio'];
       actualizarGenerados();
     }
 
-    // Iniciar
     document.addEventListener('DOMContentLoaded', cargarProductos);
   </script>
 </body>

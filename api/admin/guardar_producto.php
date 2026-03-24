@@ -11,18 +11,18 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 if (!empty($data['id_producto'])) {
     $stmt = $pdo->prepare("
-        UPDATE productos 
-        SET codigo = ?, tipo = ?, familia = ?, subfamilia = ?, unidad_medida = ?, precio_compra = ?, porc_utilidad = ?
+    UPDATE productos 
+        SET tipo = ?, familia = ?, subfamilia = ?, unidad_medida = ?, precio_compra = ?, porc_utilidad = ?, stock_actual = ?
         WHERE id_producto = ? AND id_negocio = ?
     ");
     $stmt->execute([
-        $data['codigo'],
         $data['tipo'],
         $data['familia'],
         $data['subfamilia'],
         $data['unidad_medida'],
         $data['precio_compra'],
         $data['porc_utilidad'],
+        $data['stock_actual'],
         $data['id_producto'],
         $_SESSION['id_negocio']
     ]);
@@ -34,8 +34,8 @@ if (!empty($data['id_producto'])) {
             uniqid();
 
     $stmt = $pdo->prepare("
-        INSERT INTO productos (codigo, tipo, id_negocio, familia, subfamilia, unidad_medida, precio_compra, porc_utilidad)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO productos (codigo, tipo, id_negocio, familia, subfamilia, unidad_medida, precio_compra, porc_utilidad, stock_actual)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $codigo,
@@ -45,7 +45,8 @@ if (!empty($data['id_producto'])) {
         $data['subfamilia'],
         $data['unidad_medida'],
         $data['precio_compra'],
-        $data['porc_utilidad']
+        $data['porc_utilidad'],
+        $data['stock_actual']
     ]);
 }
 
