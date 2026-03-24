@@ -27,7 +27,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      width: 90%;
+      width: 95%;
       max-width: 1400px;
       display: flex;
       height: 85vh;
@@ -37,34 +37,25 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       overflow-y: auto;
     }
     .left-column { 
-      width: 60%; 
+      width: 50%; 
       border-right: 1px solid #eee; 
     }
     .right-column { 
-      width: 40%; 
+      width: 50%; 
       display: flex;
       flex-direction: column;
     }
-    .header-pos {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    .header-pos h2 {
+    h2 {
       color: #2E7D32;
-      margin: 0;
-    }
-    .buscador {
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 80%;
-      margin-bottom: 1rem;
-      font-size: 1rem;
+      margin-top: 0;
     }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
+    th, td { 
+      padding: 0.6rem; 
+      text-align: left; 
+      border-bottom: 1px solid #eee; 
+      font-size: 0.95rem; /* ← mismo tamaño que botones */
+    }
     th { background: #4CAF50; color: white; }
     .acciones { text-align: center; }
     .acciones button {
@@ -75,66 +66,59 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       font-weight: bold;
       background: #f0f8f0;
     }
-    .form-producto {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+
+    /* Formulario derecho */
     .form-group {
-      display: flex;
-      flex-direction: column;
+      margin-bottom: 1rem;
     }
     .form-group label {
-      font-weight: 600; margin-bottom: 0.3rem;
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      font-size: 0.95rem;
     }
-    .form-group input, .form-group select {
+    .form-control {
+      width: 100%;
       padding: 0.6rem;
       border: 1px solid #ccc;
       border-radius: 6px;
-    }
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
+      font-size: 0.95rem;
     }
     .btn {
-      flex: 1;
       padding: 0.6rem;
       border: none;
       border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
+      font-size: 0.95rem; /* ← tamaño consistente */
     }
-    .btn-add { background: #4CAF50; color: white; }
-    .btn-finalizar { background: #2196F3; color: white; }
+    .btn-add { background: #4CAF50; color: white; width: 100%; margin: 0.5rem 0; }
+    .btn-finalize { background: #2196F3; color: white; width: 100%; margin: 0.5rem 0; }
+    .btn-cancel { background: #f44336; color: white; width: 100%; margin: 0.5rem 0; }
 
-    /* Lista de productos */
-    .lista-productos {
-      flex: 1;
+    /* Buscador de productos */
+    .producto-buscador {
+      position: relative;
+    }
+    .producto-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 200px;
       overflow-y: auto;
-      margin-top: 0.5rem;
+      z-index: 10;
+      border-radius: 0 0 6px 6px;
     }
     .producto-item {
-      padding: 0.8rem;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      margin-bottom: 0.6rem;
+      padding: 0.5rem;
       cursor: pointer;
-      font-size: 0.9rem;
     }
     .producto-item:hover {
-      background: #f9fbe7;
-    }
-    .producto-nombre {
-      font-weight: bold;
-    }
-    .producto-precio {
-      color: #4CAF50;
-    }
-    .producto-stock {
-      float: right;
-      color: #666;
+      background: #f0f8f0;
     }
   </style>
 </head>
@@ -142,24 +126,18 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
   <div class="pos-container">
     
-    <!-- IZQUIERDA: Carrito -->
+    <!-- IZQUIERDA: Carrito (solo lectura) -->
     <div class="left-column">
-      <div class="header-pos">
-        <h2>🛒 Carrito de Ventas</h2>
-        <select id="metodo-pago" style="padding:0.5rem; border-radius:6px;">
-          <option value="efectivo">Efectivo</option>
-          <option value="transferencia">Transferencia</option>
-        </select>
-      </div>
+      <h2>🛒 Productos Vendidos</h2>
       
       <table id="tabla-carrito">
         <thead>
           <tr>
             <th>Producto</th>
-            <th>Cantidad</th>
+            <th>Cant.</th>
             <th>Precio</th>
             <th>Subtotal</th>
-            <th class="acciones">Acciones</th>
+            <th class="acciones">✕</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -171,21 +149,46 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
           </tr>
         </tfoot>
       </table>
-
-      <div class="btn-group">
-        <button class="btn btn-finalizar" onclick="finalizarVenta()">Finalizar Venta</button>
-      </div>
     </div>
 
-    <!-- DERECHA: Selector de productos (20%) -->
+    <!-- DERECHA: Formulario de entrada -->
     <div class="right-column">
-      <h2 style="margin-top:0;">🔍 Productos</h2>
-      <input type="text" class="buscador" id="buscador-productos" placeholder="Buscar...">
-      
-      <!-- Contenedor visible con scroll -->
-      <div class="lista-productos" id="lista-productos">
-        <p style="color:#666; font-style:italic;">Empieza a escribir...</p>
+      <h2>➕ Agregar Producto</h2>
+
+      <div class="form-group">
+        <label>Producto</label>
+        <div class="producto-buscador">
+          <input type="text" id="buscador-producto" class="form-control" placeholder="Escribe para buscar...">
+          <div class="producto-results" id="resultados-producto" style="display:none;"></div>
+        </div>
       </div>
+
+      <div class="form-group">
+        <label>Cantidad</label>
+        <input type="number" step="0.01" id="cantidad" class="form-control" value="1" min="0.01">
+      </div>
+
+      <div class="form-group">
+        <label>Precio Unitario ($)</label>
+        <input type="number" step="0.01" id="precio" class="form-control" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Subtotal ($)</label>
+        <input type="text" id="subtotal" class="form-control" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Medio de Pago</label>
+        <select id="metodo-pago" class="form-control">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+
+      <button class="btn btn-add" onclick="agregarAlCarrito()">Agregar al Carrito</button>
+      <button class="btn btn-finalize" onclick="finalizarVenta()">Finalizar Venta</button>
+      <button class="btn btn-cancel" onclick="limpiarFormulario()">Cancelar Venta</button>
     </div>
 
   </div>
@@ -193,66 +196,93 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   <script>
     let carrito = [];
     let productosCache = [];
+    let productoSeleccionado = null;
 
+    // Cargar productos
     async function cargarProductos() {
       const res = await fetch('/api/admin/listar_productos.php');
       productosCache = await res.json();
-      filtrarProductos('');
     }
 
-    function filtrarProductos(query) {
-      const resultados = productosCache.filter(p => 
-        p.producto.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 30);
-
-      const contenedor = document.getElementById('lista-productos');
-      if (resultados.length === 0) {
-        contenedor.innerHTML = '<p style="color:#999;">No hay productos</p>';
+    // Buscar productos mientras escribes
+    document.getElementById('buscador-producto').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      const contenedor = document.getElementById('resultados-producto');
+      if (!query) {
+        contenedor.style.display = 'none';
         return;
       }
 
-      contenedor.innerHTML = resultados.map(p => `
-        <div class="producto-item" onclick="agregarAlCarrito(${p.id_producto})">
-          <div class="producto-nombre">${p.producto}</div>
-          <div><span class="producto-precio">$${parseFloat(p.precio_venta).toFixed(2)}</span>
-          <span class="producto-stock">Stock: ${parseFloat(p.stock_actual).toFixed(2)}</span></div>
-          <div style="font-size:0.8rem; color:#666;">${p.familia} • ${p.subfamilia}</div>
-        </div>
-      `).join('');
-    }
+      const resultados = productosCache.filter(p => 
+        p.producto.toLowerCase().includes(query)
+      ).slice(0, 10);
 
-    document.getElementById('buscador-productos').addEventListener('input', (e) => {
-      filtrarProductos(e.target.value);
+      if (resultados.length > 0) {
+        contenedor.innerHTML = resultados.map(p => `
+          <div class="producto-item" onclick="seleccionarProducto(${p.id_producto})">
+            ${p.producto} • $${parseFloat(p.precio_venta).toFixed(2)} • Stock: ${p.stock_actual}
+          </div>
+        `).join('');
+        contenedor.style.display = 'block';
+      } else {
+        contenedor.style.display = 'none';
+      }
     });
 
-    function agregarAlCarrito(idProducto) {
-      const producto = productosCache.find(p => p.id_producto == idProducto);
-      if (!producto) return;
+    function seleccionarProducto(id) {
+      const p = productosCache.find(x => x.id_producto == id);
+      if (!p) return;
 
-      const cantidad = parseFloat(prompt(`Cantidad a vender de "${producto.producto}"\nStock: ${producto.stock_actual}`, "1"));
-      if (!cantidad || isNaN(cantidad) || cantidad <= 0) return;
+      productoSeleccionado = p;
+      document.getElementById('buscador-producto').value = p.producto;
+      document.getElementById('precio').value = parseFloat(p.precio_venta).toFixed(2);
+      document.getElementById('cantidad').value = 1;
+      calcularSubtotal();
+      document.getElementById('resultados-producto').style.display = 'none';
+    }
 
-      if (cantidad > parseFloat(producto.stock_actual)) {
-        alert(`❌ Stock insuficiente.\nDisponible: ${producto.stock_actual}`);
+    function calcularSubtotal() {
+      const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
+      const precio = parseFloat(document.getElementById('precio').value) || 0;
+      document.getElementById('subtotal').value = (cantidad * precio).toFixed(2);
+    }
+
+    ['cantidad', 'precio'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calcularSubtotal);
+    });
+
+    function agregarAlCarrito() {
+      if (!productoSeleccionado) {
+        alert('Selecciona un producto primero');
         return;
       }
 
-      const itemExistente = carrito.find(item => item.id_producto === idProducto);
-      if (itemExistente) {
-        itemExistente.cantidad += cantidad;
+      const cantidad = parseFloat(document.getElementById('cantidad').value);
+      const precio = parseFloat(document.getElementById('precio').value);
+      const stock = parseFloat(productoSeleccionado.stock_actual);
+
+      if (cantidad > stock) {
+        alert(`❌ Stock insuficiente. Disponible: ${stock}`);
+        return;
+      }
+
+      // Verificar si ya está en el carrito
+      const existente = carrito.find(item => item.id_producto === productoSeleccionado.id_producto);
+      if (existente) {
+        existente.cantidad += cantidad;
+        existente.subtotal = existente.cantidad * existente.precio_unitario;
       } else {
         carrito.push({
-          id_producto: producto.id_producto,
-          producto: producto.producto,
+          id_producto: productoSeleccionado.id_producto,
+          producto: productoSeleccionado.producto,
           cantidad: cantidad,
-          precio_unitario: parseFloat(producto.precio_venta),
-          subtotal: cantidad * parseFloat(producto.precio_venta)
+          precio_unitario: precio,
+          subtotal: cantidad * precio
         });
       }
 
       renderizarCarrito();
-      document.getElementById('buscador-productos').value = '';
-      filtrarProductos('');
+      limpiarFormulario();
     }
 
     function eliminarDelCarrito(index) {
@@ -262,20 +292,27 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
     function renderizarCarrito() {
       const tbody = document.querySelector('#tabla-carrito tbody');
-      tbody.innerHTML = carrito.map((item, index) => `
+      tbody.innerHTML = carrito.map((item, i) => `
         <tr>
           <td>${item.producto}</td>
           <td>${item.cantidad.toFixed(2)}</td>
           <td>$${item.precio_unitario.toFixed(2)}</td>
           <td>$${item.subtotal.toFixed(2)}</td>
-          <td class="acciones">
-            <button onclick="eliminarDelCarrito(${index})">🗑️</button>
-          </td>
+          <td class="acciones"><button onclick="eliminarDelCarrito(${i})">×</button></td>
         </tr>
       `).join('');
 
       const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
       document.getElementById('total-carrito').textContent = `$${total.toFixed(2)}`;
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('buscador-producto').value = '';
+      document.getElementById('cantidad').value = '1';
+      document.getElementById('precio').value = '';
+      document.getElementById('subtotal').value = '';
+      productoSeleccionado = null;
+      document.getElementById('resultados-producto').style.display = 'none';
     }
 
     async function finalizarVenta() {
@@ -304,9 +341,10 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
         const result = await res.json();
         if (result.success) {
-          alert('✅ Venta registrada');
+          alert('✅ Venta registrada con éxito');
           carrito = [];
           renderizarCarrito();
+          limpiarFormulario();
         } else {
           alert('❌ Error: ' + (result.message || 'No se pudo registrar'));
         }
@@ -315,6 +353,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       }
     }
 
+    // Iniciar
     document.addEventListener('DOMContentLoaded', cargarProductos);
   </script>
 </body>
