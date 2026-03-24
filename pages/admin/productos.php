@@ -13,7 +13,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>🥦 Mantenedor de Productos — Gestión AFV</title>
+  <title>🥦 Mantenedor de Productos — NegocioUP</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
     body { 
@@ -258,7 +258,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 <body>
 
   <div class="header">
-    <div class="app-name">Gestión AFV</div>
+    <div class="app-name">NegociosUP</div>
     <h1>Mantenedor de Productos 🥦🍎🥕</h1>
   </div>
 
@@ -318,7 +318,23 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
           <!-- Campo producto oculto -->
           <input type="hidden" id="producto-generado">
 
-          <!-- Fila 1: Familia + Subfamilia -->
+          <!-- Fila 1: Tipo -->
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="tipo" required>
+              <option value="">-- Seleccionar --</option>
+              <option value="Abarrotes">Abarrotes</option>
+              <option value="Frutas">Frutas</option>
+              <option value="Verduras">Verduras</option>
+              <option value="Lácteos">Lácteos</option>
+              <option value="Botillería">Botillería</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Propios">Propios</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+
+          <!-- Fila 2: Familia + Subfamilia -->
           <div class="form-row">
             <div class="form-group">
               <label>Familia *</label>
@@ -330,7 +346,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
             </div>
           </div>
 
-          <!-- Fila 2: Unidad Medida + % Utilidad -->
+          <!-- Fila 3: Unidad Medida + % Utilidad -->
           <div class="form-row">
             <div class="form-group">
               <label>Unidad de Medida *</label>
@@ -352,7 +368,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
             </div>
           </div>
 
-          <!-- Fila 3: Precio Compra + Precio Venta -->
+          <!-- Fila 4: Precio Compra + Precio Venta -->
           <div class="form-row">
             <div class="form-group">
               <label>Precio Compra ($)*</label>
@@ -364,26 +380,10 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
             </div>
           </div>
 
-          <!-- Fila 4: Stock -->
+          <!-- Fila 5: Stock -->
           <div class="form-group">
             <label>Stock Actual</label>
             <input type="number" step="0.01" id="stock_actual" value="0">
-          </div>
-
-          <!-- Tipo -->
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select id="tipo" required>
-              <option value="">-- Seleccionar --</option>
-              <option value="Abarrotes">Abarrotes</option>
-              <option value="Frutas">Frutas</option>
-              <option value="Verduras">Verduras</option>
-              <option value="Lácteos">Lácteos</option>
-              <option value="Botillería">Botillería</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Propios">Propios</option>
-              <option value="Otros">Otros</option>
-            </select>
           </div>
 
           <div class="btn-group">
