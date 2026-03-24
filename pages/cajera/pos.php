@@ -1,12 +1,19 @@
 <?php
-require_once __DIR__ . '/../../includes/config.php';
+  require_once __DIR__ . '/../../includes/config.php';
 
-if ($_SESSION['rol'] !== 'cajera' && $_SESSION['rol'] !== 'admin') {
-    header('Location: /public/home.php');
-    exit;
-}
+  // Validar sesión segura
+  if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
+      header('Location: /public/index.php');
+      exit;
+  }
 
-$id_negocio = $_SESSION['id_negocio'] ?? 1;
+  $rol = $_SESSION['rol'];
+  if ($rol !== 'cajera' && $rol !== 'admin') {
+      header('Location: /public/home.php');
+      exit;
+  }
+
+  $id_negocio = $_SESSION['id_negocio'] ?? 1;
 ?>
 <!DOCTYPE html>
 <html>
@@ -200,7 +207,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
     // Cargar productos
     async function cargarProductos() {
-      const res = await fetch('/api/admin/listar_productos.php');
+      const res = await fetch('/api/cajera/listar_productos.php');
       productosCache = await res.json();
     }
 
