@@ -1,13 +1,16 @@
 <?php
-session_start();
-if (!isset($_SESSION['id_usuario'])) {
-    header('Location: index.php');
-    exit;
-}
-$rol = $_SESSION['rol'] ?? 'cajera';
-$nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Mi Negocio';
-?>
+  require_once __DIR__ . '/../includes/config.php';
 
+  // Proteger acceso sin login
+  if (!isset($_SESSION['id_usuario'])) {
+      header('Location: index.php');
+      exit;
+  }
+
+  $nombre = $_SESSION['nombre'] ?? 'Usuario';
+  $rol = $_SESSION['rol'] ?? 'cajera';
+  $id_negocio = $_SESSION['id_negocio'] ?? 1;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -98,6 +101,17 @@ $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Mi Negocio';
           <a href="../pages/admin/productos.php" 
             style="display: inline-block; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
             🥦 Mantenedor de Productos
+          </a>
+        </div>
+      <?php endif; ?>
+
+      <?php if ($rol === 'cajera'): ?>
+        <div style="margin: 2rem; padding: 1.5rem; background: #e3f2fd; border-radius: 12px; text-align: center;">
+          <h2>🛒 Punto de Venta</h2>
+          <p>Registra ventas diarias</p>
+          <a href="#" 
+            style="display: inline-block; padding: 0.75rem 1.5rem; background: #2196F3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            💳 Abrir POS
           </a>
         </div>
       <?php endif; ?>

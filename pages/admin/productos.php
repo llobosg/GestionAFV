@@ -1,4 +1,4 @@
-<?php
+<<?php
 require_once __DIR__ . '/../../includes/config.php';
 
 if ($_SESSION['rol'] !== 'admin') {
@@ -35,12 +35,12 @@ $id_negocio = $_SESSION['id_negocio'];
 
     .container {
       display: flex;
-      height: calc(100vh - 60px - 2rem); /* menos header y márgenes */
+      height: calc(100vh - 60px - 2rem);
       margin: 1rem;
       gap: 1.5rem;
     }
 
-    /* Lado izquierdo: tabla */
+    /* Lado izquierdo */
     .tabla-container {
       width: 70%;
       background: white;
@@ -50,13 +50,39 @@ $id_negocio = $_SESSION['id_negocio'];
       flex-direction: column;
       overflow: hidden;
     }
+    .buscador-inteligente {
+      padding: 1rem;
+      background: #f0f8f0;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .buscador-inteligente input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 1rem;
+    }
+    .buscador-inteligente button {
+      background: #e0e0e0;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .filtros {
       padding: 1rem;
       background: #f5f5f5;
       border-bottom: 1px solid #eee;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, 1fr) auto;
       gap: 0.75rem;
+      align-items: end;
     }
     .filtros input, .filtros select {
       width: 100%;
@@ -64,6 +90,18 @@ $id_negocio = $_SESSION['id_negocio'];
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 0.9rem;
+    }
+    .btn-limpiar-filtros {
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
     .tabla-scroll {
       flex: 1;
@@ -84,7 +122,7 @@ $id_negocio = $_SESSION['id_negocio'];
     }
     .acciones button:hover { opacity: 1; }
 
-    /* Lado derecho: formulario + gráficos */
+    /* Lado derecho */
     .right-column {
       width: 30%;
       display: flex;
@@ -141,7 +179,7 @@ $id_negocio = $_SESSION['id_negocio'];
     .btn-save { background: #4CAF50; color: white; }
     .btn-cancel { background: #ccc; color: #333; }
 
-    /* Gráficos */
+    /* Gráficos fijos */
     .graficos-container {
       background: white;
       border-radius: 12px;
@@ -151,6 +189,7 @@ $id_negocio = $_SESSION['id_negocio'];
       display: flex;
       flex-direction: column;
       gap: 1.2rem;
+      overflow: hidden;
     }
     .grafico {
       flex: 1;
@@ -184,15 +223,18 @@ $id_negocio = $_SESSION['id_negocio'];
     .promedio-stock {
       font-size: 1.8rem;
       font-weight: bold;
-      color: #2E7D32;
       text-align: center;
       margin-top: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 8px;
     }
+    .stock-verde { background: #e8f5e9; color: #2E7D32; }
+    .stock-amarillo { background: #fff8e1; color: #FF8F00; }
+    .stock-rojo { background: #ffebee; color: #C62828; }
   </style>
 </head>
 <body>
 
-  <!-- ENCABEZADO SUPERIOR -->
   <div class="header">
     <div class="app-name">Gestión AFV</div>
     <h1>Mantenedor de Productos 🥦🍎🥕</h1>
@@ -200,8 +242,15 @@ $id_negocio = $_SESSION['id_negocio'];
 
   <div class="container">
     
-    <!-- LADO IZQUIERDO: TABLA -->
+    <!-- LADO IZQUIERDO -->
     <div class="tabla-container">
+      <!-- Buscador inteligente -->
+      <div class="buscador-inteligente">
+        <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
+        <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
+      </div>
+
+      <!-- Filtros -->
       <div class="filtros">
         <select id="filtro-tipo">
           <option value="">Todos los tipos</option>
@@ -217,7 +266,12 @@ $id_negocio = $_SESSION['id_negocio'];
         <input type="text" id="filtro-familia" placeholder="Familia">
         <input type="text" id="filtro-producto" placeholder="Producto">
         <input type="number" id="filtro-stock" placeholder="Stock mínimo">
+        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">
+          🧹 Limpiar
+        </button>
       </div>
+
+      <!-- Tabla -->
       <div class="tabla-scroll">
         <table id="tabla-productos">
           <thead>
@@ -239,10 +293,8 @@ $id_negocio = $_SESSION['id_negocio'];
       </div>
     </div>
 
-    <!-- LADO DERECHO: FORMULARIO + GRÁFICOS -->
+    <!-- LADO DERECHO -->
     <div class="right-column">
-      
-      <!-- FORMULARIO -->
       <div class="form-container">
         <h2 id="form-title">Agregar Producto</h2>
         <form id="producto-form">
@@ -316,12 +368,11 @@ $id_negocio = $_SESSION['id_negocio'];
         </form>
       </div>
 
-      <!-- GRÁFICOS -->
+      <!-- Gráficos fijos -->
       <div class="graficos-container">
         <div class="grafico">
-          <h3>📊 Productos por Familia</h3>
-          <div id="grafico-familias">
-            <!-- Se llenará dinámicamente -->
+          <h3>📊 Productos por Tipo</h3>
+          <div id="grafico-tipos">
             <div style="color:#666; font-style:italic;">Cargando...</div>
           </div>
         </div>
@@ -330,13 +381,13 @@ $id_negocio = $_SESSION['id_negocio'];
           <div class="promedio-stock" id="promedio-stock">--</div>
         </div>
       </div>
-
     </div>
 
   </div>
 
   <script>
-    // Actualizar campos generados en tiempo real
+    let productosCache = [];
+
     function actualizarGenerados() {
       const familia = document.getElementById('familia').value || '';
       const subfamilia = document.getElementById('subfamilia').value || '';
@@ -351,16 +402,27 @@ $id_negocio = $_SESSION['id_negocio'];
       document.getElementById(id).addEventListener('input', actualizarGenerados);
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      cargarProductos();
-      actualizarGenerados();
-    });
+    // Filtros y búsqueda
+    function aplicarFiltros() {
+      const busqueda = document.getElementById('buscador-global').value.toLowerCase();
+      const tipo = document.getElementById('filtro-tipo').value;
+      const familia = document.getElementById('filtro-familia').value.toLowerCase();
+      const producto = document.getElementById('filtro-producto').value.toLowerCase();
+      const stockMin = parseFloat(document.getElementById('filtro-stock').value) || -1;
 
-    async function cargarProductos() {
-      const res = await fetch('/api/admin/listar_productos.php');
-      const productos = await res.json();
       const tbody = document.querySelector('#tabla-productos tbody');
-      tbody.innerHTML = productos.map(p => `
+      tbody.innerHTML = '';
+
+      const filtrados = productosCache.filter(p => {
+        const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
+        const matchTipo = !tipo || p.tipo === tipo;
+        const matchFamilia = !familia || p.familia.toLowerCase().includes(familia);
+        const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
+        const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
+        return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
+      }).sort((a, b) => a.producto.localeCompare(b.producto));
+
+      tbody.innerHTML = filtrados.map(p => `
         <tr>
           <td>${p.producto}</td>
           <td>${p.tipo}</td>
@@ -377,44 +439,73 @@ $id_negocio = $_SESSION['id_negocio'];
           </td>
         </tr>
       `).join('');
-
-      // Actualizar gráficos
-      renderizarGraficos(productos);
     }
 
+    // Eventos de filtros
+    ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
+      document.getElementById(id).addEventListener('input', aplicarFiltros);
+    });
+
+    function limpiarFiltros() {
+      document.getElementById('buscador-global').value = '';
+      document.getElementById('filtro-tipo').value = '';
+      document.getElementById('filtro-familia').value = '';
+      document.getElementById('filtro-producto').value = '';
+      document.getElementById('filtro-stock').value = '';
+      aplicarFiltros();
+    }
+
+    // Cargar productos
+    async function cargarProductos() {
+      const res = await fetch('/api/admin/listar_productos.php');
+      productosCache = await res.json();
+      aplicarFiltros();
+      renderizarGraficos(productosCache);
+    }
+
+    // Renderizar gráficos
     function renderizarGraficos(productos) {
-      // Promedio de stock
+      // Promedio de stock con semáforo
       if (productos.length > 0) {
         const totalStock = productos.reduce((sum, p) => sum + parseFloat(p.stock_actual || 0), 0);
         const promedio = totalStock / productos.length;
-        document.getElementById('promedio-stock').textContent = promedio.toFixed(2);
+        const promedioEl = document.getElementById('promedio-stock');
+        promedioEl.textContent = promedio.toFixed(2);
+        promedioEl.className = 'promedio-stock';
+        if (promedio >= 50) promedioEl.classList.add('stock-verde');
+        else if (promedio >= 10) promedioEl.classList.add('stock-amarillo');
+        else promedioEl.classList.add('stock-rojo');
       } else {
         document.getElementById('promedio-stock').textContent = '0.00';
+        document.getElementById('promedio-stock').className = 'promedio-stock stock-rojo';
       }
 
-      // Productos por familia
-      const familias = {};
+      // Productos por TIPO (máx 8)
+      const tipos = {};
       productos.forEach(p => {
-        const f = p.familia || 'Sin familia';
-        familias[f] = (familias[f] || 0) + 1;
+        tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
       });
 
-      const maxCount = Math.max(...Object.values(familias), 1);
+      const maxCount = Math.max(...Object.values(tipos), 1);
       let html = '';
-      for (const [familia, count] of Object.entries(familias)) {
-        const pct = (count / maxCount) * 100;
-        html += `
-          <div style="margin-bottom:0.6rem;">
-            <div style="font-size:0.85rem;margin-bottom:0.2rem;">${familia} (${count})</div>
-            <div class="barra">
-              <div class="barra-fill" style="width:${Math.max(pct, 5)}%;">${count}</div>
+      Object.entries(tipos)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .forEach(([tipo, count]) => {
+          const pct = (count / maxCount) * 100;
+          html += `
+            <div style="margin-bottom:0.6rem;">
+              <div style="font-size:0.85rem;margin-bottom:0.2rem;">${tipo} (${count})</div>
+              <div class="barra">
+                <div class="barra-fill" style="width:${Math.max(pct, 5)}%;">${count}</div>
+              </div>
             </div>
-          </div>
-        `;
-      }
-      document.getElementById('grafico-familias').innerHTML = html || '<div style="color:#999;">No hay productos</div>';
+          `;
+        });
+      document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;">No hay productos</div>';
     }
 
+    // Formulario
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
@@ -438,19 +529,31 @@ $id_negocio = $_SESSION['id_negocio'];
       cargarProductos();
     });
 
-    function editarProducto(id) {
-      alert('Edición completa: implementaremos próximamente.');
+    // Edición REAL
+    async function editarProducto(id) {
+      const producto = productosCache.find(p => p.id_producto == id);
+      if (!producto) return;
+
+      document.getElementById('id_producto').value = producto.id_producto;
+      document.getElementById('tipo').value = producto.tipo;
+      document.getElementById('familia').value = producto.familia;
+      document.getElementById('subfamilia').value = producto.subfamilia;
+      document.getElementById('unidad_medida').value = producto.unidad_medida;
+      document.getElementById('precio_compra').value = producto.precio_compra;
+      document.getElementById('porc_utilidad').value = producto.porc_utilidad;
+      document.getElementById('form-title').textContent = 'Editar Producto';
+      actualizarGenerados();
     }
 
+    // Eliminación REAL
     async function eliminarProducto(id) {
-      if (confirm('¿Eliminar este producto?')) {
-        await fetch('/api/admin/eliminar_producto.php', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ id_producto: id })
-        });
-        cargarProductos();
-      }
+      if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
+      await fetch('/api/admin/eliminar_producto.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id_producto: id })
+      });
+      cargarProductos();
     }
 
     function limpiarForm() {
@@ -459,6 +562,9 @@ $id_negocio = $_SESSION['id_negocio'];
       document.getElementById('form-title').textContent = 'Agregar Producto';
       actualizarGenerados();
     }
+
+    // Iniciar
+    document.addEventListener('DOMContentLoaded', cargarProductos);
   </script>
 </body>
 </html>

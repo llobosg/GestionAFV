@@ -1,18 +1,10 @@
-<?php
-session_start();
-if (isset($_SESSION['id_usuario'])) {
-    header('Location: home.php');
-    exit;
-}
-?>
+<!-- public/index.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🥦 Gestión AFV — Iniciar Sesión</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
+  <title>🥦 Iniciar Sesión — NegocioUP</title>
   <style>
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edc3 100%);
@@ -23,56 +15,38 @@ if (isset($_SESSION['id_usuario'])) {
       justify-content: center;
       align-items: center;
     }
-    .login-container {
+    .container {
       background: white;
-      padding: 2.5rem;
+      padding: 2rem;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      text-align: center;
       max-width: 400px;
       width: 90%;
+      text-align: center;
     }
-    .logo {
-      font-size: 3rem;
-      margin-bottom: 1.5rem;
-      color: #4CAF50;
-    }
-    h1 {
-      color: #2E7D32;
-      margin-bottom: 1.5rem;
-      font-weight: 700;
-    }
-    .form-group {
-      margin-bottom: 1.2rem;
-      text-align: left;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.4rem;
-      font-weight: 600;
-      color: #333;
-    }
+    .logo { font-size: 2.5rem; margin-bottom: 1rem; color: #4CAF50; }
+    h1 { color: #2E7D32; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; text-align: left; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
     .form-group input {
-      width: 100%;
-      padding: 0.7rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      width: 100%; padding: 0.7rem;
+      border: 1px solid #ccc; border-radius: 8px;
       font-size: 1rem;
     }
     .btn-login {
-      width: 100%;
-      padding: 0.8rem;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: bold;
+      width: 100%; padding: 0.8rem;
+      background: #4CAF50; color: white;
+      border: none; border-radius: 8px;
+      font-size: 1.1rem; font-weight: bold;
       cursor: pointer;
-      margin-top: 1rem;
     }
-    .btn-login:hover {
-      background: #388E3C;
+    .error {
+      color: #C62828;
+      background: #ffebee;
+      padding: 0.7rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
     }
     .forgot-link {
       display: block;
@@ -81,24 +55,16 @@ if (isset($_SESSION['id_usuario'])) {
       text-decoration: none;
       font-size: 0.9rem;
     }
-    .forgot-link:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="logo">🥦🍎🥕</div>
-    <h1>Gestión AFV</h1>
-    <p>Inicia sesión para acceder a tu negocio</p>
+  <div class="container">
+    <div class="logo">🥦</div>
+    <h1>Iniciar Sesión</h1>
 
-    <?php if (!empty($_GET['error'])): ?>
-      <div style="background:#ffebee;color:#c62828;padding:0.8rem;border-radius:6px;margin-bottom:1.5rem;font-size:0.9rem;">
-        <?= htmlspecialchars($_GET['error']) ?>
-      </div>
-    <?php endif; ?>
+    <div id="error-msg" class="error"></div>
 
-    <form method="POST" action="../api/login.php">
+    <form id="login-form">
       <div class="form-group">
         <label for="usuario">Nombre</label>
         <input type="text" id="usuario" name="usuario" placeholder="Ej: Ana" required>
@@ -111,5 +77,35 @@ if (isset($_SESSION['id_usuario'])) {
     </form>
     <a href="recuperar_password.php" class="forgot-link">¿Olvidaste tu contraseña?</a>
   </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      try {
+        const res = await fetch('../api/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          // ✅ Redirección automática a home.php
+          window.location.href = 'home.php';
+        } else {
+          document.getElementById('error-msg').textContent = result.message || 'Error desconocido';
+          document.getElementById('error-msg').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('error-msg').textContent = 'No se pudo conectar al servidor';
+        document.getElementById('error-msg').style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>
