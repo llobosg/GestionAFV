@@ -28,7 +28,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       width: 95%;
-      max-width: 1200px;
+      max-width: 1400px;
       display: flex;
       height: 85vh;
     }
@@ -36,8 +36,15 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       padding: 1.5rem;
       overflow-y: auto;
     }
-    .left-column { width: 60%; border-right: 1px solid #eee; }
-    .right-column { width: 40%; }
+    .left-column { 
+      width: 80%; 
+      border-right: 1px solid #eee; 
+    }
+    .right-column { 
+      width: 20%; 
+      display: flex;
+      flex-direction: column;
+    }
     .header-pos {
       display: flex;
       justify-content: space-between;
@@ -53,7 +60,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       border: 1px solid #ccc;
       border-radius: 8px;
       width: 100%;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       font-size: 1rem;
     }
     table { width: 100%; border-collapse: collapse; }
@@ -101,6 +108,34 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
     .btn-add { background: #4CAF50; color: white; }
     .btn-finalizar { background: #2196F3; color: white; }
+
+    /* Lista de productos */
+    .lista-productos {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+    .producto-item {
+      padding: 0.8rem;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .producto-item:hover {
+      background: #f9fbe7;
+    }
+    .producto-nombre {
+      font-weight: bold;
+    }
+    .producto-precio {
+      color: #4CAF50;
+    }
+    .producto-stock {
+      float: right;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -111,7 +146,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     <div class="left-column">
       <div class="header-pos">
         <h2>🛒 Carrito de Ventas</h2>
-        <select id="metodo-pago">
+        <select id="metodo-pago" style="padding:0.5rem; border-radius:6px;">
           <option value="efectivo">Efectivo</option>
           <option value="transferencia">Transferencia</option>
         </select>
@@ -142,14 +177,14 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
     </div>
 
-    <!-- DERECHA: Selector de productos -->
+    <!-- DERECHA: Selector de productos (20%) -->
     <div class="right-column">
-      <h2>🔍 Seleccionar Producto</h2>
-      <input type="text" class="buscador" id="buscador-productos" placeholder="Buscar producto...">
+      <h2 style="margin-top:0;">🔍 Productos</h2>
+      <input type="text" class="buscador" id="buscador-productos" placeholder="Buscar...">
       
-      <div id="lista-productos" style="margin-top:1rem;">
-        <!-- Se llenará dinámicamente -->
-        <p style="color:#666;">Empieza a escribir para buscar...</p>
+      <!-- Contenedor visible con scroll -->
+      <div class="lista-productos" id="lista-productos">
+        <p style="color:#666; font-style:italic;">Empieza a escribir...</p>
       </div>
     </div>
 
@@ -159,7 +194,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     let carrito = [];
     let productosCache = [];
 
-    // Cargar productos del negocio
     async function cargarProductos() {
       const res = await fetch('/api/admin/listar_productos.php');
       productosCache = await res.json();
@@ -169,21 +203,20 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     function filtrarProductos(query) {
       const resultados = productosCache.filter(p => 
         p.producto.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 20);
+      ).slice(0, 30);
 
       const contenedor = document.getElementById('lista-productos');
       if (resultados.length === 0) {
-        contenedor.innerHTML = '<p style="color:#999;">No se encontraron productos</p>';
+        contenedor.innerHTML = '<p style="color:#999;">No hay productos</p>';
         return;
       }
 
       contenedor.innerHTML = resultados.map(p => `
-        <div style="padding:0.8rem; border:1px solid #eee; border-radius:8px; margin-bottom:0.6rem; cursor:pointer;"
-             onclick="agregarAlCarrito(${p.id_producto})">
-          <strong>${p.producto}</strong><br>
-          <small>${p.familia} • ${p.subfamilia}</small><br>
-          <span style="color:#4CAF50;">$${parseFloat(p.precio_venta).toFixed(2)}</span>
-          <span style="float:right; color:#666;">Stock: ${parseFloat(p.stock_actual).toFixed(2)}</span>
+        <div class="producto-item" onclick="agregarAlCarrito(${p.id_producto})">
+          <div class="producto-nombre">${p.producto}</div>
+          <div><span class="producto-precio">$${parseFloat(p.precio_venta).toFixed(2)}</span>
+          <span class="producto-stock">Stock: ${parseFloat(p.stock_actual).toFixed(2)}</span></div>
+          <div style="font-size:0.8rem; color:#666;">${p.familia} • ${p.subfamilia}</div>
         </div>
       `).join('');
     }
@@ -196,7 +229,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       const producto = productosCache.find(p => p.id_producto == idProducto);
       if (!producto) return;
 
-      const cantidad = parseFloat(prompt(`Cantidad a vender de "${producto.producto}"\nStock disponible: ${producto.stock_actual}`, "1"));
+      const cantidad = parseFloat(prompt(`Cantidad a vender de "${producto.producto}"\nStock: ${producto.stock_actual}`, "1"));
       if (!cantidad || isNaN(cantidad) || cantidad <= 0) return;
 
       if (cantidad > parseFloat(producto.stock_actual)) {
@@ -204,7 +237,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         return;
       }
 
-      // Verificar si ya está en el carrito
       const itemExistente = carrito.find(item => item.id_producto === idProducto);
       if (itemExistente) {
         itemExistente.cantidad += cantidad;
@@ -272,18 +304,17 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
         const result = await res.json();
         if (result.success) {
-          alert('✅ Venta registrada con éxito');
+          alert('✅ Venta registrada');
           carrito = [];
           renderizarCarrito();
         } else {
-          alert('❌ Error: ' + (result.message || 'No se pudo registrar la venta'));
+          alert('❌ Error: ' + (result.message || 'No se pudo registrar'));
         }
       } catch (err) {
         alert('Error de conexión');
       }
     }
 
-    // Iniciar
     document.addEventListener('DOMContentLoaded', cargarProductos);
   </script>
 </body>
