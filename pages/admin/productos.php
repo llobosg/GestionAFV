@@ -493,72 +493,71 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
 
     function renderizarGraficos(productos) {
-    // === Productos por Tipo (barras verticales) ===
-    const tipos = {};
-    productos.forEach(p => {
-      tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
-    });
-
-    const maxCount = Math.max(...Object.values(tipos), 1);
-    let html = '';
-    Object.entries(tipos)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .forEach(([tipo, count]) => {
-        const heightPct = (count / maxCount) * 100;
-        html += `
-          <div class="barra-vertical">
-            <div class="barra-fill-v" style="height: ${Math.max(heightPct, 5)}%;"></div>
-            <div class="barra-label">${tipo}<br>(${count})</div>
-          </div>
-        `;
+      // === Productos por Tipo (barras verticales) ===
+      const tipos = {};
+      productos.forEach(p => {
+        tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
       });
-    document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;text-align:center;width:100%;">Sin datos</div>';
 
-    // === Semáforo basado en stock_actual vs stock_critico ===
-    if (productos.length === 0) {
-      document.getElementById('promedio-stock').textContent = '0.00';
+      const maxCount = Math.max(...Object.values(tipos), 1);
+      let html = '';
+      Object.entries(tipos)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .forEach(([tipo, count]) => {
+          const heightPct = (count / maxCount) * 100;
+          html += `
+            <div class="barra-vertical">
+              <div class="barra-fill-v" style="height: ${Math.max(heightPct, 5)}%;"></div>
+              <div class="barra-label">${tipo}<br>(${count})</div>
+            </div>
+          `;
+        });
+      document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;text-align:center;width:100%;">Sin datos</div>';
+
+      // === Semáforo basado en stock_actual vs stock_critico ===
+      if (productos.length === 0) {
+        document.getElementById('promedio-stock').textContent = '0.00';
+        document.getElementById('light-green').classList.remove('active');
+        document.getElementById('light-yellow').classList.remove('active');
+        document.getElementById('light-red').classList.add('active');
+        return;
+      }
+
+      // Contar estados
+      let rojos = 0, amarillos = 0, verdes = 0;
+      productos.forEach(p => {
+        const actual = parseFloat(p.stock_actual) || 0;
+        const critico = parseFloat(p.stock_critico) || 10;
+        if (actual >= critico) {
+          verdes++;
+        } else if (actual >= critico * 0.5) {
+          amarillos++;
+        } else {
+          rojos++;
+        }
+      });
+
+      // Determinar estado predominante
+      const total = productos.length;
+      const rojoPct = rojos / total;
+      const amarilloPct = amarillos / total;
+
+      // Reset luces
       document.getElementById('light-green').classList.remove('active');
       document.getElementById('light-yellow').classList.remove('active');
-      document.getElementById('light-red').classList.add('active');
-      return;
-    }
+      document.getElementById('light-red').classList.remove('active');
 
-    // Contar estados
-    let rojos = 0, amarillos = 0, verdes = 0;
-    productos.forEach(p => {
-      const actual = parseFloat(p.stock_actual) || 0;
-      const critico = parseFloat(p.stock_critico) || 10;
-      if (actual >= critico) {
-        verdes++;
-      } else if (actual >= critico * 0.5) {
-        amarillos++;
+      if (rojoPct > 0.3) {
+        document.getElementById('light-red').classList.add('active');
+        document.getElementById('promedio-stock').textContent = '⚠️ Crítico';
+      } else if (amarilloPct > 0.5) {
+        document.getElementById('light-yellow').classList.add('active');
+        document.getElementById('promedio-stock').textContent = '🟡 Alerta';
       } else {
-        rojos++;
+        document.getElementById('light-green').classList.add('active');
+        document.getElementById('promedio-stock').textContent = '✅ Estable';
       }
-    });
-
-    // Determinar estado predominante
-    const total = productos.length;
-    const rojoPct = rojos / total;
-    const amarilloPct = amarillos / total;
-
-    // Reset luces
-    document.getElementById('light-green').classList.remove('active');
-    document.getElementById('light-yellow').classList.remove('active');
-    document.getElementById('light-red').classList.remove('active');
-
-    if (rojoPct > 0.3) {
-      document.getElementById('light-red').classList.add('active');
-      document.getElementById('promedio-stock').textContent = '⚠️ Crítico';
-    } else if (amarilloPct > 0.5) {
-      document.getElementById('light-yellow').classList.add('active');
-      document.getElementById('promedio-stock').textContent = '🟡 Alerta';
-    } else {
-      document.getElementById('light-green').classList.add('active');
-      document.getElementById('promedio-stock').textContent = '✅ Estable';
-    }
-  }
 
       // Barras verticales: Productos por TIPO
       const tipos = {};
