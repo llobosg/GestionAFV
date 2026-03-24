@@ -259,7 +259,12 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
   <div class="header">
     <div class="app-name">NegociosUP</div>
-    <h1>Mantenedor de Productos 🥦🍎🥕</h1>
+      <h1>Mantenedor de Productos 🥦🍎🥕</h1>
+      <a href="/public/home.php" 
+        style="background:#2E7D32; color:white; padding:0.4rem 0.8rem; border-radius:6px; text-decoration:none; font-size:0.9rem;">
+        ← Volver a Home
+      </a>
+    </div>
   </div>
 
   <div class="container">
