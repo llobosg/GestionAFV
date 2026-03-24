@@ -23,7 +23,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       justify-content: center;
       align-items: center;
     }
-    .pos-container {
+      .pos-container {
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -32,89 +32,29 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       display: flex;
       height: 85vh;
     }
-    .column {
-      padding: 1.5rem;
-      overflow-y: auto;
-    }
-    .left-column { 
-      width: 80%; 
-      border-right: 1px solid #eee; 
-    }
-    .right-column { 
-      width: 20%; 
-      display: flex;
-      flex-direction: column;
-    }
-    .header-pos {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    .header-pos h2 {
-      color: #2E7D32;
-      margin: 0;
-    }
-    .buscador {
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 100%;
-      margin-bottom: 1rem;
-      font-size: 1rem;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #4CAF50; color: white; }
-    .acciones { text-align: center; }
-    .acciones button {
-      background: none; border: none; cursor: pointer; opacity: 0.7;
-    }
-    .acciones button:hover { opacity: 1; }
-    .total-row {
-      font-weight: bold;
-      background: #f0f8f0;
-    }
-    .form-producto {
-      margin-top: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-    .form-group label {
-      font-weight: 600; margin-bottom: 0.3rem;
-    }
-    .form-group input, .form-group select {
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    .btn {
-      flex: 1;
-      padding: 0.6rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .btn-add { background: #4CAF50; color: white; }
-    .btn-finalizar { background: #2196F3; color: white; }
 
-    /* Lista de productos */
+    .left-column { 
+      width: 50%; /* ← reducido de 80% a 50% */
+      border-right: 1px solid #eee; 
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-column { 
+      width: 50%; /* ← ahora ocupa la mitad */
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+    }
+
+    /* Asegurar que la lista de productos tenga altura y scroll */
     .lista-productos {
       flex: 1;
       overflow-y: auto;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
+      padding-right: 0.5rem;
     }
+
     .producto-item {
       padding: 0.8rem;
       border: 1px solid #eee;
@@ -122,19 +62,11 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       margin-bottom: 0.6rem;
       cursor: pointer;
       font-size: 0.9rem;
+      background: #fafafa;
     }
+
     .producto-item:hover {
-      background: #f9fbe7;
-    }
-    .producto-nombre {
-      font-weight: bold;
-    }
-    .producto-precio {
-      color: #4CAF50;
-    }
-    .producto-stock {
-      float: right;
-      color: #666;
+      background: #f0f8f0;
     }
   </style>
 </head>
@@ -177,14 +109,14 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
     </div>
 
-    <!-- DERECHA: Selector de productos (20%) -->
+    <!-- DERECHA: Selector de productos -->
     <div class="right-column">
-      <h2 style="margin-top:0;">🔍 Productos</h2>
-      <input type="text" class="buscador" id="buscador-productos" placeholder="Buscar...">
-      
-      <!-- Contenedor visible con scroll -->
+      <h2 style="margin-top:0;">🔍 Seleccionar Producto</h2>
+      <input type="text" class="buscador" id="buscador-productos" placeholder="Buscar producto...">
+
+      <!-- Contenedor con scroll garantizado -->
       <div class="lista-productos" id="lista-productos">
-        <p style="color:#666; font-style:italic;">Empieza a escribir...</p>
+        <p style="color:#666; font-style:italic;">Escribe para buscar productos...</p>
       </div>
     </div>
 
