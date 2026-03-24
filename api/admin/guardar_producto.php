@@ -27,14 +27,20 @@ if (!empty($data['id_producto'])) {
         $_SESSION['id_negocio']
     ]);
 } else {
+    // Dentro del bloque de inserción:
+    $codigo = strtoupper(substr($data['tipo'], 0, 3)) . '-' . 
+            strtoupper(str_replace(' ', '', $data['familia'])) . '-' . 
+            strtoupper(str_replace(' ', '', $data['subfamilia'])) . '-' . 
+            uniqid();
+
     $stmt = $pdo->prepare("
         INSERT INTO productos (codigo, tipo, id_negocio, familia, subfamilia, unidad_medida, precio_compra, porc_utilidad)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
-        $data['codigo'],
+        $codigo,
         $data['tipo'],
-        $_SESSION['id_negocio'],
+        $data['id_negocio'],
         $data['familia'],
         $data['subfamilia'],
         $data['unidad_medida'],
