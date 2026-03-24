@@ -13,7 +13,7 @@ try {
         $password = $_POST['password'] ?? '';
     }
 
-    if (empty($ombre) || empty($password)) {
+    if (empty($nombre) || empty($password)) {
         throw new Exception('Nombre y contraseña son obligatorios');
     }
 
