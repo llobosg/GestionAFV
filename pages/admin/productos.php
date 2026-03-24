@@ -21,12 +21,25 @@ $id_negocio = $_SESSION['id_negocio'];
       margin: 0; 
       padding: 0;
     }
+    .header {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .header h1 { margin: 0; font-size: 1.6rem; }
+    .header .app-name { font-weight: bold; }
+
     .container {
       display: flex;
-      height: calc(100vh - 2rem);
+      height: calc(100vh - 60px - 2rem); /* menos header y márgenes */
       margin: 1rem;
       gap: 1.5rem;
     }
+
     /* Lado izquierdo: tabla */
     .tabla-container {
       width: 70%;
@@ -56,22 +69,9 @@ $id_negocio = $_SESSION['id_negocio'];
       flex: 1;
       overflow-y: auto;
     }
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-    }
-    th, td { 
-      padding: 0.6rem 0.8rem; 
-      text-align: left; 
-      border-bottom: 1px solid #eee; 
-      font-size: 0.9rem;
-    }
-    th { 
-      background: #4CAF50; 
-      color: white; 
-      position: sticky;
-      top: 0;
-    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #4CAF50; color: white; position: sticky; top: 0; }
     .acciones { text-align: center; }
     .acciones button {
       background: none;
@@ -84,9 +84,14 @@ $id_negocio = $_SESSION['id_negocio'];
     }
     .acciones button:hover { opacity: 1; }
 
-    /* Lado derecho: formulario */
-    .form-container {
+    /* Lado derecho: formulario + gráficos */
+    .right-column {
       width: 30%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .form-container {
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -135,9 +140,64 @@ $id_negocio = $_SESSION['id_negocio'];
     }
     .btn-save { background: #4CAF50; color: white; }
     .btn-cancel { background: #ccc; color: #333; }
+
+    /* Gráficos */
+    .graficos-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1.2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+    .grafico {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .grafico h3 {
+      margin: 0 0 0.8rem 0;
+      color: #2E7D32;
+      font-size: 1.1rem;
+    }
+    .barra {
+      height: 24px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      position: relative;
+      margin-bottom: 0.4rem;
+    }
+    .barra-fill {
+      height: 100%;
+      background: #4CAF50;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 0.5rem;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .promedio-stock {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2E7D32;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <div class="header">
+    <div class="app-name">Gestión AFV</div>
+    <h1>Mantenedor de Productos 🥦🍎🥕</h1>
+  </div>
+
   <div class="container">
     
     <!-- LADO IZQUIERDO: TABLA -->
@@ -179,81 +239,98 @@ $id_negocio = $_SESSION['id_negocio'];
       </div>
     </div>
 
-    <!-- LADO DERECHO: FORMULARIO -->
-    <div class="form-container">
-      <h2 id="form-title">Agregar Producto</h2>
+    <!-- LADO DERECHO: FORMULARIO + GRÁFICOS -->
+    <div class="right-column">
       
-      <form id="producto-form">
-        <input type="hidden" id="id_producto">
-        <!-- Código autogenerado (oculto) -->
-        <input type="hidden" id="codigo">
+      <!-- FORMULARIO -->
+      <div class="form-container">
+        <h2 id="form-title">Agregar Producto</h2>
+        <form id="producto-form">
+          <input type="hidden" id="id_producto">
+          <input type="hidden" id="codigo">
 
-        <div class="form-group">
-          <label>Tipo *</label>
-          <select id="tipo" required>
-            <option value="">-- Seleccionar --</option>
-            <option value="Abarrotes">Abarrotes</option>
-            <option value="Frutas">Frutas</option>
-            <option value="Verduras">Verduras</option>
-            <option value="Lácteos">Lácteos</option>
-            <option value="Botillería">Botillería</option>
-            <option value="Bebidas">Bebidas</option>
-            <option value="Propios">Propios</option>
-            <option value="Otros">Otros</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="tipo" required>
+              <option value="">-- Seleccionar --</option>
+              <option value="Abarrotes">Abarrotes</option>
+              <option value="Frutas">Frutas</option>
+              <option value="Verduras">Verduras</option>
+              <option value="Lácteos">Lácteos</option>
+              <option value="Botillería">Botillería</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Propios">Propios</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label>Familia * (ej: Manzana)</label>
-          <input type="text" id="familia" required>
-        </div>
+          <div class="form-group">
+            <label>Familia * (ej: Manzana)</label>
+            <input type="text" id="familia" required>
+          </div>
 
-        <div class="form-group">
-          <label>Subfamilia * (ej: Fuji)</label>
-          <input type="text" id="subfamilia" required>
-        </div>
+          <div class="form-group">
+            <label>Subfamilia * (ej: Fuji)</label>
+            <input type="text" id="subfamilia" required>
+          </div>
 
-        <div class="form-group">
-          <label>Unidad de Medida *</label>
-          <select id="unidad_medida" required>
-            <option value="unidad">Unidad</option>
-            <option value="kg">Kilogramo</option>
-            <option value="litro">Litro</option>
-            <option value="paquete">Paquete</option>
-            <option value="caja">Caja</option>
-            <option value="bandeja">Bandeja</option>
-            <option value="docena">Docena</option>
-            <option value="1/2 docena">1/2 docena</option>
-            <option value="pack">Pack</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label>Unidad de Medida *</label>
+            <select id="unidad_medida" required>
+              <option value="unidad">Unidad</option>
+              <option value="kg">Kilogramo</option>
+              <option value="litro">Litro</option>
+              <option value="paquete">Paquete</option>
+              <option value="caja">Caja</option>
+              <option value="bandeja">Bandeja</option>
+              <option value="docena">Docena</option>
+              <option value="1/2 docena">1/2 docena</option>
+              <option value="pack">Pack</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label>Precio Compra ($)*</label>
-          <input type="number" step="0.01" id="precio_compra" required min="0">
-        </div>
+          <div class="form-group">
+            <label>Precio Compra ($)*</label>
+            <input type="number" step="0.01" id="precio_compra" required min="0">
+          </div>
 
-        <div class="form-group">
-          <label>% Utilidad *</label>
-          <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
-        </div>
+          <div class="form-group">
+            <label>% Utilidad *</label>
+            <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
+          </div>
 
-        <!-- Campos generados (solo lectura) -->
-        <div class="form-group readonly">
-          <label>Producto generado</label>
-          <input type="text" id="producto-generado" readonly>
-        </div>
+          <div class="form-group readonly">
+            <label>Producto generado</label>
+            <input type="text" id="producto-generado" readonly>
+          </div>
 
-        <div class="form-group readonly">
-          <label>Precio Venta ($)</label>
-          <input type="text" id="precio_venta-generado" readonly>
-        </div>
+          <div class="form-group readonly">
+            <label>Precio Venta ($)</label>
+            <input type="text" id="precio_venta-generado" readonly>
+          </div>
 
-        <div class="btn-group">
-          <button type="submit" class="btn btn-save">Guardar</button>
-          <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
+          <div class="btn-group">
+            <button type="submit" class="btn btn-save">Guardar</button>
+            <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- GRÁFICOS -->
+      <div class="graficos-container">
+        <div class="grafico">
+          <h3>📊 Productos por Familia</h3>
+          <div id="grafico-familias">
+            <!-- Se llenará dinámicamente -->
+            <div style="color:#666; font-style:italic;">Cargando...</div>
+          </div>
         </div>
-      </form>
+        <div class="grafico">
+          <h3>📈 Promedio de Stock</h3>
+          <div class="promedio-stock" id="promedio-stock">--</div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -270,12 +347,10 @@ $id_negocio = $_SESSION['id_negocio'];
       document.getElementById('precio_venta-generado').value = (compra * (1 + utilidad / 100)).toFixed(2);
     }
 
-    // Event listeners para actualizar en tiempo real
     ['familia', 'subfamilia', 'precio_compra', 'porc_utilidad'].forEach(id => {
       document.getElementById(id).addEventListener('input', actualizarGenerados);
     });
 
-    // Cargar productos al iniciar
     document.addEventListener('DOMContentLoaded', () => {
       cargarProductos();
       actualizarGenerados();
@@ -302,12 +377,46 @@ $id_negocio = $_SESSION['id_negocio'];
           </td>
         </tr>
       `).join('');
+
+      // Actualizar gráficos
+      renderizarGraficos(productos);
+    }
+
+    function renderizarGraficos(productos) {
+      // Promedio de stock
+      if (productos.length > 0) {
+        const totalStock = productos.reduce((sum, p) => sum + parseFloat(p.stock_actual || 0), 0);
+        const promedio = totalStock / productos.length;
+        document.getElementById('promedio-stock').textContent = promedio.toFixed(2);
+      } else {
+        document.getElementById('promedio-stock').textContent = '0.00';
+      }
+
+      // Productos por familia
+      const familias = {};
+      productos.forEach(p => {
+        const f = p.familia || 'Sin familia';
+        familias[f] = (familias[f] || 0) + 1;
+      });
+
+      const maxCount = Math.max(...Object.values(familias), 1);
+      let html = '';
+      for (const [familia, count] of Object.entries(familias)) {
+        const pct = (count / maxCount) * 100;
+        html += `
+          <div style="margin-bottom:0.6rem;">
+            <div style="font-size:0.85rem;margin-bottom:0.2rem;">${familia} (${count})</div>
+            <div class="barra">
+              <div class="barra-fill" style="width:${Math.max(pct, 5)}%;">${count}</div>
+            </div>
+          </div>
+        `;
+      }
+      document.getElementById('grafico-familias').innerHTML = html || '<div style="color:#999;">No hay productos</div>';
     }
 
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      // Generar código único: TIPO-FAMILIA-SUBFAMILIA-ID (pero lo generamos en backend)
       const data = {
         id_producto: document.getElementById('id_producto').value || null,
         id_negocio: <?= $id_negocio ?>,
@@ -330,7 +439,7 @@ $id_negocio = $_SESSION['id_negocio'];
     });
 
     function editarProducto(id) {
-      alert('Edición completa: implementaremos en el próximo paso.');
+      alert('Edición completa: implementaremos próximamente.');
     }
 
     async function eliminarProducto(id) {
