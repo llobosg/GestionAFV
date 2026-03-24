@@ -1,19 +1,19 @@
 <?php
-  require_once __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../../includes/config.php';
 
-  // Validar sesión segura
-  if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
-      header('Location: /public/index.php');
-      exit;
-  }
+// Validación segura de sesión
+if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
+    header('Location: /public/index.php');
+    exit;
+}
 
-  $rol = $_SESSION['rol'];
-  if ($rol !== 'cajera' && $rol !== 'admin') {
-      header('Location: /public/home.php');
-      exit;
-  }
+$rol = $_SESSION['rol'];
+if ($rol !== 'cajera' && $rol !== 'admin') {
+    header('Location: /public/home.php');
+    exit;
+}
 
-  $id_negocio = $_SESSION['id_negocio'] ?? 1;
+$id_negocio = $_SESSION['id_negocio'] ?? 1;
 ?>
 <!DOCTYPE html>
 <html>
@@ -39,29 +39,30 @@
       display: flex;
       height: 85vh;
     }
-    .column {
+    .left-column { 
+      width: 70%; 
+      border-right: 1px solid #eee; 
       padding: 1.5rem;
       overflow-y: auto;
     }
-    .left-column { 
-      width: 50%; 
-      border-right: 1px solid #eee; 
-    }
     .right-column { 
-      width: 50%; 
+      width: 30%; 
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
+      gap: 1rem;
     }
     h2 {
       color: #2E7D32;
       margin-top: 0;
+      font-size: 1.2rem;
     }
     table { width: 100%; border-collapse: collapse; }
     th, td { 
       padding: 0.6rem; 
       text-align: left; 
       border-bottom: 1px solid #eee; 
-      font-size: 0.95rem; /* ← mismo tamaño que botones */
+      font-size: 0.95rem;
     }
     th { background: #4CAF50; color: white; }
     .acciones { text-align: center; }
@@ -74,7 +75,7 @@
       background: #f0f8f0;
     }
 
-    /* Formulario derecho */
+    /* Formulario */
     .form-group {
       margin-bottom: 1rem;
     }
@@ -85,25 +86,49 @@
       font-size: 0.95rem;
     }
     .form-control {
-      width: 100%;
+      width: 100%; /* ← ajustado al 100% del 30% */
       padding: 0.6rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 0.95rem;
     }
+
+    /* Botones de pago */
+    .pago-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    .pago-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .pago-btn.active {
+      background: #2196F3;
+      color: white;
+    }
+
+    /* Botones de acción */
     .btn {
+      width: 100%;
       padding: 0.6rem;
       border: none;
       border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.95rem; /* ← tamaño consistente */
+      font-size: 0.95rem;
+      margin: 0.3rem 0;
     }
-    .btn-add { background: #4CAF50; color: white; width: 100%; margin: 0.5rem 0; }
-    .btn-finalize { background: #2196F3; color: white; width: 100%; margin: 0.5rem 0; }
-    .btn-cancel { background: #f44336; color: white; width: 100%; margin: 0.5rem 0; }
+    .btn-add { background: #4CAF50; color: white; }
+    .btn-finalize { background: #2196F3; color: white; }
+    .btn-cancel { background: #f44336; color: white; }
 
-    /* Buscador de productos */
+    /* Buscador */
     .producto-buscador {
       position: relative;
     }
@@ -127,16 +152,53 @@
     .producto-item:hover {
       background: #f0f8f0;
     }
+
+    /* Calculadora */
+    .calculadora {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+    .calc-display {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      text-align: right;
+      font-size: 1.2rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .calc-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.3rem;
+    }
+    .calc-btn {
+      padding: 0.4rem;
+      background: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .calc-btn.operator {
+      background: #2196F3;
+      color: white;
+    }
+    .calc-btn.equals {
+      background: #4CAF50;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
   <div class="pos-container">
     
-    <!-- IZQUIERDA: Carrito (solo lectura) -->
+    <!-- IZQUIERDA: Carrito -->
     <div class="left-column">
       <h2>🛒 Productos Vendidos</h2>
-      
       <table id="tabla-carrito">
         <thead>
           <tr>
@@ -158,14 +220,14 @@
       </table>
     </div>
 
-    <!-- DERECHA: Formulario de entrada -->
+    <!-- DERECHA: Formulario + Calculadora -->
     <div class="right-column">
       <h2>➕ Agregar Producto</h2>
 
       <div class="form-group">
         <label>Producto</label>
         <div class="producto-buscador">
-          <input type="text" id="buscador-producto" class="form-control" placeholder="Escribe para buscar...">
+          <input type="text" id="buscador-producto" class="form-control" placeholder="Buscar...">
           <div class="producto-results" id="resultados-producto" style="display:none;"></div>
         </div>
       </div>
@@ -187,15 +249,42 @@
 
       <div class="form-group">
         <label>Medio de Pago</label>
-        <select id="metodo-pago" class="form-control">
-          <option value="efectivo">Efectivo</option>
-          <option value="transferencia">Transferencia</option>
-        </select>
+        <div class="pago-buttons">
+          <button class="pago-btn" onclick="setMetodoPago('efectivo')">Efectivo</button>
+          <button class="pago-btn" onclick="setMetodoPago('tarjeta')">Tarjetas</button>
+        </div>
+        <input type="hidden" id="metodo-pago" value="efectivo">
       </div>
 
       <button class="btn btn-add" onclick="agregarAlCarrito()">Agregar al Carrito</button>
       <button class="btn btn-finalize" onclick="finalizarVenta()">Finalizar Venta</button>
       <button class="btn btn-cancel" onclick="limpiarFormulario()">Cancelar Venta</button>
+
+      <!-- CALCULADORA -->
+      <div class="calculadora">
+        <input type="text" class="calc-display" id="calc-display" value="0" readonly>
+        <div class="calc-buttons">
+          <button class="calc-btn" onclick="calcAppend('7')">7</button>
+          <button class="calc-btn" onclick="calcAppend('8')">8</button>
+          <button class="calc-btn" onclick="calcAppend('9')">9</button>
+          <button class="calc-btn operator" onclick="calcAppend('/')">/</button>
+          
+          <button class="calc-btn" onclick="calcAppend('4')">4</button>
+          <button class="calc-btn" onclick="calcAppend('5')">5</button>
+          <button class="calc-btn" onclick="calcAppend('6')">6</button>
+          <button class="calc-btn operator" onclick="calcAppend('*')">*</button>
+          
+          <button class="calc-btn" onclick="calcAppend('1')">1</button>
+          <button class="calc-btn" onclick="calcAppend('2')">2</button>
+          <button class="calc-btn" onclick="calcAppend('3')">3</button>
+          <button class="calc-btn operator" onclick="calcAppend('-')">-</button>
+          
+          <button class="calc-btn" onclick="calcAppend('0')">0</button>
+          <button class="calc-btn" onclick="calcAppend('.')">.</button>
+          <button class="calc-btn equals" onclick="calcEval()">=</button>
+          <button class="calc-btn operator" onclick="calcAppend('+')">+</button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -205,13 +294,19 @@
     let productosCache = [];
     let productoSeleccionado = null;
 
-    // Cargar productos
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarProductos();
+      document.getElementById('cantidad').addEventListener('input', calcularSubtotal);
+      document.getElementById('precio').addEventListener('input', calcularSubtotal);
+    });
+
     async function cargarProductos() {
       const res = await fetch('/api/cajera/listar_productos.php');
       productosCache = await res.json();
     }
 
-    // Buscar productos mientras escribes
+    // Buscador
     document.getElementById('buscador-producto').addEventListener('input', function(e) {
       const query = e.target.value.toLowerCase();
       const contenedor = document.getElementById('resultados-producto');
@@ -254,9 +349,11 @@
       document.getElementById('subtotal').value = (cantidad * precio).toFixed(2);
     }
 
-    ['cantidad', 'precio'].forEach(id => {
-      document.getElementById(id).addEventListener('input', calcularSubtotal);
-    });
+    function setMetodoPago(metodo) {
+      document.querySelectorAll('.pago-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('metodo-pago').value = metodo;
+    }
 
     function agregarAlCarrito() {
       if (!productoSeleccionado) {
@@ -273,7 +370,6 @@
         return;
       }
 
-      // Verificar si ya está en el carrito
       const existente = carrito.find(item => item.id_producto === productoSeleccionado.id_producto);
       if (existente) {
         existente.cantidad += cantidad;
@@ -320,6 +416,11 @@
       document.getElementById('subtotal').value = '';
       productoSeleccionado = null;
       document.getElementById('resultados-producto').style.display = 'none';
+      
+      // Reset pago
+      document.querySelectorAll('.pago-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.pago-btn:first-child').classList.add('active');
+      document.getElementById('metodo-pago').value = 'efectivo';
     }
 
     async function finalizarVenta() {
@@ -348,7 +449,7 @@
 
         const result = await res.json();
         if (result.success) {
-          alert('✅ Venta registrada con éxito');
+          alert('✅ Venta registrada');
           carrito = [];
           renderizarCarrito();
           limpiarFormulario();
@@ -360,8 +461,28 @@
       }
     }
 
-    // Iniciar
-    document.addEventListener('DOMContentLoaded', cargarProductos);
+    // === CALCULADORA ===
+    function calcAppend(value) {
+      const display = document.getElementById('calc-display');
+      if (display.value === '0' && value !== '.') {
+        display.value = value;
+      } else {
+        display.value += value;
+      }
+    }
+
+    function calcEval() {
+      const display = document.getElementById('calc-display');
+      try {
+        // Prevenir inyección, solo permitir operaciones básicas
+        const expr = display.value.replace(/[^0-9+\-*/().]/g, '');
+        const result = Function('"use strict";return (' + expr + ')')();
+        display.value = parseFloat(result.toFixed(2)).toString();
+      } catch (e) {
+        display.value = 'Error';
+        setTimeout(() => display.value = '0', 1000);
+      }
+    }
   </script>
 </body>
 </html>
