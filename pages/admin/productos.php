@@ -6,6 +6,17 @@ if ($_SESSION['rol'] !== 'admin') {
     exit;
 }
 
+// Validar sesión completa
+if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+    header('Location: /public/index.php');
+    exit;
+}
+
+// Asignar variables seguras
+$id_negocio = $_SESSION['id_negocio'] ?? 1;
+$nombre = $_SESSION['nombre'] ?? 'Admin';
+?>
+
 $id_negocio = $_SESSION['id_negocio'];
 ?>
 <!DOCTYPE html>

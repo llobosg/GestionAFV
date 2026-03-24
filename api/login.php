@@ -3,14 +3,21 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/config.php';
 
 try {
-    $nombre = trim($_POST['usuario'] ?? '');
-    $password = $_POST['password'] ?? '';
+    // Leer datos (soporta tanto POST normal como JSON)
+    $input = json_decode(file_get_contents('php://input'), true);
+    if ($input) {
+        $nombre = trim($input['usuario'] ?? '');
+        $password = $input['password'] ?? '';
+    } else {
+        $nombre = trim($_POST['usuario'] ?? '');
+        $password = $_POST['password'] ?? '';
+    }
 
-    if (empty($nombre) || empty($password)) {
+    if (empty($ombre) || empty($password)) {
         throw new Exception('Nombre y contraseña son obligatorios');
     }
 
-    // Buscar por nombre (de pila) — asume nombres únicos por negocio
+    // Buscar solo por nombre (asume unicidad global o por diseño)
     $stmt = $pdo->prepare("
         SELECT 
             u.id_usuario, 
@@ -18,13 +25,13 @@ try {
             u.apellido, 
             u.rol, 
             u.password,
-            n.id_negocio,
+            u.id_negocio,
             n.nombre AS nombre_negocio
         FROM usuarios u
         JOIN negocios n ON u.id_negocio = n.id_negocio
-        WHERE u.nombre = ? AND u.id_negocio = ?
+        WHERE u.nombre = ?
     ");
-    $stmt->execute([$nombre, $_SESSION['id_negocio'] ?? 1]); // ← Ajusta según cómo identifiques el negocio
+    $stmt->execute([$nombre]);
     $usuario = $stmt->fetch();
 
     if (!$usuario || !password_verify($password, $usuario['password'])) {
