@@ -559,29 +559,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         document.getElementById('promedio-stock').textContent = '✅ Estable';
       }
 
-      // Barras verticales: Productos por TIPO
-      const tipos = {};
-      productos.forEach(p => {
-        tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
-      });
-
-      const maxCount = Math.max(...Object.values(tipos), 1);
-      let html = '';
-      Object.entries(tipos)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .forEach(([tipo, count]) => {
-          const heightPct = (count / maxCount) * 100;
-          html += `
-            <div class="barra-vertical">
-              <div class="barra-fill-v" style="height: ${Math.max(heightPct, 5)}%;"></div>
-              <div class="barra-label">${tipo}<br>(${count})</div>
-            </div>
-          `;
-        });
-      document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;text-align:center;width:100%;">Sin datos</div>';
-    }
-
     // Formulario
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
       e.preventDefault();
