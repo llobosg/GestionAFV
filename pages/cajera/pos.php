@@ -37,11 +37,11 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       overflow-y: auto;
     }
     .left-column { 
-      width: 80%; 
+      width: 60%; 
       border-right: 1px solid #eee; 
     }
     .right-column { 
-      width: 20%; 
+      width: 40%; 
       display: flex;
       flex-direction: column;
     }
