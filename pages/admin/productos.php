@@ -558,6 +558,8 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         document.getElementById('light-green').classList.add('active');
         document.getElementById('promedio-stock').textContent = '✅ Estable';
       }
+  }
+
 
     // Formulario
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
