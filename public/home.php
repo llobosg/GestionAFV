@@ -68,7 +68,7 @@ $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Mi Negocio';
 </head>
 <body>
   <div class="header">
-    <h2>🥦 Gestión AFV</h2>
+    <h2>🥦 NegocioUP</h2>
     <a href="../api/logout.php" class="logout">Salir</a>
   </div>
 
@@ -91,6 +91,14 @@ $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Mi Negocio';
         <div class="card">
           <h3>👥 Usuarios</h3>
           <p>Gestiona cajeras</p>
+        </div>
+        <div style="margin: 2rem; padding: 1.5rem; background: #e8f5e9; border-radius: 12px; text-align: center;">
+          <h2>⚙️ Panel de Administración</h2>
+          <p>Gestiona tu catálogo de productos</p>
+          <a href="../pages/admin/productos.php" 
+            style="display: inline-block; padding: 0.75rem 1.5rem; background: #4CAF50; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            🥦 Mantenedor de Productos
+          </a>
         </div>
       <?php endif; ?>
 
