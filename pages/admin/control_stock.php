@@ -9,6 +9,14 @@ if ($_SESSION['rol'] !== 'admin') {
 $id_negocio = $_SESSION['id_negocio'] ?? 1;
 $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Negocio';
 $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
+$email = $_SESSION['email'] ?? '';
+
+// En control_stock.php
+const email = "<?= $_SESSION['email'] ?? '' ?>";
+if (!email) {
+    alert("❌ No se encontró el correo del administrador. Contacte al soporte.");
+}
+
 ?>
 <!DOCTYPE html>
 <html>
