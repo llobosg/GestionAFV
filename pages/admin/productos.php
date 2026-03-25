@@ -111,51 +111,51 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   </div>
 
   <div class="main-layout">
-      <!-- LADO IZQUIERDO: Tabla de productos -->
-      <div class="left-panel">
-          <div class="buscador-inteligente">
-            <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
-            <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
-          </div>
-          <div class="filtros">
-            <select id="filtro-tipo">
-              <option value="">Todos los tipos</option>
-              <option value="Abarrotes">Abarrotes</option>
-              <option value="Frutas">Frutas</option>
-              <option value="Verduras">Verduras</option>
-              <option value="Lácteos">Lácteos</option>
-              <option value="Botillería">Botillería</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Propios">Propios</option>
-              <option value="Otros">Otros</option>
-            </select>
-            <input type="text" id="filtro-familia" placeholder="Familia">
-            <input type="text" id="filtro-producto" placeholder="Producto">
-            <input type="number" id="filtro-stock" placeholder="Stock mínimo">
-            <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">🧹 Limpiar</button>
-          </div>
-          <div class="tabla-scroll">
-            <table id="tabla-productos">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Tipo</th>
-                  <th>Familia</th>
-                  <th>Subfamilia</th>
-                  <th>UM</th>
-                  <th>Compra</th>
-                  <th>% Util.</th>
-                  <th>Venta</th>
-                  <th>Stock</th>
-                  <th class="acciones">Acciones</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+      <!-- LADO IZQUIERDO -->
+    <div class="tabla-container">
+      <div class="buscador-inteligente">
+        <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
+        <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
       </div>
+      <div class="filtros">
+        <select id="filtro-tipo">
+          <option value="">Todos los tipos</option>
+          <option value="Abarrotes">Abarrotes</option>
+          <option value="Frutas">Frutas</option>
+          <option value="Verduras">Verduras</option>
+          <option value="Lácteos">Lácteos</option>
+          <option value="Botillería">Botillería</option>
+          <option value="Bebidas">Bebidas</option>
+          <option value="Propios">Propios</option>
+          <option value="Otros">Otros</option>
+        </select>
+        <input type="text" id="filtro-familia" placeholder="Familia">
+        <input type="text" id="filtro-producto" placeholder="Producto">
+        <input type="number" id="filtro-stock" placeholder="Stock mínimo">
+        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">🧹 Limpiar</button>
+      </div>
+      <div class="tabla-scroll">
+        <table id="tabla-productos">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Tipo</th>
+              <th>Familia</th>
+              <th>Subfamilia</th>
+              <th>UM</th>
+              <th>Compra</th>
+              <th>% Util.</th>
+              <th>Venta</th>
+              <th>Stock</th>
+              <th class="acciones">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-      <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
+    <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
     <div class="right-panel">
       <!-- SUPERIOR: Dos columnas -->
       <div class="right-top">
