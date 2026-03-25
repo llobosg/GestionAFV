@@ -83,17 +83,34 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
       border-radius: 4px;
       cursor: pointer;
     }
+    /* === TOAST DESDE ABAJO AL CENTRO === */
     .toast-container {
-      position: fixed; top: 20px; right: 20px; z-index: 1000;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: fit-content;
     }
     .toast {
-      background: #4CAF50; color: white; padding: 1rem; border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 0.75rem;
-      min-width: 280px; opacity: 0; transform: translateX(100%);
-      transition: all 0.3s ease;
+      background: #4CAF50;
+      color: white;
+      padding: 1rem 1.8rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      min-width: 280px;
+      text-align: center;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
     }
-    .toast.show { opacity: 1; transform: translateX(0); }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
     .toast.error { background: #F44336; }
+    .toast.warning { background: #FF9800; }
   </style>
 </head>
 <body>
@@ -127,6 +144,10 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
           <label>Total (opcional)</label>
           <input type="number" step="0.01" id="total-venta" class="form-control" placeholder="Ej: 5000.50">
         </div>
+        <div class="form-group">
+          <label>Producto (opcional)</label>
+          <input type="text" id="nombre-producto" class="form-control" placeholder="Ej: Manzana Fuji">
+        </div>
       </div>
       <button class="btn" onclick="buscarVentas()">Buscar Ventas</button>
     </div>
@@ -142,12 +163,14 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
       const hasta = document.getElementById('fecha-hasta').value;
       const idVenta = document.getElementById('id-venta').value || null;
       const total = document.getElementById('total-venta').value || null;
+      const nombreProducto = document.getElementById('nombre-producto').value.trim() || null;
 
       const params = new URLSearchParams();
       params.append('desde', desde);
       params.append('hasta', hasta);
       if (idVenta) params.append('id_venta', idVenta);
       if (total) params.append('total', total);
+      if (nombreProducto) params.append('producto', nombreProducto);
 
       const res = await fetch(`/api/cajera/buscar_ventas.php?${params}`);
       const ventas = await res.json();
