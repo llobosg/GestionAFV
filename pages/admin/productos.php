@@ -16,244 +16,87 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   <title>🥦 Mantenedor de Productos — NegocioUP</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
-    body { 
-      background: #f9fbe7; 
-      font-family: 'Segoe UI', sans-serif; 
-      margin: 0; 
-      padding: 0;
-    }
-    .header {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .header h1 { margin: 0; font-size: 1.6rem; }
-    .header .app-name { font-weight: bold; }
+  .main-layout {
+    display: flex;
+    height: calc(100vh - 60px - 2rem);
+    margin: 1rem;
+    gap: 1.5rem;
+  }
+  .left-panel {
+    width: 60%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .right-panel {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .right-top {
+    display: flex;
+    gap: 1rem;
+    height: 50%;
+  }
+  .right-bottom {
+    height: 50%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .factura-section, .producto-section {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .form-group { margin-bottom: 0.8rem; }
+  .form-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .form-control {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  .btn {
+    padding: 0.6rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .btn-save { background: #4CAF50; color: white; }
+  .btn-clear { background: #ccc; color: #333; }
 
-    .container {
-      display: flex;
-      height: calc(100vh - 60px - 2rem);
-      margin: 1rem;
-      gap: 1.5rem;
-    }
-
-    /* Lado izquierdo */
-    .tabla-container {
-      width: 70%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .buscador-inteligente {
-      padding: 1rem;
-      background: #f0f8f0;
-      display: flex;
-      gap: 0.5rem;
-    }
-    .buscador-inteligente input {
-      flex: 1;
-      padding: 0.6rem 1rem;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      font-size: 1rem;
-    }
-    .buscador-inteligente button {
-      background: #e0e0e0;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .filtros {
-      padding: 1rem;
-      background: #f5f5f5;
-      border-bottom: 1px solid #eee;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr) auto;
-      gap: 0.75rem;
-      align-items: end;
-    }
-    .filtros input, .filtros select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-    .btn-limpiar-filtros {
-      background: #ff9800;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    .tabla-scroll {
-      flex: 1;
-      overflow-y: auto;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    th { background: #4CAF50; color: white; position: sticky; top: 0; }
-    .acciones { text-align: center; }
-    .acciones button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      margin: 0 0.3rem;
-      opacity: 0.7;
-    }
-    .acciones button:hover { opacity: 1; }
-
-    /* Lado derecho */
-    .right-column {
-      width: 30%;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    .form-container {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .form-container h2 {
-      margin-top: 0;
-      color: #2E7D32;
-      font-size: 1.3rem;
-    }
-    .form-row {
-      display: flex;
-      gap: 0.75rem;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-    .form-group label {
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-      font-size: 0.9rem;
-    }
-    .form-group input, .form-group select {
-      padding: 0.6rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.95rem;
-    }
-    .form-group.readonly input {
-      background: #f9f9f9;
-      color: #666;
-    }
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .btn {
-      flex: 1;
-      padding: 0.6rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-    .btn-save { background: #4CAF50; color: white; }
-    .btn-cancel { background: #ccc; color: #333; }
-
-    /* Gráficos */
-    .graficos-container {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 1.2rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-      overflow: hidden;
-    }
-    .grafico {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .grafico h3 {
-      margin: 0 0 0.8rem 0;
-      color: #2E7D32;
-      font-size: 1.1rem;
-    }
-    /* Barras verticales */
-    .barras-container {
-      display: flex;
-      align-items: flex-end;
-      height: 120px;
-      gap: 0.5rem;
-      padding: 0.5rem;
-    }
-    .barra-vertical {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .barra-fill-v {
-      width: 100%;
-      background: #4CAF50;
-      border-radius: 4px 4px 0 0;
-      transition: height 0.3s;
-    }
-    .barra-label {
-      font-size: 0.7rem;
-      text-align: center;
-      margin-top: 0.3rem;
-    }
-    /* Semáforo */
-    .semaphore {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .light {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      opacity: 0.3;
-    }
-    .light.active {
-      opacity: 1;
-    }
-    .light.green { background: #4CAF50; }
-    .light.yellow { background: #FFC107; }
-    .light.red { background: #F44336; }
-    .promedio-value {
-      font-size: 1.8rem;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 0.5rem;
-    }
-  </style>
+  /* Tabla facturas */
+  .tabla-facturas { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .tabla-facturas th, .tabla-facturas td {
+    padding: 0.4rem;
+    font-size: 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tabla-facturas th { background: #4CAF50; color: white; }
+  .acciones-btn {
+    background: none; border: none; cursor: pointer; font-size: 1rem;
+  }
+</style>
 </head>
 <body>
 
@@ -267,104 +110,16 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     </div>
   </div>
 
-  <div class="container">
-    
-    <!-- LADO IZQUIERDO -->
-    <div class="tabla-container">
-      <div class="buscador-inteligente">
-        <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
-        <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
-      </div>
-      <div class="filtros">
-        <select id="filtro-tipo">
-          <option value="">Todos los tipos</option>
-          <option value="Abarrotes">Abarrotes</option>
-          <option value="Frutas">Frutas</option>
-          <option value="Verduras">Verduras</option>
-          <option value="Lácteos">Lácteos</option>
-          <option value="Botillería">Botillería</option>
-          <option value="Bebidas">Bebidas</option>
-          <option value="Propios">Propios</option>
-          <option value="Otros">Otros</option>
-        </select>
-        <input type="text" id="filtro-familia" placeholder="Familia">
-        <input type="text" id="filtro-producto" placeholder="Producto">
-        <input type="number" id="filtro-stock" placeholder="Stock mínimo">
-        <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">🧹 Limpiar</button>
-      </div>
-      <div class="tabla-scroll">
-        <table id="tabla-productos">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Tipo</th>
-              <th>Familia</th>
-              <th>Subfamilia</th>
-              <th>UM</th>
-              <th>Compra</th>
-              <th>% Util.</th>
-              <th>Venta</th>
-              <th>Stock</th>
-              <th class="acciones">Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- LADO DERECHO -->
-    <!-- ENCABEZADO DE FACTURA -->
-    <div class="form-section" style="background:#f9f9f9; padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
-      <h3 style="margin-top:0; color:#2E7D32;">📄 Datos de la Factura</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>N° Factura (opcional)</label>
-          <input type="text" id="nro-factura" class="form-control" placeholder="Ej: F001-12345">
-        </div>
-        <div class="form-group">
-          <label>Fecha Factura *</label>
-          <input type="date" id="fecha-factura" class="form-control" value="<?= date('Y-m-d') ?>">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Monto Total Factura ($)</label>
-          <input type="number" step="0.01" id="monto-factura" class="form-control" placeholder="Para conciliación">
-        </div>
-        <div class="form-group">
-          <label>Estado</label>
-          <select id="estado-factura" class="form-control">
-            <option value="pendiente">Pendiente</option>
-            <option value="pagada">Pagada</option>
-            <option value="anulada">Anulada</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Fecha Pago (si aplica)</label>
-        <input type="date" id="fecha-pago" class="form-control">
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Proveedor *</label>
-      <input type="text" id="proveedor" class="form-control" placeholder="Ej: Frutas del Sur S.A." required>
-    </div>
-
-    <div class="right-column">
-      <div class="form-container">
-        <h2 id="form-title">Agregar Producto</h2>
-        <form id="producto-form">
-          <input type="hidden" id="id_producto">
-          <input type="hidden" id="codigo">
-          <!-- Campo producto oculto -->
-          <input type="hidden" id="producto-generado">
-
-          <!-- Fila 1: Tipo -->
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select id="tipo" required>
-              <option value="">-- Seleccionar --</option>
+  <div class="main-layout">
+      <!-- LADO IZQUIERDO: Tabla de productos -->
+      <div class="left-panel">
+          <div class="buscador-inteligente">
+            <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
+            <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
+          </div>
+          <div class="filtros">
+            <select id="filtro-tipo">
+              <option value="">Todos los tipos</option>
               <option value="Abarrotes">Abarrotes</option>
               <option value="Frutas">Frutas</option>
               <option value="Verduras">Verduras</option>
@@ -374,105 +129,112 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
               <option value="Propios">Propios</option>
               <option value="Otros">Otros</option>
             </select>
+            <input type="text" id="filtro-familia" placeholder="Familia">
+            <input type="text" id="filtro-producto" placeholder="Producto">
+            <input type="number" id="filtro-stock" placeholder="Stock mínimo">
+            <button class="btn-limpiar-filtros" onclick="limpiarFiltros()">🧹 Limpiar</button>
           </div>
-
-          <!-- Fila 2: Familia + Subfamilia -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Familia *</label>
-              <input type="text" id="familia" required>
-            </div>
-            <div class="form-group">
-              <label>Subfamilia *</label>
-              <input type="text" id="subfamilia" required>
-            </div>
+          <div class="tabla-scroll">
+            <table id="tabla-productos">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Tipo</th>
+                  <th>Familia</th>
+                  <th>Subfamilia</th>
+                  <th>UM</th>
+                  <th>Compra</th>
+                  <th>% Util.</th>
+                  <th>Venta</th>
+                  <th>Stock</th>
+                  <th class="acciones">Acciones</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
-
-          <!-- Fila 3: Unidad Medida + % Utilidad -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Unidad de Medida *</label>
-              <select id="unidad_medida" required>
-                <option value="unidad">Unidad</option>
-                <option value="kg">Kilogramo</option>
-                <option value="litro">Litro</option>
-                <option value="paquete">Paquete</option>
-                <option value="caja">Caja</option>
-                <option value="bandeja">Bandeja</option>
-                <option value="docena">Docena</option>
-                <option value="1/2 docena">1/2 docena</option>
-                <option value="pack">Pack</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>% Utilidad *</label>
-              <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
-            </div>
-          </div>
-
-          <!-- Fila 4: Precio Compra + Precio Venta -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Precio Compra ($)*</label>
-              <input type="number" step="0.01" id="precio_compra" required min="0">
-            </div>
-            <div class="form-group readonly">
-              <label>Precio Venta ($)</label>
-              <input type="text" id="precio_venta-generado" readonly>
-            </div>
-          </div>
-
-          <!-- Fila 5: Stock Actual + Crítico -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>Stock Actual</label>
-              <input type="number" step="0.01" id="stock_actual" value="0">
-            </div>
-            <div class="form-group">
-              <label>Stock Crítico</label>
-              <input type="number" step="0.01" id="stock_critico" value="10">
-            </div>
-          </div>
-
-          <div class="btn-group">
-            <button type="submit" class="btn btn-save">Guardar</button>
-            <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
-          </div>
-        </form>
       </div>
 
-      <!-- TABLA DE FACTURAS -->
-      <h3 style="margin:1.5rem 0 0.8rem 0; color:#2E7D32;">📋 Facturas Recientes</h3>
+      <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
+    <div class="right-panel">
+      <!-- SUPERIOR: Dos columnas -->
+      <div class="right-top">
+        <!-- DATOS DE LA FACTURA -->
+        <div class="factura-section">
+          <h3 style="margin-top:0; color:#2E7D32;">📄 Datos de la Factura</h3>
+          <div class="form-group">
+            <label>N° Factura (opcional)</label>
+            <input type="text" id="nro-factura" class="form-control" placeholder="Ej: F001-12345">
+          </div>
+          <div class="form-group">
+            <label>Proveedor *</label>
+            <input type="text" id="proveedor" class="form-control" placeholder="Ej: Frutas del Sur" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha Factura *</label>
+            <input type="date" id="fecha-factura" class="form-control" value="<?= date('Y-m-d') ?>">
+          </div>
+          <div class="form-group">
+            <label>Monto Total Factura ($)</label>
+            <input type="number" step="0.01" id="monto-factura" class="form-control" placeholder="Para conciliación">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="estado-factura" class="form-control">
+              <option value="pendiente">Pendiente</option>
+              <option value="pagada">Pagada</option>
+              <option value="anulada">Anulada</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fecha Pago</label>
+            <input type="date" id="fecha-pago" class="form-control">
+          </div>
+        </div>
 
-      <!-- Filtros -->
-      <div style="display:flex; gap:0.6rem; margin-bottom:0.8rem; font-size:0.9rem;">
-        <input type="text" id="filtro-nro-factura" placeholder="N° Factura" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
-        <input type="month" id="filtro-mes" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
-        <input type="text" id="filtro-proveedor" placeholder="Proveedor" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
-        <button onclick="filtrarFacturas()" style="padding:0.4rem 0.8rem; background:#4CAF50; color:white; border:none; border-radius:4px;">🔍</button>
+        <!-- AGREGAR PRODUCTO -->
+        <div class="producto-section">
+          <h3 style="margin-top:0; color:#2E7D32;">➕ Agregar Producto</h3>
+          <!-- Campos de producto: familia, subfamilia, etc. -->
+          <!-- (usa tu formulario existente, pero ajusta los campos para ingreso de stock) -->
+          <div class="form-group">
+            <label>Producto</label>
+            <input type="text" id="buscador-producto" class="form-control" placeholder="Buscar o crear...">
+          </div>
+          <div class="form-group">
+            <label>Cantidad *</label>
+            <input type="number" step="0.01" id="cantidad" class="form-control" value="1" min="0.01">
+          </div>
+          <div class="form-group">
+            <label>Precio Compra ($)*</label>
+            <input type="number" step="0.01" id="precio-compra" class="form-control">
+          </div>
+          <div class="form-row" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button class="btn btn-save" style="flex:1;" onclick="guardarItem()">✅ Guardar Ítem</button>
+            <button class="btn btn-clear" style="flex:1;" onclick="limpiarFactura()">🧹 Limpiar Factura</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Tabla -->
-      <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-        <thead>
-          <tr style="background:#4CAF50; color:white;">
-            <th>N° Factura</th>
-            <th>Fecha</th>
-            <th>Monto</th>
-            <th>Estado</th>
-            <th>Proveedor</th>
-            <th>Fecha Pago</th>
-            <th style="text-align:center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-facturas">
-          <!-- Se llenará dinámicamente -->
-          <tr><td colspan="7" style="text-align:center; padding:1rem; color:#999;">Cargando facturas...</td></tr>
-        </tbody>
-      </table>
-
+      <!-- INFERIOR: Facturas recientes -->
+      <div class="right-bottom">
+        <h3 style="margin-top:0; color:#2E7D32; font-size:1.1rem;">📋 Facturas Recientes</h3>
+        <table class="tabla-facturas">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Fecha</th>
+              <th>Prov.</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="lista-facturas">
+            <tr><td colspan="4" style="text-align:center;color:#999;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-
   <script>
     let productosCache = [];
 
