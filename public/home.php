@@ -75,8 +75,11 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
     <div class="module cajera">
       <h2>🛒 Punto de Venta</h2>
       <p>Registra ventas diarias</p>
-      <a href="../pages/cajera/pos.php" class="btn btn-pos">
-        💳 Abrir POS
+      <a href="../pages/cajera/pos.php" class="btn btn-pos">💳 Abrir POS</a>
+      
+      <!-- NUEVO BOTÓN -->
+      <a href="../pages/cajera/buscar_venta.php" class="btn btn-pos" style="background:#FF9800; margin-top:0.8rem;">
+        🔍 Buscar Venta (Devoluciones)
       </a>
     </div>
   <?php endif; ?>

@@ -277,7 +277,7 @@
 
     <!-- IZQUIERDA: Carrito -->
     <div class="left-column">
-      <h2>🛒 Productos Vendidos</h2>
+      <h2>  🛒 Carrito de compra</h2>
       <table id="tabla-carrito">
         <thead>
           <tr>
@@ -307,7 +307,7 @@
 
     <!-- DERECHA: Formulario + Calculadora -->
     <div class="right-column">
-      <h2>➕ Agregar Producto</h2>
+      <h2>➕ Agregar Producto 🥦🍎🥕</h2>
 
       <div class="form-group">
         <label>Producto</label>
