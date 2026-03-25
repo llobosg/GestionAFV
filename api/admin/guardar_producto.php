@@ -57,18 +57,20 @@ if (!empty($data['id_producto'])) {
         $data['stock_critico'] ?? 10
     ]);
 
-    // Guardar ingreso de stock
+    // En el INSERT de ingresos_stock
     $pdo->prepare("
         INSERT INTO ingresos_stock (
             id_producto, id_negocio, cantidad, precio_compra_unitario,
-            nro_factura, fecha_factura, monto_factura, estado_factura, fechapago_factura
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            nro_factura, proveedor, fecha_factura, monto_factura, 
+            estado_factura, fechapago_factura
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ")->execute([
         $id_producto,
         $data['id_negocio'],
         $data['cantidad'],
         $data['precio_compra'],
         $data['nro_factura'] ?: null,
+        $data['proveedor'],
         $data['fecha_factura'],
         $data['monto_factura'] ?: null,
         $data['estado_factura'],

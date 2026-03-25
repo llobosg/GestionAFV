@@ -346,6 +346,11 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         <input type="date" id="fecha-pago" class="form-control">
       </div>
     </div>
+    <div class="form-group">
+      <label>Proveedor *</label>
+      <input type="text" id="proveedor" class="form-control" placeholder="Ej: Frutas del Sur S.A." required>
+    </div>
+
     <div class="right-column">
       <div class="form-container">
         <h2 id="form-title">Agregar Producto</h2>
@@ -436,23 +441,35 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         </form>
       </div>
 
-      <!-- GRÁFICOS -->
-      <div class="graficos-container">
-        <div class="grafico">
-          <h3>📊 Productos por Tipo</h3>
-          <div class="barras-container" id="grafico-tipos"></div>
-        </div>
-        <div class="grafico">
-          <h3>📈 Promedio de Stock</h3>
-          <div class="promedio-value" id="promedio-stock">--</div>
-          <div class="semaphore">
-            <div class="light green" id="light-green"></div>
-            <div class="light yellow" id="light-yellow"></div>
-            <div class="light red" id="light-red"></div>
-          </div>
-        </div>
+      <!-- TABLA DE FACTURAS -->
+      <h3 style="margin:1.5rem 0 0.8rem 0; color:#2E7D32;">📋 Facturas Recientes</h3>
+
+      <!-- Filtros -->
+      <div style="display:flex; gap:0.6rem; margin-bottom:0.8rem; font-size:0.9rem;">
+        <input type="text" id="filtro-nro-factura" placeholder="N° Factura" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
+        <input type="month" id="filtro-mes" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
+        <input type="text" id="filtro-proveedor" placeholder="Proveedor" style="flex:1; padding:0.4rem; border:1px solid #ccc; border-radius:4px;">
+        <button onclick="filtrarFacturas()" style="padding:0.4rem 0.8rem; background:#4CAF50; color:white; border:none; border-radius:4px;">🔍</button>
       </div>
-    </div>
+
+      <!-- Tabla -->
+      <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+          <tr style="background:#4CAF50; color:white;">
+            <th>N° Factura</th>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Estado</th>
+            <th>Proveedor</th>
+            <th>Fecha Pago</th>
+            <th style="text-align:center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-facturas">
+          <!-- Se llenará dinámicamente -->
+          <tr><td colspan="7" style="text-align:center; padding:1rem; color:#999;">Cargando facturas...</td></tr>
+        </tbody>
+      </table>
 
   </div>
 
@@ -659,6 +676,22 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
 
     document.addEventListener('DOMContentLoaded', cargarProductos);
+
+    async function editarFactura(nroFactura, proveedor) {
+      const res = await fetch(`/api/admin/detalle_factura.php?nro=${encodeURIComponent(nroFactura)}&prov=${encodeURIComponent(proveedor)}`);
+      const data = await res.json();
+      
+      // Cargar encabezado
+      document.getElementById('nro-factura').value = data.encabezado.nro_factura || '';
+      document.getElementById('proveedor').value = data.encabezado.proveedor;
+      document.getElementById('fecha-factura').value = data.encabezado.fecha_factura;
+      document.getElementById('monto-factura').value = data.encabezado.monto_factura || '';
+      document.getElementById('estado-factura').value = data.encabezado.estado_factura;
+      document.getElementById('fecha-pago').value = data.encabezado.fechapago_factura || '';
+      
+      // Aquí podrías mostrar los ítems en una sección temporal...
+      alert('Factura cargada. Edita los campos y guarda como nueva entrada.');
+    }
   </script>
 </body>
 </html>
