@@ -1,19 +1,24 @@
 <?php
-require_once __DIR__ . '/../../includes/config.php';
+  require_once __DIR__ . '/../../includes/config.php';
 
-// Validación segura de sesión
-if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
-    header('Location: /public/index.php');
-    exit;
-}
+  // Validación segura de sesión
+  if (!isset($_SESSION['id_usuario']) || empty($_SESSION['rol'])) {
+      header('Location: /public/index.php');
+      exit;
+  }
 
-$rol = $_SESSION['rol'];
-if ($rol !== 'cajera' && $rol !== 'admin') {
-    header('Location: /public/home.php');
-    exit;
-}
+  $rol = $_SESSION['rol'];
+  if ($rol !== 'cajera' && $rol !== 'admin') {
+      header('Location: /public/home.php');
+      exit;
+  }
 
-$id_negocio = $_SESSION['id_negocio'] ?? 1;
+  // Variables seguras
+  $id_negocio = $_SESSION['id_negocio'] ?? 1;
+  $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Negocio';
+  $nombre = $_SESSION['nombre_usuario'] ?? 'Usuario';
+  $apellido = $_SESSION['apellido_usuario'] ?? '';
+  $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
 ?>
 <!DOCTYPE html>
 <html>
@@ -216,11 +221,60 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
     .toast.warning { background: #FF9800; }
     .toast.error { background: #F44336; }
+
+    /* === BARRA SUPERIOR === */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 0.8rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 900;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .top-left .btn-home {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .top-center {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .top-right {
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+    /* Ajustar contenedor principal para no solapar la barra */
+    .pos-container {
+      margin-top: 60px; /* ← espacio para la barra */
+    }
   </style>
 </head>
 <body>
+    <!-- BARRA SUPERIOR -->
+    <div class="top-bar">
+      <div class="top-left">
+        <a href="/public/home.php" class="btn-home">← Home</a>
+      </div>
+      <div class="top-center">
+        <strong><?= htmlspecialchars($nombre_negocio) ?></strong>
+      </div>
+      <div class="top-right">
+        <span><?= htmlspecialchars($nombre_completo) ?></span> • 
+        <span id="fecha-hora"></span>
+      </div>
+    </div>
+    <!-- TOAST Y SCRIPTS -->
+    <div class="toast-container" id="toast-container"></div>
+    <div class="pos-container">
 
-  <div class="pos-container">
     <!-- IZQUIERDA: Carrito -->
     <div class="left-column">
       <h2>🛒 Productos Vendidos</h2>
@@ -563,6 +617,20 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         setTimeout(() => toast.remove(), 300);
       }, 3000);
     }
+    // Actualizar fecha y hora en tiempo real
+    function actualizarFechaHora() {
+      const ahora = new Date();
+      const opciones = { 
+        weekday: 'short', 
+        day: '2-digit', 
+        month: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      document.getElementById('fecha-hora').textContent = ahora.toLocaleString('es-ES', opciones);
+    }
+    setInterval(actualizarFechaHora, 1000);
+    actualizarFechaHora(); // Inicial
   </script>
   <div class="toast-container" id="toast-container"></div>
 </body>
