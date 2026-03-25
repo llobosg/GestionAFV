@@ -190,6 +190,32 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       background: #4CAF50;
       color: white;
     }
+
+    /* === TOAST NOTIFICATIONS === */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .toast {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 0.75rem;
+      min-width: 280px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .toast.warning { background: #FF9800; }
+    .toast.error { background: #F44336; }
   </style>
 </head>
 <body>
@@ -263,8 +289,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
 
       <button class="btn btn-add" onclick="agregarAlCarrito()">Agregar al Carrito</button>
-      <button class="btn btn-finalize" onclick="finalizarVenta()">Finalizar Venta</button>
-      <button class="btn btn-cancel" onclick="limpiarFormulario()">Cancelar Venta</button>
 
       <!-- CALCULADORA -->
       <div class="calc-buttons">
@@ -432,7 +456,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
     async function finalizarVenta() {
       if (carrito.length === 0) {
-        alert('El carrito está vacío');
+        showToast('El carrito está vacío', 'warning');
         return;
       }
 
@@ -456,15 +480,15 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
         const result = await res.json();
         if (result.success) {
-          alert('✅ Venta registrada');
+          showToast('✅ Venta registrada con éxito');
           carrito = [];
           renderizarCarrito();
           limpiarFormulario();
         } else {
-          alert('❌ Error: ' + (result.message || 'No se pudo registrar'));
+          showToast('❌ Error: ' + (result.message || 'No se pudo registrar'), 'error');
         }
       } catch (err) {
-        alert('Error de conexión');
+        showToast('❌ Error de conexión', 'error');
       }
     }
 
@@ -504,7 +528,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
           item.subtotal = item.cantidad * item.precio_unitario;
           renderizarCarrito();
         } else {
-          alert('❌ Stock insuficiente para la nueva cantidad');
+          showToast('❌ Stock insuficiente para la nueva cantidad', 'warning');
         }
       }
     }
@@ -522,6 +546,24 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     function calcClear() {
       document.getElementById('calc-display').value = '0';
     }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type === 'warning' ? 'warning' : type === 'error' ? 'error' : ''}`;
+      toast.textContent = message;
+
+      document.getElementById('toast-container').appendChild(toast);
+
+      // Mostrar
+      setTimeout(() => toast.classList.add('show'), 10);
+
+      // Ocultar y eliminar
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
   </script>
+  <div class="toast-container" id="toast-container"></div>
 </body>
 </html>
