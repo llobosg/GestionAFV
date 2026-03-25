@@ -16,34 +16,14 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   <title>🥦 Mantenedor de Productos — NegocioUP</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
-  body { 
-      background: #f9fbe7; 
-      font-family: 'Segoe UI', sans-serif; 
-      margin: 0; 
-      padding: 0;
-    }
-    .header {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .header h1 { margin: 0; font-size: 1.6rem; }
-    .header .app-name { font-weight: bold; }
-
-    .container {
+    .main-layout {
       display: flex;
       height: calc(100vh - 60px - 2rem);
       margin: 1rem;
       gap: 1.5rem;
     }
-
-    /* Lado izquierdo */
-    .tabla-container {
-      width: 70%;
+    .left-panel {
+      width: 60%;
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -51,96 +31,71 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       flex-direction: column;
       overflow: hidden;
     }
-    .buscador-inteligente {
-      padding: 1rem;
-      background: #f0f8f0;
+    .right-panel {
+      width: 40%;
       display: flex;
-      gap: 0.5rem;
+      flex-direction: column;
+      gap: 1rem;
     }
-    .buscador-inteligente input {
-      flex: 1;
-      padding: 0.6rem 1rem;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      font-size: 1rem;
-    }
-    .buscador-inteligente button {
-      background: #e0e0e0;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .filtros {
-      padding: 1rem;
-      background: #f5f5f5;
-      border-bottom: 1px solid #eee;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr) auto;
-      gap: 0.75rem;
-      align-items: end;
-    }
-    .filtros input, .filtros select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-    .btn-limpiar-filtros {
-      background: #ff9800;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      font-weight: bold;
+    .right-top {
       display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      gap: 1rem;
+      height: 50%;
     }
-    .tabla-scroll {
-      flex: 1;
+    .right-bottom {
+      height: 50%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
       overflow-y: auto;
     }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    th { background: #4CAF50; color: white; position: sticky; top: 0; }
-    .acciones { text-align: center; }
-    .acciones button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      margin: 0 0.3rem;
-      opacity: 0.7;
+    .factura-section, .producto-section {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-    .acciones button:hover { opacity: 1; }
-  .btn {
-    padding: 0.6rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.95rem;
-  }
-  .btn-save { background: #4CAF50; color: white; }
-  .btn-clear { background: #ccc; color: #333; }
+    .form-group { margin-bottom: 0.8rem; }
+    .form-group label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .btn {
+      padding: 0.6rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .btn-save { background: #4CAF50; color: white; }
+    .btn-clear { background: #ccc; color: #333; }
 
-  /* Tabla facturas */
-  .tabla-facturas { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-  .tabla-facturas th, .tabla-facturas td {
-    padding: 0.4rem;
-    font-size: 0.85rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-  .tabla-facturas th { background: #4CAF50; color: white; }
-  .acciones-btn {
-    background: none; border: none; cursor: pointer; font-size: 1rem;
-  }
+    /* Tabla facturas */
+    .tabla-facturas { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    .tabla-facturas th, .tabla-facturas td {
+      padding: 0.4rem;
+      font-size: 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .tabla-facturas th { background: #4CAF50; color: white; }
+    .acciones-btn {
+      background: none; border: none; cursor: pointer; font-size: 1rem;
+    }
 </style>
 </head>
 <body>
@@ -157,7 +112,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
   <div class="main-layout">
       <!-- LADO IZQUIERDO -->
-    <div class="tabla-container">
+    <div class="left-panel">
       <div class="buscador-inteligente">
         <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
         <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
@@ -200,7 +155,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
     </div>
 
-    <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
+      <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
     <div class="right-panel">
       <!-- SUPERIOR: Dos columnas -->
       <div class="right-top">
