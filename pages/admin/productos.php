@@ -16,12 +16,29 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   <title>🥦 Mantenedor de Productos — NegocioUP</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
+     body { 
+      background: #f9fbe7; 
+      font-family: 'Segoe UI', sans-serif; 
+      margin: 0; 
+      padding: 0;
+    }
     .main-layout {
       display: flex;
       height: calc(100vh - 60px - 2rem);
       margin: 1rem;
       gap: 1.5rem;
     }
+     .header {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .header h1 { margin: 0; font-size: 1.6rem; }
+    .header .app-name { font-weight: bold; }
     .left-panel {
       width: 60%;
       background: white;
