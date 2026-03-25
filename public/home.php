@@ -70,8 +70,6 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
       <a href="../pages/admin/registrar_factura.php" class="btn btn-admin" style="background:#2196F3; margin-top:0.5rem;">🧾 Registrar Factura</a>
     </div>
   <?php endif; ?>
-    </div>
-  <?php endif; ?>
 
   <?php if ($rol === 'cajera' || $rol === 'admin'): ?>
     <div class="module cajera">
