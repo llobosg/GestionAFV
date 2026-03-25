@@ -16,19 +16,13 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   <title>🥦 Mantenedor de Productos — NegocioUP</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
-     body { 
+    body { 
       background: #f9fbe7; 
       font-family: 'Segoe UI', sans-serif; 
       margin: 0; 
       padding: 0;
     }
-    .main-layout {
-      display: flex;
-      height: calc(100vh - 60px - 2rem);
-      margin: 1rem;
-      gap: 1.5rem;
-    }
-     .header {
+    .header {
       background: linear-gradient(135deg, #4CAF50, #2E7D32);
       color: white;
       padding: 1rem 2rem;
@@ -39,15 +33,14 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
     .header h1 { margin: 0; font-size: 1.6rem; }
     .header .app-name { font-weight: bold; }
-    .left-panel {
-      width: 60%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+    .container {
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      height: calc(100vh - 60px - 2rem);
+      margin: 1rem;
+      gap: 1.5rem;
     }
+
     /* Lado izquierdo */
     .tabla-container {
       width: 70%;
@@ -125,49 +118,59 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       opacity: 0.7;
     }
     .acciones button:hover { opacity: 1; }
-    .right-panel {
-      width: 40%;
+
+    /* Lado derecho */
+    .right-column {
+      width: 30%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
-    .right-top {
+    .form-container h2 {
+      margin-top: 0;
+      color: #2E7D32;
+      font-size: 1.3rem;
+    }
+    .form-row {
       display: flex;
-      gap: 1rem;
-      height: 50%;
+      gap: 0.75rem;
     }
-    .right-bottom {
-      height: 50%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 1rem;
-      overflow-y: auto;
-    }
-    .factura-section, .producto-section {
+    .form-group {
+      display: flex;
+      flex-direction: column;
       flex: 1;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
     }
-    .form-group { margin-bottom: 0.8rem; }
     .form-group label {
       font-weight: 600;
-      font-size: 0.9rem;
       margin-bottom: 0.3rem;
+      font-size: 0.9rem;
     }
-    .form-control {
-      width: 100%;
+    .form-group input, .form-group select {
       padding: 0.6rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 0.95rem;
     }
+    .form-group.readonly input {
+      background: #f9f9f9;
+      color: #666;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
     .btn {
+      flex: 1;
       padding: 0.6rem;
       border: none;
       border-radius: 6px;
@@ -176,21 +179,81 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       font-size: 0.95rem;
     }
     .btn-save { background: #4CAF50; color: white; }
-    .btn-clear { background: #ccc; color: #333; }
+    .btn-cancel { background: #ccc; color: #333; }
 
-    /* Tabla facturas */
-    .tabla-facturas { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-    .tabla-facturas th, .tabla-facturas td {
-      padding: 0.4rem;
-      font-size: 0.85rem;
-      text-align: left;
-      border-bottom: 1px solid #eee;
+    /* Gráficos */
+    .graficos-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1.2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      overflow: hidden;
     }
-    .tabla-facturas th { background: #4CAF50; color: white; }
-    .acciones-btn {
-      background: none; border: none; cursor: pointer; font-size: 1rem;
+    .grafico {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
-</style>
+    .grafico h3 {
+      margin: 0 0 0.8rem 0;
+      color: #2E7D32;
+      font-size: 1.1rem;
+    }
+    /* Barras verticales */
+    .barras-container {
+      display: flex;
+      align-items: flex-end;
+      height: 120px;
+      gap: 0.5rem;
+      padding: 0.5rem;
+    }
+    .barra-vertical {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .barra-fill-v {
+      width: 100%;
+      background: #4CAF50;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s;
+    }
+    .barra-label {
+      font-size: 0.7rem;
+      text-align: center;
+      margin-top: 0.3rem;
+    }
+    /* Semáforo */
+    .semaphore {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .light {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      opacity: 0.3;
+    }
+    .light.active {
+      opacity: 1;
+    }
+    .light.green { background: #4CAF50; }
+    .light.yellow { background: #FFC107; }
+    .light.red { background: #F44336; }
+    .promedio-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -204,7 +267,8 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     </div>
   </div>
 
-  <div class="main-layout">
+  <div class="container">
+    
     <!-- LADO IZQUIERDO -->
     <div class="tabla-container">
       <div class="buscador-inteligente">
@@ -249,86 +313,117 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
     </div>
 
-      <!-- LADO DERECHO: Factura + Producto + Facturas recientes -->
-    <div class="right-panel">
-      <!-- SUPERIOR: Dos columnas -->
-      <div class="right-top">
-        <!-- DATOS DE LA FACTURA -->
-        <div class="factura-section">
-          <h3 style="margin-top:0; color:#2E7D32;">📄 Datos de la Factura</h3>
+    <!-- LADO DERECHO -->
+    <div class="right-column">
+      <div class="form-container">
+        <h2 id="form-title">Agregar Producto</h2>
+        <form id="producto-form">
+          <input type="hidden" id="id_producto">
+          <input type="hidden" id="codigo">
+          <!-- Campo producto oculto -->
+          <input type="hidden" id="producto-generado">
+
+          <!-- Fila 1: Tipo -->
           <div class="form-group">
-            <label>N° Factura (opcional)</label>
-            <input type="text" id="nro-factura" class="form-control" placeholder="Ej: F001-12345">
-          </div>
-          <div class="form-group">
-            <label>Proveedor *</label>
-            <input type="text" id="proveedor" class="form-control" placeholder="Ej: Frutas del Sur" required>
-          </div>
-          <div class="form-group">
-            <label>Fecha Factura *</label>
-            <input type="date" id="fecha-factura" class="form-control" value="<?= date('Y-m-d') ?>">
-          </div>
-          <div class="form-group">
-            <label>Monto Total Factura ($)</label>
-            <input type="number" step="0.01" id="monto-factura" class="form-control" placeholder="Para conciliación">
-          </div>
-          <div class="form-group">
-            <label>Estado</label>
-            <select id="estado-factura" class="form-control">
-              <option value="pendiente">Pendiente</option>
-              <option value="pagada">Pagada</option>
-              <option value="anulada">Anulada</option>
+            <label>Tipo *</label>
+            <select id="tipo" required>
+              <option value="">-- Seleccionar --</option>
+              <option value="Abarrotes">Abarrotes</option>
+              <option value="Frutas">Frutas</option>
+              <option value="Verduras">Verduras</option>
+              <option value="Lácteos">Lácteos</option>
+              <option value="Botillería">Botillería</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Propios">Propios</option>
+              <option value="Otros">Otros</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Fecha Pago</label>
-            <input type="date" id="fecha-pago" class="form-control">
-          </div>
-        </div>
 
-        <!-- AGREGAR PRODUCTO -->
-        <div class="producto-section">
-          <h3 style="margin-top:0; color:#2E7D32;">➕ Agregar Producto</h3>
-          <!-- Campos de producto: familia, subfamilia, etc. -->
-          <!-- (usa tu formulario existente, pero ajusta los campos para ingreso de stock) -->
-          <div class="form-group">
-            <label>Producto</label>
-            <input type="text" id="buscador-producto" class="form-control" placeholder="Buscar o crear...">
+          <!-- Fila 2: Familia + Subfamilia -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Familia *</label>
+              <input type="text" id="familia" required>
+            </div>
+            <div class="form-group">
+              <label>Subfamilia *</label>
+              <input type="text" id="subfamilia" required>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Cantidad *</label>
-            <input type="number" step="0.01" id="cantidad" class="form-control" value="1" min="0.01">
+
+          <!-- Fila 3: Unidad Medida + % Utilidad -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unidad de Medida *</label>
+              <select id="unidad_medida" required>
+                <option value="unidad">Unidad</option>
+                <option value="kg">Kilogramo</option>
+                <option value="litro">Litro</option>
+                <option value="paquete">Paquete</option>
+                <option value="caja">Caja</option>
+                <option value="bandeja">Bandeja</option>
+                <option value="docena">Docena</option>
+                <option value="1/2 docena">1/2 docena</option>
+                <option value="pack">Pack</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>% Utilidad *</label>
+              <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
+            </div>
           </div>
-          <div class="form-group">
-            <label>Precio Compra ($)*</label>
-            <input type="number" step="0.01" id="precio-compra" class="form-control">
+
+          <!-- Fila 4: Precio Compra + Precio Venta -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Precio Compra ($)*</label>
+              <input type="number" step="0.01" id="precio_compra" required min="0">
+            </div>
+            <div class="form-group readonly">
+              <label>Precio Venta ($)</label>
+              <input type="text" id="precio_venta-generado" readonly>
+            </div>
           </div>
-          <div class="form-row" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-            <button class="btn btn-save" style="flex:1;" onclick="guardarItem()">✅ Guardar Ítem</button>
-            <button class="btn btn-clear" style="flex:1;" onclick="limpiarFactura()">🧹 Limpiar Factura</button>
+
+          <!-- Fila 5: Stock Actual + Crítico -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Stock Actual</label>
+              <input type="number" step="0.01" id="stock_actual" value="0">
+            </div>
+            <div class="form-group">
+              <label>Stock Crítico</label>
+              <input type="number" step="0.01" id="stock_critico" value="10">
+            </div>
           </div>
-        </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn btn-save">Guardar</button>
+            <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
+          </div>
+        </form>
       </div>
 
-      <!-- INFERIOR: Facturas recientes -->
-      <div class="right-bottom">
-        <h3 style="margin-top:0; color:#2E7D32; font-size:1.1rem;">📋 Facturas Recientes</h3>
-        <table class="tabla-facturas">
-          <thead>
-            <tr>
-              <th>N°</th>
-              <th>Fecha</th>
-              <th>Prov.</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody id="lista-facturas">
-            <tr><td colspan="4" style="text-align:center;color:#999;">Cargando...</td></tr>
-          </tbody>
-        </table>
+      <!-- GRÁFICOS -->
+      <div class="graficos-container">
+        <div class="grafico">
+          <h3>📊 Productos por Tipo</h3>
+          <div class="barras-container" id="grafico-tipos"></div>
+        </div>
+        <div class="grafico">
+          <h3>📈 Promedio de Stock</h3>
+          <div class="promedio-value" id="promedio-stock">--</div>
+          <div class="semaphore">
+            <div class="light green" id="light-green"></div>
+            <div class="light yellow" id="light-yellow"></div>
+            <div class="light red" id="light-red"></div>
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
+
   <script>
     let productosCache = [];
 
@@ -532,22 +627,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
 
     document.addEventListener('DOMContentLoaded', cargarProductos);
-
-    async function editarFactura(nroFactura, proveedor) {
-      const res = await fetch(`/api/admin/detalle_factura.php?nro=${encodeURIComponent(nroFactura)}&prov=${encodeURIComponent(proveedor)}`);
-      const data = await res.json();
-      
-      // Cargar encabezado
-      document.getElementById('nro-factura').value = data.encabezado.nro_factura || '';
-      document.getElementById('proveedor').value = data.encabezado.proveedor;
-      document.getElementById('fecha-factura').value = data.encabezado.fecha_factura;
-      document.getElementById('monto-factura').value = data.encabezado.monto_factura || '';
-      document.getElementById('estado-factura').value = data.encabezado.estado_factura;
-      document.getElementById('fecha-pago').value = data.encabezado.fechapago_factura || '';
-      
-      // Aquí podrías mostrar los ítems en una sección temporal...
-      alert('Factura cargada. Edita los campos y guarda como nueva entrada.');
-    }
   </script>
 </body>
 </html>
