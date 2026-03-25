@@ -12,8 +12,8 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
 $email = $_SESSION['email'] ?? '';
 
 // En control_stock.php
-const email = "<?= $_SESSION['email'] ?? '' ?>";
-if (!email) {
+const $email = "<?= $_SESSION['email'] ?? '' ?>";
+if (!$email) {
     alert("❌ No se encontró el correo del administrador. Contacte al soporte.");
 }
 
