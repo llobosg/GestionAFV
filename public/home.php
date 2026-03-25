@@ -64,9 +64,12 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
   <?php if ($rol === 'admin'): ?>
     <div class="module admin">
       <h2>⚙️ Panel de Administración</h2>
-      <p>Gestiona tu catálogo de productos</p>
-      <a href="../pages/admin/productos.php" class="btn btn-admin">🥦🍎🥕 Mantenedor de Productos</a>
-      <a href="../pages/admin/registrar_merma.php" class="btn btn-admin" style="background:#F44336; margin-top:0.8rem;">📉 Registrar Merma</a>
+      <a href="../pages/admin/control_stock.php" class="btn btn-admin" style="background:#FF9800; margin-top:0.5rem;">📦 Control de Stock</a>
+      <a href="../pages/admin/productos.php" class="btn btn-admin">🥦 Mantenedor de Productos</a>
+      <a href="../pages/admin/registrar_merma.php" class="btn btn-admin" style="background:#F44336; margin-top:0.5rem;">📉 Registrar Merma</a>
+      <a href="../pages/admin/registrar_factura.php" class="btn btn-admin" style="background:#2196F3; margin-top:0.5rem;">🧾 Registrar Factura</a>
+    </div>
+  <?php endif; ?>
     </div>
   <?php endif; ?>
 
