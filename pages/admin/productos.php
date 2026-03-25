@@ -31,6 +31,83 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       flex-direction: column;
       overflow: hidden;
     }
+    /* Lado izquierdo */
+    .tabla-container {
+      width: 70%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .buscador-inteligente {
+      padding: 1rem;
+      background: #f0f8f0;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .buscador-inteligente input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 1rem;
+    }
+    .buscador-inteligente button {
+      background: #e0e0e0;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .filtros {
+      padding: 1rem;
+      background: #f5f5f5;
+      border-bottom: 1px solid #eee;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+    .filtros input, .filtros select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .btn-limpiar-filtros {
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .tabla-scroll {
+      flex: 1;
+      overflow-y: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #4CAF50; color: white; position: sticky; top: 0; }
+    .acciones { text-align: center; }
+    .acciones button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      margin: 0 0.3rem;
+      opacity: 0.7;
+    }
+    .acciones button:hover { opacity: 1; }
     .right-panel {
       width: 40%;
       display: flex;
@@ -111,8 +188,8 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
   </div>
 
   <div class="main-layout">
-      <!-- LADO IZQUIERDO -->
-    <div class="left-panel">
+    <!-- LADO IZQUIERDO -->
+    <div class="tabla-container">
       <div class="buscador-inteligente">
         <input type="text" id="buscador-global" placeholder="Buscar producto (ej: tomate, manzana...)">
         <button onclick="document.getElementById('buscador-global').value=''; aplicarFiltros()">×</button>
