@@ -195,7 +195,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 <body>
 
   <div class="pos-container">
-    
     <!-- IZQUIERDA: Carrito -->
     <div class="left-column">
       <h2>🛒 Productos Vendidos</h2>
@@ -206,7 +205,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
             <th>Cant.</th>
             <th>Precio</th>
             <th>Subtotal</th>
-            <th class="acciones">✕</th>
+            <th class="acciones">Acciones</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -218,6 +217,12 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
           </tr>
         </tfoot>
       </table>
+
+      <!-- BOTONES MOVIDOS AQUÍ -->
+      <div style="margin-top: 1.5rem; display:flex; gap:0.8rem;">
+        <button class="btn btn-finalize" onclick="finalizarVenta()">✅ Finalizar Venta</button>
+        <button class="btn btn-cancel" onclick="cancelarVentaCompleta()">❌ Cancelar Venta</button>
+      </div>
     </div>
 
     <!-- DERECHA: Formulario + Calculadora -->
@@ -249,9 +254,10 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
       <div class="form-group">
         <label>Medio de Pago</label>
+        <!-- Botones de pago con iconos -->
         <div class="pago-buttons">
-          <button class="pago-btn" onclick="setMetodoPago('efectivo')">Efectivo</button>
-          <button class="pago-btn" onclick="setMetodoPago('tarjeta')">Tarjetas</button>
+          <button class="pago-btn" onclick="setMetodoPago('efectivo')">💵 Efectivo</button>
+          <button class="pago-btn" onclick="setMetodoPago('tarjeta')">💳 Tarjetas</button>
         </div>
         <input type="hidden" id="metodo-pago" value="efectivo">
       </div>
@@ -261,29 +267,27 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       <button class="btn btn-cancel" onclick="limpiarFormulario()">Cancelar Venta</button>
 
       <!-- CALCULADORA -->
-      <div class="calculadora">
-        <input type="text" class="calc-display" id="calc-display" value="0" readonly>
-        <div class="calc-buttons">
-          <button class="calc-btn" onclick="calcAppend('7')">7</button>
-          <button class="calc-btn" onclick="calcAppend('8')">8</button>
-          <button class="calc-btn" onclick="calcAppend('9')">9</button>
-          <button class="calc-btn operator" onclick="calcAppend('/')">/</button>
-          
-          <button class="calc-btn" onclick="calcAppend('4')">4</button>
-          <button class="calc-btn" onclick="calcAppend('5')">5</button>
-          <button class="calc-btn" onclick="calcAppend('6')">6</button>
-          <button class="calc-btn operator" onclick="calcAppend('*')">*</button>
-          
-          <button class="calc-btn" onclick="calcAppend('1')">1</button>
-          <button class="calc-btn" onclick="calcAppend('2')">2</button>
-          <button class="calc-btn" onclick="calcAppend('3')">3</button>
-          <button class="calc-btn operator" onclick="calcAppend('-')">-</button>
-          
-          <button class="calc-btn" onclick="calcAppend('0')">0</button>
-          <button class="calc-btn" onclick="calcAppend('.')">.</button>
-          <button class="calc-btn equals" onclick="calcEval()">=</button>
-          <button class="calc-btn operator" onclick="calcAppend('+')">+</button>
-        </div>
+      <div class="calc-buttons">
+        <button class="calc-btn operator" onclick="calcClear()">C</button> <!-- ← Nuevo botón -->
+        <button class="calc-btn" onclick="calcAppend('7')">7</button>
+        <button class="calc-btn" onclick="calcAppend('8')">8</button>
+        <button class="calc-btn" onclick="calcAppend('9')">9</button>
+        <button class="calc-btn operator" onclick="calcAppend('/')">/</button>
+        
+        <button class="calc-btn" onclick="calcAppend('4')">4</button>
+        <button class="calc-btn" onclick="calcAppend('5')">5</button>
+        <button class="calc-btn" onclick="calcAppend('6')">6</button>
+        <button class="calc-btn operator" onclick="calcAppend('*')">*</button>
+        
+        <button class="calc-btn" onclick="calcAppend('1')">1</button>
+        <button class="calc-btn" onclick="calcAppend('2')">2</button>
+        <button class="calc-btn" onclick="calcAppend('3')">3</button>
+        <button class="calc-btn operator" onclick="calcAppend('-')">-</button>
+        
+        <button class="calc-btn" onclick="calcAppend('0')">0</button>
+        <button class="calc-btn" onclick="calcAppend('.')">.</button>
+        <button class="calc-btn equals" onclick="calcEval()">=</button>
+        <button class="calc-btn operator" onclick="calcAppend('+')">+</button>
       </div>
     </div>
 
@@ -401,7 +405,10 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
           <td>${item.cantidad.toFixed(2)}</td>
           <td>$${item.precio_unitario.toFixed(2)}</td>
           <td>$${item.subtotal.toFixed(2)}</td>
-          <td class="acciones"><button onclick="eliminarDelCarrito(${i})">×</button></td>
+          <td class="acciones">
+            <button onclick="editarProducto(${i})" title="Editar">✏️</button>
+            <button onclick="eliminarDelCarrito(${i})" title="Eliminar">🗑️</button>
+          </td>
         </tr>
       `).join('');
 
@@ -482,6 +489,38 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         display.value = 'Error';
         setTimeout(() => display.value = '0', 1000);
       }
+    }
+
+    // === EDITAR PRODUCTO EN CARRITO ===
+    function editarProducto(index) {
+      const item = carrito[index];
+      const nuevaCantidad = parseFloat(prompt(`Editar cantidad para "${item.producto}"\nActual: ${item.cantidad}`, item.cantidad));
+      
+      if (nuevaCantidad && !isNaN(nuevaCantidad) && nuevaCantidad > 0) {
+        // Verificar stock
+        const prod = productosCache.find(p => p.id_producto === item.id_producto);
+        if (prod && nuevaCantidad <= parseFloat(prod.stock_actual)) {
+          item.cantidad = nuevaCantidad;
+          item.subtotal = item.cantidad * item.precio_unitario;
+          renderizarCarrito();
+        } else {
+          alert('❌ Stock insuficiente para la nueva cantidad');
+        }
+      }
+    }
+
+    // === CANCELAR VENTA COMPLETA ===
+    function cancelarVentaCompleta() {
+      if (confirm('¿Cancelar toda la venta?')) {
+        carrito = [];
+        renderizarCarrito();
+        limpiarFormulario();
+      }
+    }
+
+    // === CALCULADORA: LIMPIAR ===
+    function calcClear() {
+      document.getElementById('calc-display').value = '0';
     }
   </script>
 </body>
