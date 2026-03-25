@@ -25,7 +25,7 @@ $html .= "</table>";
 // Enviar correo (reutiliza BrevoMailer)
 require_once __DIR__ . '/../../includes/BrevoMailer.php';
 $mailer = new BrevoMailer();
-$mailer->setTo($_SESSION['email'] ?? 'admin@negocioup.com', $_SESSION['nombre_usuario'])
+$mailer->setTo($_SESSION['email'] ?? 'luis.lobos.g@gmail.com', $_SESSION['nombre_usuario'])
        ->setSubject('📦 Pedido de Reposición – ' . $_SESSION['nombre_negocio'])
        ->setHtmlBody($html)
        ->send();
