@@ -314,6 +314,38 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     </div>
 
     <!-- LADO DERECHO -->
+    <!-- ENCABEZADO DE FACTURA -->
+    <div class="form-section" style="background:#f9f9f9; padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+      <h3 style="margin-top:0; color:#2E7D32;">📄 Datos de la Factura</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>N° Factura (opcional)</label>
+          <input type="text" id="nro-factura" class="form-control" placeholder="Ej: F001-12345">
+        </div>
+        <div class="form-group">
+          <label>Fecha Factura *</label>
+          <input type="date" id="fecha-factura" class="form-control" value="<?= date('Y-m-d') ?>">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monto Total Factura ($)</label>
+          <input type="number" step="0.01" id="monto-factura" class="form-control" placeholder="Para conciliación">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="estado-factura" class="form-control">
+            <option value="pendiente">Pendiente</option>
+            <option value="pagada">Pagada</option>
+            <option value="anulada">Anulada</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Fecha Pago (si aplica)</label>
+        <input type="date" id="fecha-pago" class="form-control">
+      </div>
+    </div>
     <div class="right-column">
       <div class="form-container">
         <h2 id="form-title">Agregar Producto</h2>

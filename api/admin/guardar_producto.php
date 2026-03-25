@@ -56,6 +56,31 @@ if (!empty($data['id_producto'])) {
         $data['stock_actual'] ?? 0,
         $data['stock_critico'] ?? 10
     ]);
+
+    // Guardar ingreso de stock
+    $pdo->prepare("
+        INSERT INTO ingresos_stock (
+            id_producto, id_negocio, cantidad, precio_compra_unitario,
+            nro_factura, fecha_factura, monto_factura, estado_factura, fechapago_factura
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ")->execute([
+        $id_producto,
+        $data['id_negocio'],
+        $data['cantidad'],
+        $data['precio_compra'],
+        $data['nro_factura'] ?: null,
+        $data['fecha_factura'],
+        $data['monto_factura'] ?: null,
+        $data['estado_factura'],
+        $data['fecha_pago'] ?: null
+    ]);
+
+    // Actualizar stock_actual del producto
+    $pdo->prepare("
+        UPDATE productos 
+        SET stock_actual = stock_actual + ?
+        WHERE id_producto = ?
+    ")->execute([$data['cantidad'], $id_producto]);
 }
 
 echo json_encode(['success' => true]);
