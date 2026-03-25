@@ -65,9 +65,8 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
     <div class="module admin">
       <h2>⚙️ Panel de Administración</h2>
       <p>Gestiona tu catálogo de productos</p>
-      <a href="../pages/admin/productos.php" class="btn btn-admin">
-        🥦 Mantenedor de Productos
-      </a>
+      <a href="../pages/admin/productos.php" class="btn btn-admin">🥦🍎🥕 Mantenedor de Productos</a>
+      <a href="../pages/admin/registrar_merma.php" class="btn btn-admin" style="background:#F44336; margin-top:0.8rem;">📉 Registrar Merma</a>
     </div>
   <?php endif; ?>
 
