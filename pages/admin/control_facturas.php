@@ -321,27 +321,38 @@ function renderTabla(){
 
 /* DRAWER */
 async function abrirDrawer(f){
+
   try {
-      facturaActual = f;
-      editMode = false;
-      renderDetalle();
-      document.getElementById('drawer').classList.add('open');
 
-      const resProd = await fetch(`/api/admin/factura_productos.php?id_factura=${factura.id_factura}`);
-      const productos = await resProd.json();
+    facturaActual = f;
+    editMode = false;
 
-      const tbody = document.querySelector('#tabla-productos tbody');
+    renderDetalle();
 
-      tbody.innerHTML = productos.map(p => `
-        <tr>
-          <td><input class="prod-nombre" value="${p.nombre}"></td>
-          <td><input class="prod-cantidad" type="number" value="${p.cantidad}"></td>
-          <td><input class="prod-precio" type="number" value="${p.precio}"></td>
-        </tr>
-      `).join('');
+    document.getElementById('drawer').classList.add('open');
+    if (!facturaActual?.id_factura) {
+      console.error("Factura inválida", facturaActual);
+      return;
+    }
+
+    const resProd = await fetch(`/api/admin/factura_productos.php?id_factura=${facturaActual.id_factura}`);
+    const productos = await resProd.json();
+
+    const tbody = document.querySelector('#tabla-productos tbody');
+
+    tbody.innerHTML = productos.map(p => `
+      <tr>
+        <td><input class="prod-nombre" value="${p.nombre}"></td>
+        <td><input class="prod-cantidad" type="number" value="${p.cantidad}"></td>
+        <td><input class="prod-precio" type="number" value="${p.precio}"></td>
+      </tr>
+    `).join('');
+
   } catch (err) {
+
     console.error("Error cargando productos:", err);
     alert("Error cargando productos");
+
   }
 }
 
