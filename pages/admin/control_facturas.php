@@ -14,6 +14,7 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
 <html>
 <head>
   <meta charset="UTF-8">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <title>🧾 Control de Facturas — NegocioUP</title>
   <style>
     body { background: #f9fbe7; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
@@ -179,7 +180,7 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
 
         <div class="grafico">
           <h3>📊 Resumen por Estado</h3>
-          <div class="barras-container" id="grafico-estado">
+          <canvas id="chartEstado"></canvas>
             <!-- Se llenará -->
           </div>
         </div>
@@ -188,7 +189,7 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
       <!-- SUPERIOR DERECHA -->
       <div class="superior-der">
         <h3>📅 Facturas por Mes (Valor e IVA)</h3>
-        <div class="barras-mensuales" id="grafico-mensual">
+        <canvas id="chartMensual"></canvas>
           <!-- 12 meses x 2 barras -->
         </div>
       </div>
@@ -225,6 +226,9 @@ function formatearMoneda(v) {
   return '$' + Number(v || 0).toLocaleString('es-CL');
 }
 
+let chartEstado = null;
+let chartMensual = null;
+
 async function cargarDatos() {
   try {
 
@@ -246,70 +250,128 @@ async function cargarDatos() {
 
     console.log("DATA:", data);
 
-    // === VALIDACIÓN ===
-    if (!data || !data.mensual) {
-      console.error("Respuesta inválida");
-      return;
-    }
+    /* =========================
+       🔹 GRAFICO ESTADO
+    ========================= */
 
-    // === GRAFICO ESTADO ===
-    const valores = [
-      data.pendiente?.monto || 0,
-      data.pagada?.monto || 0,
-      data.anulada?.monto || 0,
-      data.total_qty || 0,
-      data.total_monto || 0,
-      data.total_iva || 0
-    ];
+    const ctxEstado = document.getElementById('chartEstado').getContext('2d');
 
-    const maxEstado = Math.max(...valores, 1);
+    if (chartEstado) chartEstado.destroy();
 
-    document.getElementById('grafico-estado').innerHTML = valores.map((v, i) => {
-      const clases = ['pendiente','pagada','anulada','qty','monto','iva'];
-      const labels = ['Pendiente','Pagada','Anulada','Cant.','Total','IVA'];
-
-      return `
-        <div class="barra-item">
-          <div class="barra-fill ${clases[i]}" style="height:${calcularAltura(v, maxEstado)};"></div>
-          <div class="barra-label">
-            ${i === 3 ? v : formatearMoneda(v)}<br>${labels[i]}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // === GRAFICO MENSUAL ===
-    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-
-    const maxMensual = Math.max(
-      ...data.mensual.flatMap(m => [m.valor || 0, m.iva || 0]),
-      1
-    );
-
-    let htmlMensual = '';
-
-    data.mensual.forEach((m, i) => {
-      htmlMensual += `
-        <div class="mes-item">
-          <div class="mes-barra" style="height:${calcularAltura(m.valor || 0, maxMensual)}; background:#4CAF50;"></div>
-          <div class="mes-barra" style="height:${calcularAltura(m.iva || 0, maxMensual)}; background:#FF5722; margin-top:2px;"></div>
-          <div class="mes-label">${meses[i]}</div>
-        </div>
-      `;
+    chartEstado = new Chart(ctxEstado, {
+      type: 'bar',
+      data: {
+        labels: ['Pendiente', 'Pagada', 'Anulada', 'Cantidad', 'Total', 'IVA'],
+        datasets: [{
+          label: 'Resumen',
+          data: [
+            data.pendiente.monto,
+            data.pagada.monto,
+            data.anulada.monto,
+            data.total_qty,
+            data.total_monto,
+            data.total_iva
+          ],
+          backgroundColor: [
+            '#FF9800',
+            '#4CAF50',
+            '#F44336',
+            '#2196F3',
+            '#9C27B0',
+            '#FF5722'
+          ],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let value = context.raw;
+                if (context.dataIndex === 3) {
+                  return 'Cantidad: ' + value;
+                }
+                return 'Monto: $' + value.toLocaleString('es-CL');
+              }
+            }
+          },
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
     });
 
-    document.getElementById('grafico-mensual').innerHTML = htmlMensual;
+    /* =========================
+       🔹 GRAFICO MENSUAL
+    ========================= */
 
-    // === TABLA ===
+    const ctxMensual = document.getElementById('chartMensual').getContext('2d');
+
+    if (chartMensual) chartMensual.destroy();
+
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    chartMensual = new Chart(ctxMensual, {
+      type: 'bar',
+      data: {
+        labels: meses,
+        datasets: [
+          {
+            label: 'Monto',
+            data: data.mensual.map(m => m.valor),
+            backgroundColor: '#4CAF50'
+          },
+          {
+            label: 'IVA',
+            data: data.mensual.map(m => m.iva),
+            backgroundColor: '#FF5722'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': $' + context.raw.toLocaleString('es-CL');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    /* =========================
+       🔹 TABLA
+    ========================= */
+
     const tbody = document.querySelector('#tabla-facturas tbody');
 
-    tbody.innerHTML = (data.facturas || []).map(f => `
+    tbody.innerHTML = data.facturas.map(f => `
       <tr>
         <td>${f.fecha}</td>
         <td>${f.nro_factura || '-'}</td>
         <td>${f.proveedor}</td>
-        <td>${formatearMoneda(f.monto)}</td>
-        <td>${formatearMoneda(f.monto * 0.19)}</td>
+        <td>$${Number(f.monto).toLocaleString('es-CL')}</td>
+        <td>$${Number(f.monto * 0.19).toLocaleString('es-CL')}</td>
         <td>${f.estado}</td>
         <td><button class="acciones-btn">✏️</button></td>
       </tr>
