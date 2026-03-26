@@ -172,19 +172,19 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
           // Gráfico 1: Resumen
           const resumenHtml = `
             <div class="barra-item">
-              <div class="barra-fill ventas" style="height:${(data.ventas / maxResumen) * 100}%;"></div>
+              <div class="barra-fill ventas" style="height:${calcularAltura(data.ventas, maxResumen)};"></div>
               <div class="barra-label">${formatearMoneda(data.ventas)}<br>Ventas</div>
             </div>
             <div class="barra-item">
-              <div class="barra-fill costo" style="height:${(data.costo / maxResumen) * 100}%;"></div>
+              <div class="barra-fill costo" style="height:${calcularAltura(data.costo, maxResumen)};"></div>
               <div class="barra-label">${formatearMoneda(data.costo)}<br>Costo</div>
             </div>
             <div class="barra-item">
-              <div class="barra-fill mermas" style="height:${(data.mermas / maxResumen) * 100}%;"></div>
+              <div class="barra-fill mermas" style="height:${calcularAltura(data.mermas, maxResumen)};"></div>
               <div class="barra-label">${formatearMoneda(data.mermas)}<br>Mermas</div>
             </div>
             <div class="barra-item">
-              <div class="barra-fill saldo" style="height:${(data.saldo / maxResumen) * 100}%;"></div>
+              <div class="barra-fill saldo" style="height:${calcularAltura(data.saldo, maxResumen)};"></div>
               <div class="barra-label">${formatearMoneda(data.saldo)}<br>Saldo</div>
             </div>
           `;
@@ -193,11 +193,11 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
           // Gráfico 2: Medio de pago
           const pagoHtml = `
             <div class="barra-item">
-              <div class="barra-fill efectivo" style="height:${(data.efectivo / maxPago) * 100}%;"></div>
+              <div class="barra-fill efectivo" style="height:${calcularAltura(data.efectivo, maxPago)};"></div>
               <div class="barra-label">${formatearMoneda(data.efectivo)}<br>Efectivo</div>
             </div>
             <div class="barra-item">
-              <div class="barra-fill tarjeta" style="height:${(data.tarjeta / maxPago) * 100}%;"></div>
+              <div class="barra-fill tarjeta" style="height:${calcularAltura(data.tarjeta, maxPago)};"></div>
               <div class="barra-label">${formatearMoneda(data.tarjeta)}<br>Tarjeta</div>
             </div>
           `;
@@ -226,6 +226,12 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
     });
 
     document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+
+    function calcularAltura(valor, max) {
+      if (max === 0) return '0%';
+      const pct = (valor / max) * 100;
+      return Math.max(pct, 5) + '%'; // mínimo 5% para visibilidad
+    }
   </script>
 </body>
 </html>
