@@ -236,25 +236,6 @@ tr:hover {
     <span onclick="cerrarDrawer()">✖</span>
 </div>
 
-<div id="detalle"></div>
-
-  <h4>Productos</h4>
-  <table id="tabla-productos">
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Cant</th>
-        <th>Precio</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <table class="mini-table" id="tabla-productos"></table>
-  <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
-    💾 Guardar cambios
-  </button>
-</div>
-
 <script>
 
 let dataGlobal = [];
@@ -330,28 +311,11 @@ async function abrirDrawer(f){
     renderDetalle();
 
     document.getElementById('drawer').classList.add('open');
-    if (!facturaActual?.id_factura) {
-      console.error("Factura inválida", facturaActual);
-      return;
-    }
-
-    const resProd = await fetch(`/api/admin/factura_productos.php?id_factura=${facturaActual.id_factura}`);
-    const productos = await resProd.json();
-
-    const tbody = document.querySelector('#tabla-productos tbody');
-
-    tbody.innerHTML = productos.map(p => `
-      <tr>
-        <td><input class="prod-nombre" value="${p.nombre}"></td>
-        <td><input class="prod-cantidad" type="number" value="${p.cantidad}"></td>
-        <td><input class="prod-precio" type="number" value="${p.precio}"></td>
-      </tr>
-    `).join('');
 
   } catch (err) {
 
-    console.error("Error cargando productos:", err);
-    alert("Error cargando productos");
+    console.error("Error abriendo drawer:", err);
+    alert("Error cargando detalle");
 
   }
 }
@@ -368,19 +332,9 @@ function renderDetalle(){
         <p><strong>Estado:</strong> ${campo('estado', f.estado)}</p>
     `;
 
-    // Productos mock (puedes reemplazar por API)
-    const productos = f.productos || [
-        {nombre:'Producto A', cantidad:1, precio:1000}
-    ];
-
-    document.getElementById('tabla-productos').innerHTML =
-        productos.map(p=>`
-            <tr>
-                <td>${editMode?`<input value="${p.nombre}">`:p.nombre}</td>
-                <td>${editMode?`<input value="${p.cantidad}">`:p.cantidad}</td>
-                <td>${editMode?`<input value="${p.precio}">`:money(p.precio)}</td>
-            </tr>
-        `).join('');
+    <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
+      💾 Guardar cambios
+    </button>
 }
 
 function campo(key, value){
@@ -415,34 +369,12 @@ async function guardarFactura() {
   const glosa = document.getElementById('panel-glosa').value.trim();
 
   /* VALIDACIONES */
-  if (!proveedor) {
-    alert("Proveedor requerido");
-    return;
-  }
-
-  if (isNaN(monto) || monto <= 0) {
-    alert("Monto inválido");
-    return;
-  }
-
-  if (!estado) {
-    alert("Estado requerido");
-    return;
-  }
-
-  const productos = [];
-
-  document.querySelectorAll('#tabla-productos tbody tr').forEach(tr => {
-    const nombre = tr.querySelector('.prod-nombre').value;
-    const cantidad = parseFloat(tr.querySelector('.prod-cantidad').value);
-    const precio = parseFloat(tr.querySelector('.prod-precio').value);
-
-    if (nombre && cantidad > 0 && precio > 0) {
-      productos.push({ nombre, cantidad, precio });
-    }
-  });
+  if (!proveedor) return alert("Proveedor requerido");
+  if (isNaN(monto) || monto <= 0) return alert("Monto inválido");
+  if (!estado) return alert("Estado requerido");
 
   try {
+
     const res = await fetch('/api/admin/factura_guardar.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -451,23 +383,24 @@ async function guardarFactura() {
         proveedor,
         monto,
         estado,
-        glosa,
-        productos
+        glosa
       })
     });
 
     const data = await res.json();
 
     if (data.status === 'ok') {
-      alert("✅ Guardado correctamente");
+      alert("✅ Guardado");
       cargarDatos();
     } else {
-      alert("❌ Error: " + data.message);
+      alert("❌ " + data.message);
     }
+
+    document.getElementById('drawer').classList.remove('open');
 
   } catch (e) {
     console.error(e);
-    alert("Error de conexión");
+    alert("Error conexión");
   }
 }
 
