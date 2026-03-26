@@ -155,33 +155,24 @@ th {
                     </select>
                 </div>
             </div>
-
             <h3>📊 Resumen</h3>
-
             <div class="chart-container">
                 <canvas id="chartEstado"></canvas>
             </div>
-
         </div>
 
         <!-- DERECHA -->
         <div class="card">
-
             <h3>📅 Facturación mensual</h3>
-
             <div class="chart-container">
                 <canvas id="chartMensual"></canvas>
             </div>
-
         </div>
-
     </div>
 
     <!-- 🔹 SECCIÓN INFERIOR -->
     <div class="dashboard-bottom">
-
         <h3>📋 Listado de Facturas</h3>
-
         <table id="tabla-facturas">
             <thead>
                 <tr>
@@ -191,19 +182,28 @@ th {
                     <th>Monto</th>
                     <th>IVA</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
-
     </div>
-
 </div>
 
 <script>
 
 let chartEstado = null;
 let chartMensual = null;
+
+function formatearMoneda(v) {
+      return '$' + parseFloat(v).toLocaleString('es-CL', { minimumFractionDigits: 0 });
+    }
+
+    document.getElementById('filtro-periodo').addEventListener('change', function() {
+      const cont = document.getElementById('contenedor-meses');
+      cont.style.display = this.value === 'meses' ? 'block' : 'none';
+      cargarDatos();
+    });
 
 function limpiarFiltros() {
     document.getElementById('filtro-estado').value = '';
@@ -273,13 +273,20 @@ async function cargarDatos() {
             <td>${f.proveedor}</td>
             <td>$${Number(f.monto).toLocaleString('es-CL')}</td>
             <td>$${Number(f.monto * 0.19).toLocaleString('es-CL')}</td>
+            <td><button class="acciones-btn" onclick="editarFactura(${f.id_factura})">✏️</button></td>
             <td>${f.estado}</td>
         </tr>
     `).join('');
 }
 
+function editarFactura(id) {
+  alert('Edición de factura #' + id + ' (próximamente)');
+}
+
+// Iniciar
 document.addEventListener('DOMContentLoaded', () => {
-    cargarDatos();
+  document.getElementById('filtro-periodo').value = 'hoy';
+  cargarDatos();
 });
 
 </script>
