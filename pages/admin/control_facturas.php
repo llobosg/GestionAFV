@@ -215,114 +215,110 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
   </div>
 
   <script>
-    function calcularAltura(valor, max) {
-      if (max <= 0) return '0%';
-      const pct = (valor / max) * 100;
-      return Math.max(pct, 5) + '%';
+function calcularAltura(valor, max) {
+  if (!max || max <= 0) return '5%'; // 👈 evita barras invisibles
+  const pct = (valor / max) * 100;
+  return Math.max(pct, 5) + '%';
+}
+
+function formatearMoneda(v) {
+  return '$' + Number(v || 0).toLocaleString('es-CL');
+}
+
+async function cargarDatos() {
+  try {
+
+    const estado = document.getElementById('filtro-estado').value;
+    const periodo = document.getElementById('filtro-periodo').value;
+    let mes = null;
+
+    if (periodo === 'meses') {
+      mes = document.getElementById('filtro-mes-anterior').value;
     }
 
-    function formatearMoneda(v) {
-      return '$' + parseFloat(v).toLocaleString('es-CL', { minimumFractionDigits: 0 });
+    const params = new URLSearchParams();
+    if (estado) params.append('estado', estado);
+    params.append('periodo', periodo);
+    if (mes) params.append('mes', mes);
+
+    const res = await fetch(`/api/admin/facturas_estadisticas.php?${params}`);
+    const data = await res.json();
+
+    console.log("DATA:", data);
+
+    // === VALIDACIÓN ===
+    if (!data || !data.mensual) {
+      console.error("Respuesta inválida");
+      return;
     }
 
-    document.getElementById('filtro-periodo').addEventListener('change', function() {
-      const cont = document.getElementById('contenedor-meses');
-      cont.style.display = this.value === 'meses' ? 'block' : 'none';
-      cargarDatos();
-    });
+    // === GRAFICO ESTADO ===
+    const valores = [
+      data.pendiente?.monto || 0,
+      data.pagada?.monto || 0,
+      data.anulada?.monto || 0,
+      data.total_qty || 0,
+      data.total_monto || 0,
+      data.total_iva || 0
+    ];
 
-    function limpiarFiltros() {
-      document.getElementById('filtro-estado').value = '';
-      document.getElementById('filtro-periodo').value = 'hoy';
-      document.getElementById('contenedor-meses').style.display = 'none';
-      cargarDatos();
-    }
+    const maxEstado = Math.max(...valores, 1);
 
-    async function cargarDatos() {
-      const estado = document.getElementById('filtro-estado').value;
-      const periodo = document.getElementById('filtro-periodo').value;
-      let mes = null;
-      if (periodo === 'meses') {
-        mes = document.getElementById('filtro-mes-anterior').value;
-      }
+    document.getElementById('grafico-estado').innerHTML = valores.map((v, i) => {
+      const clases = ['pendiente','pagada','anulada','qty','monto','iva'];
+      const labels = ['Pendiente','Pagada','Anulada','Cant.','Total','IVA'];
 
-      const params = new URLSearchParams();
-      if (estado) params.append('estado', estado);
-      params.append('periodo', periodo);
-      if (mes) params.append('mes', mes);
-
-      const res = await fetch(`/api/admin/facturas_estadisticas.php?${params}`);
-      const data = await res.json();
-
-      // Gráfico por estado
-      const maxEstado = Math.max(data.pendiente.monto, data.pagada.monto, data.anulada.monto, 
-                                 data.total_qty, data.total_monto, data.total_iva, 1);
-      document.getElementById('grafico-estado').innerHTML = `
+      return `
         <div class="barra-item">
-          <div class="barra-fill pendiente" style="height:${calcularAltura(data.pendiente.monto, maxEstado)};"></div>
-          <div class="barra-label">${formatearMoneda(data.pendiente.monto)}<br>Pendiente</div>
-        </div>
-        <div class="barra-item">
-          <div class="barra-fill pagada" style="height:${calcularAltura(data.pagada.monto, maxEstado)};"></div>
-          <div class="barra-label">${formatearMoneda(data.pagada.monto)}<br>Pagada</div>
-        </div>
-        <div class="barra-item">
-          <div class="barra-fill anulada" style="height:${calcularAltura(data.anulada.monto, maxEstado)};"></div>
-          <div class="barra-label">${formatearMoneda(data.anulada.monto)}<br>Anulada</div>
-        </div>
-        <div class="barra-item">
-          <div class="barra-fill qty" style="height:${calcularAltura(data.total_qty, maxEstado)};"></div>
-          <div class="barra-label">${data.total_qty}<br>Cant.</div>
-        </div>
-        <div class="barra-item">
-          <div class="barra-fill monto" style="height:${calcularAltura(data.total_monto, maxEstado)};"></div>
-          <div class="barra-label">${formatearMoneda(data.total_monto)}<br>Total</div>
-        </div>
-        <div class="barra-item">
-          <div class="barra-fill iva" style="height:${calcularAltura(data.total_iva, maxEstado)};"></div>
-          <div class="barra-label">${formatearMoneda(data.total_iva)}<br>IVA</div>
+          <div class="barra-fill ${clases[i]}" style="height:${calcularAltura(v, maxEstado)};"></div>
+          <div class="barra-label">
+            ${i === 3 ? v : formatearMoneda(v)}<br>${labels[i]}
+          </div>
         </div>
       `;
+    }).join('');
 
-      // Gráfico mensual
-      const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-      const maxMensual = Math.max(...data.mensual.flatMap(m => [m.valor, m.iva]), 1);
-      let htmlMensual = '';
-      data.mensual.forEach((m, i) => {
-        htmlMensual += `
-          <div class="mes-item">
-            <div title="Valor" class="mes-barra" style="height:${calcularAltura(m.valor, maxMensual)}; background:#4CAF50;"></div>
-            <div title="IVA" class="mes-barra" style="height:${calcularAltura(m.iva, maxMensual)}; background:#FF5722; margin-top:2px;"></div>
-            <div class="mes-label">${meses[i]}</div>
-          </div>
-        `;
-      });
-      document.getElementById('grafico-mensual').innerHTML = htmlMensual;
+    // === GRAFICO MENSUAL ===
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-      // Tabla
-      const tbody = document.querySelector('#tabla-facturas tbody');
-      tbody.innerHTML = data.facturas.map(f => `
-        <tr>
-          <td>${f.fecha}</td>
-          <td>${f.nro_factura || '-'}</td>
-          <td>${f.proveedor}</td>
-          <td>${formatearMoneda(f.monto)}</td>
-          <td>${formatearMoneda(f.monto * 0.19)}</td>
-          <td>${f.estado}</td>
-          <td><button class="acciones-btn" onclick="editarFactura(${f.id_factura})">✏️</button></td>
-        </tr>
-      `).join('');
-    }
+    const maxMensual = Math.max(
+      ...data.mensual.flatMap(m => [m.valor || 0, m.iva || 0]),
+      1
+    );
 
-    function editarFactura(id) {
-      alert('Edición de factura #' + id + ' (próximamente)');
-    }
+    let htmlMensual = '';
 
-    // Iniciar
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('filtro-periodo').value = 'hoy';
-      cargarDatos();
+    data.mensual.forEach((m, i) => {
+      htmlMensual += `
+        <div class="mes-item">
+          <div class="mes-barra" style="height:${calcularAltura(m.valor || 0, maxMensual)}; background:#4CAF50;"></div>
+          <div class="mes-barra" style="height:${calcularAltura(m.iva || 0, maxMensual)}; background:#FF5722; margin-top:2px;"></div>
+          <div class="mes-label">${meses[i]}</div>
+        </div>
+      `;
     });
-  </script>
+
+    document.getElementById('grafico-mensual').innerHTML = htmlMensual;
+
+    // === TABLA ===
+    const tbody = document.querySelector('#tabla-facturas tbody');
+
+    tbody.innerHTML = (data.facturas || []).map(f => `
+      <tr>
+        <td>${f.fecha}</td>
+        <td>${f.nro_factura || '-'}</td>
+        <td>${f.proveedor}</td>
+        <td>${formatearMoneda(f.monto)}</td>
+        <td>${formatearMoneda(f.monto * 0.19)}</td>
+        <td>${f.estado}</td>
+        <td><button class="acciones-btn">✏️</button></td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error("ERROR:", err);
+  }
+}
+</script>
 </body>
 </html>

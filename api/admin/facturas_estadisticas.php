@@ -13,8 +13,9 @@ $estado = $_GET['estado'] ?? null;
 $periodo = $_GET['periodo'] ?? 'hoy';
 $mes = $_GET['mes'] ?? null;
 
-// Rango de fechas
+// === RANGO FECHAS ===
 $hoy = date('Y-m-d');
+
 switch ($periodo) {
     case 'semana': $inicio = date('Y-m-d', strtotime('-6 days')); break;
     case 'mes': $inicio = date('Y-m-01'); break;
@@ -27,57 +28,84 @@ switch ($periodo) {
     default: $inicio = $hoy;
 }
 
-// Condición base
-$where = "id_negocio = ?";
-$params = [$id_negocio];
-if ($estado) { $where .= " AND estado = ?"; $params[] = $estado; }
-$where .= " AND fecha BETWEEN ? AND ?";
-$params[] = $inicio;
-$params[] = $hoy;
+// === BASE WHERE (SIN ESTADO) ===
+$whereBase = "id_negocio = ? AND fecha BETWEEN ? AND ?";
+$paramsBase = [$id_negocio, $inicio, $hoy];
 
-// Estadísticas por estado
+// === STATS POR ESTADO (SIN DUPLICAR FILTRO) ===
 $estados = ['pendiente', 'pagada', 'anulada'];
 $stats = [];
+
 foreach ($estados as $e) {
-    $sql = "SELECT COALESCE(SUM(monto), 0) as monto FROM facturas WHERE $where AND estado = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(array_merge($params, [$e]));
+    $stmt = $pdo->prepare("
+        SELECT COALESCE(SUM(monto), 0)
+        FROM facturas
+        WHERE $whereBase AND estado = ?
+    ");
+    $stmt->execute(array_merge($paramsBase, [$e]));
     $stats[$e] = ['monto' => (float)$stmt->fetchColumn()];
 }
 
-// Totales
-$stmt = $pdo->prepare("SELECT COUNT(*), COALESCE(SUM(monto), 0) FROM facturas WHERE $where");
-$stmt->execute($params);
-[$total_qty, $total_monto] = $stmt->fetch();
-$total_iva = $total_monto * 0.19;
+// === TOTALES ===
+$whereFinal = $whereBase;
+$paramsFinal = $paramsBase;
 
-// Datos mensuales (últimos 12 meses)
-$mensual = [];
-for ($i = 11; $i >= 0; $i--) {
-    $fecha = date('Y-m', strtotime("-$i months"));
-    $stmt = $pdo->prepare("
-        SELECT COALESCE(SUM(monto), 0) 
-        FROM facturas 
-        WHERE id_negocio = ? AND DATE_FORMAT(fecha, '%Y-%m') = ?
-    ");
-    $stmt->execute([$id_negocio, $fecha]);
-    $valor = (float)$stmt->fetchColumn();
-    $mensual[] = ['valor' => $valor, 'iva' => $valor * 0.19];
+if ($estado) {
+    $whereFinal .= " AND estado = ?";
+    $paramsFinal[] = $estado;
 }
 
-// Facturas filtradas
-$stmt = $pdo->prepare("SELECT * FROM facturas WHERE $where ORDER BY fecha DESC");
-$stmt->execute($params);
-$facturas = $stmt->fetchAll();
+$stmt = $pdo->prepare("
+    SELECT COUNT(*) as qty, COALESCE(SUM(monto),0) as total
+    FROM facturas
+    WHERE $whereFinal
+");
+$stmt->execute($paramsFinal);
+$row = $stmt->fetch();
 
+$total_qty = (int)$row['qty'];
+$total_monto = (float)$row['total'];
+$total_iva = $total_monto * 0.19;
+
+// === MENSUAL ===
+$mensual = [];
+
+for ($i = 11; $i >= 0; $i--) {
+    $fecha = date('Y-m', strtotime("-$i months"));
+
+    $stmt = $pdo->prepare("
+        SELECT COALESCE(SUM(monto),0)
+        FROM facturas
+        WHERE id_negocio = ? AND DATE_FORMAT(fecha,'%Y-%m') = ?
+    ");
+    $stmt->execute([$id_negocio, $fecha]);
+
+    $valor = (float)$stmt->fetchColumn();
+
+    $mensual[] = [
+        'valor' => $valor,
+        'iva' => $valor * 0.19
+    ];
+}
+
+// === FACTURAS ===
+$stmt = $pdo->prepare("
+    SELECT *
+    FROM facturas
+    WHERE $whereFinal
+    ORDER BY fecha DESC
+");
+$stmt->execute($paramsFinal);
+$facturas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// === RESPUESTA SEGURA ===
 echo json_encode([
     'pendiente' => $stats['pendiente'],
     'pagada' => $stats['pagada'],
     'anulada' => $stats['anulada'],
-    'total_qty' => (int)$total_qty,
+    'total_qty' => $total_qty,
     'total_monto' => $total_monto,
     'total_iva' => $total_iva,
     'mensual' => $mensual,
     'facturas' => $facturas
 ]);
-?>
