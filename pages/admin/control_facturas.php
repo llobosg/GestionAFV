@@ -196,19 +196,20 @@ let chartEstado = null;
 let chartMensual = null;
 
 function formatearMoneda(v) {
-      return '$' + parseFloat(v).toLocaleString('es-CL', { minimumFractionDigits: 0 });
-    }
+  return '$' + parseFloat(v).toLocaleString('es-CL', { minimumFractionDigits: 0 });
+}
 
-    document.getElementById('filtro-periodo').addEventListener('change', function() {
-      const cont = document.getElementById('contenedor-meses');
-      cont.style.display = this.value === 'meses' ? 'block' : 'none';
-      cargarDatos();
-    });
+document.getElementById('filtro-periodo').addEventListener('change', function() {
+  const cont = document.getElementById('contenedor-meses');
+  cont.style.display = this.value === 'meses' ? 'block' : 'none';
+  cargarDatos();
+});
 
 function limpiarFiltros() {
-    document.getElementById('filtro-estado').value = '';
-    document.getElementById('filtro-periodo').value = 'hoy';
-    cargarDatos();
+  document.getElementById('filtro-estado').value = '';
+  document.getElementById('filtro-periodo').value = 'hoy';
+  document.getElementById('contenedor-meses').style.display = 'none';
+  cargarDatos();
 }
 
 async function cargarDatos() {
@@ -218,10 +219,13 @@ async function cargarDatos() {
 
     const params = new URLSearchParams();
     if (estado) params.append('estado', estado);
-    params.append('periodo', periodo);
+      params.append('periodo', periodo);
 
-    const res = await fetch(`/api/admin/facturas_estadisticas.php?${params}`);
-    const data = await res.json();
+    if (mes) params.append('mes', mes);
+      const res = await fetch(`/api/admin/facturas_estadisticas.php?${params}`);
+      const data = await res.json();
+
+    console.log("DATA:", data);
 
     /* ===== GRAFICO ESTADO ===== */
     if (chartEstado) chartEstado.destroy();
