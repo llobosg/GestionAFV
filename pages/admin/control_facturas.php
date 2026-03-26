@@ -366,34 +366,7 @@ function cerrarDrawer(){
     document.getElementById(id).addEventListener('input', autoGuardar);
 });
 
-function autoGuardar(){
 
-    clearTimeout(debounceTimer);
-
-    debounceTimer = setTimeout(async () => {
-        const $ = id => document.getElementById(id);
-
-        const payload = {
-            id_factura: facturaActual.id_factura,
-            proveedor: $('panel-proveedor').value,
-            monto: $('panel-monto').value,
-            estado: $('panel-estado').value,
-            glosa: $('panel-glosa').value
-        };
-
-        document.getElementById('saveStatus').innerText = 'Guardando...';
-
-        await fetch('/api/admin/factura_guardar.php', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-        });
-
-        document.getElementById('saveStatus').innerText = '✔ Guardado';
-        cargarDatos();
-
-    }, 600);
-}
 
 /* EVENTOS */
 filtro-estado.onchange = cargarDatos;
