@@ -371,13 +371,14 @@ function autoGuardar(){
     clearTimeout(debounceTimer);
 
     debounceTimer = setTimeout(async () => {
+        const $ = id => document.getElementById(id);
 
         const payload = {
             id_factura: facturaActual.id_factura,
-            proveedor: panel-proveedor.value,
-            monto: panel-monto.value,
-            estado: panel-estado.value,
-            glosa: panel-glosa.value
+            proveedor: $('panel-proveedor').value,
+            monto: $('panel-monto').value,
+            estado: $('panel-estado').value,
+            glosa: $('panel-glosa').value
         };
 
         document.getElementById('saveStatus').innerText = 'Guardando...';
