@@ -6,7 +6,6 @@ if ($_SESSION['rol'] !== 'admin') {
     exit;
 }
 
-$id_negocio = $_SESSION['id_negocio'] ?? 1;
 $nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Negocio';
 $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
 ?>
@@ -16,101 +15,123 @@ $nombre = $_SESSION['nombre_usuario'] ?? 'Admin';
 <meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<title>🧾 Control de Facturas — NegocioUP</title>
+<title>Dashboard Facturas</title>
 
 <style>
 
+/* ===== BASE ===== */
 body {
-    background: #f4f6f9;
-    font-family: 'Segoe UI', sans-serif;
     margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f9;
 }
 
-/* TOP BAR */
+/* ===== TOP BAR ===== */
 .top-bar {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    background: linear-gradient(135deg,#4CAF50,#2E7D32);
     color: white;
-    padding: 0.8rem 2rem;
+    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
-/* CONTENEDOR GENERAL */
+/* ===== CONTAINER ===== */
 .container {
     max-width: 1300px;
     margin: 2rem auto;
 }
 
-/* SECCIONES */
-.dashboard-top {
-    display: flex;
-    gap: 2rem;
-    height: 45vh;
-    margin-bottom: 2rem;
-}
-
-.dashboard-bottom {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-}
-
-/* TARJETAS */
-.card {
-    flex: 1;
-    background: white;
-    padding: 1.5rem;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-}
-
-/* FILTROS */
-.filtros {
-    margin-bottom: 1rem;
-}
-
-.filtro-row {
-    display: flex;
+/* ===== KPI ===== */
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
     gap: 1rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
-select, button {
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+.kpi {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
-.btn-limpiar {
-    background: #ff9800;
-    color: white;
-    border: none;
+.kpi h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
 }
 
-/* CANVAS */
+.kpi span {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+/* ===== GRID ===== */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
 .chart-container {
-    flex: 1;
-    position: relative;
+    height: 250px;
 }
 
-/* TABLA */
+/* ===== TABLA ===== */
+.table-card {
+    margin-top: 1.5rem;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
 }
 
-th, td {
-    padding: 0.7rem;
-    border-bottom: 1px solid #eee;
-}
-
 th {
     background: #4CAF50;
     color: white;
+    padding: 0.6rem;
+}
+
+td {
+    padding: 0.6rem;
+    border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+    background: #f5f5f5;
+}
+
+/* ===== BADGES ===== */
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.75rem;
+}
+
+.pendiente { background:#FF9800; }
+.pagada { background:#4CAF50; }
+.anulada { background:#F44336; }
+
+/* ===== FILTROS ===== */
+.filtros {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+select {
+    padding: 0.4rem;
 }
 
 </style>
@@ -119,73 +140,61 @@ th {
 <body>
 
 <div class="top-bar">
-    <a href="/public/home.php" style="color:white;">← Home</a>
-    <strong><?= htmlspecialchars($nombre_negocio) ?></strong>
-    <span><?= htmlspecialchars($nombre) ?></span>
+    <div><?= $nombre_negocio ?></div>
+    <div><?= $nombre ?></div>
 </div>
 
 <div class="container">
 
-    <h2>🧾 Dashboard de Facturas</h2>
+    <!-- KPIs -->
+    <div class="kpis">
+        <div class="kpi"><h4>Total</h4><span id="kpiTotal">$0</span></div>
+        <div class="kpi"><h4>IVA</h4><span id="kpiIVA">$0</span></div>
+        <div class="kpi"><h4>Cantidad</h4><span id="kpiQty">0</span></div>
+        <div class="kpi"><h4>Pendiente</h4><span id="kpiPendiente">$0</span></div>
+    </div>
 
-    <!-- 🔹 SECCIÓN SUPERIOR -->
-    <div class="dashboard-top">
+    <!-- FILTROS -->
+    <div class="filtros">
+        <select id="filtro-estado">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="pagada">Pagada</option>
+            <option value="anulada">Anulada</option>
+        </select>
 
-        <!-- IZQUIERDA -->
+        <select id="filtro-periodo">
+            <option value="hoy">Hoy</option>
+            <option value="semana">7 días</option>
+            <option value="mes">Mes</option>
+            <option value="ytd">Año</option>
+        </select>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid">
+
         <div class="card">
-
-            <div class="filtros">
-                <div class="filtro-row">
-                    <select id="filtro-estado">
-                        <option value="">Todos</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="pagada">Pagada</option>
-                        <option value="anulada">Anulada</option>
-                    </select>
-
-                    <button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
-                </div>
-
-                <div class="filtro-row">
-                    <select id="filtro-periodo">
-                        <option value="hoy">Hoy</option>
-                        <option value="semana">7 días</option>
-                        <option value="mes">Mes</option>
-                        <option value="ytd">Año</option>
-                        <option value="meses">Meses anteriores</option>
-                    </select>
-                </div>
-                <div id="contenedor-meses" style="display:none;">
-                <select id="filtro-mes-anterior">
-                  <?php
-                    $meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-                    foreach ($meses as $i => $m) {
-                      echo "<option value='" . ($i+1) . "'>$m</option>";
-                    }
-                  ?>
-                </select>
-              </div>
-            </div>
-
-            <h3>📊 Resumen</h3>
+            <h3>Estado</h3>
             <div class="chart-container">
                 <canvas id="chartEstado"></canvas>
             </div>
         </div>
 
-        <!-- DERECHA -->
         <div class="card">
-            <h3>📅 Facturación mensual</h3>
+            <h3>Mensual</h3>
             <div class="chart-container">
                 <canvas id="chartMensual"></canvas>
             </div>
         </div>
+
     </div>
 
-    <!-- 🔹 SECCIÓN INFERIOR -->
-    <div class="dashboard-bottom">
-        <h3>📋 Listado de Facturas</h3>
-        <table id="tabla-facturas">
+    <!-- TABLA -->
+    <div class="card table-card">
+        <h3>Facturas</h3>
+
+        <table>
             <thead>
                 <tr>
                     <th>Fecha</th>
@@ -194,112 +203,95 @@ th {
                     <th>Monto</th>
                     <th>IVA</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="tabla"></tbody>
         </table>
     </div>
+
 </div>
 
 <script>
 
-let chartEstado = null;
-let chartMensual = null;
+let chartEstado, chartMensual;
 
-function formatearMoneda(v) {
-      return '$' + parseFloat(v).toLocaleString('es-CL', { minimumFractionDigits: 0 });
-    }
-
-    document.getElementById('filtro-periodo').addEventListener('change', function() {
-      const cont = document.getElementById('contenedor-meses');
-      cont.style.display = this.value === 'meses' ? 'block' : 'none';
-      cargarDatos();
-    });
-
-function limpiarFiltros() {
-    document.getElementById('filtro-estado').value = '';
-    document.getElementById('filtro-periodo').value = 'hoy';
-    cargarDatos();
+function money(v){
+    return '$'+Number(v).toLocaleString('es-CL');
 }
 
-async function cargarDatos() {
+async function cargar(){
 
     const estado = document.getElementById('filtro-estado').value;
     const periodo = document.getElementById('filtro-periodo').value;
 
-    const params = new URLSearchParams();
-    if (estado) params.append('estado', estado);
-    params.append('periodo', periodo);
-
-    const res = await fetch(`/api/admin/facturas_estadisticas.php?${params}`);
+    const res = await fetch(`/api/admin/facturas_estadisticas.php?estado=${estado}&periodo=${periodo}`);
     const data = await res.json();
 
-    /* ===== GRAFICO ESTADO ===== */
-    if (chartEstado) chartEstado.destroy();
+    /* KPIs */
+    document.getElementById('kpiTotal').innerText = money(data.total_monto);
+    document.getElementById('kpiIVA').innerText = money(data.total_iva);
+    document.getElementById('kpiQty').innerText = data.total_qty;
+    document.getElementById('kpiPendiente').innerText = money(data.pendiente.monto);
 
-    chartEstado = new Chart(document.getElementById('chartEstado'), {
-        type: 'bar',
-        data: {
-            labels: ['Pendiente', 'Pagada', 'Anulada'],
-            datasets: [{
-                data: [
+    /* CHART ESTADO */
+    if(chartEstado) chartEstado.destroy();
+
+    chartEstado = new Chart(chartEstado = document.getElementById('chartEstado'), {
+        type:'bar',
+        data:{
+            labels:['Pendiente','Pagada','Anulada'],
+            datasets:[{
+                data:[
                     data.pendiente.monto,
                     data.pagada.monto,
                     data.anulada.monto
                 ],
-                backgroundColor: ['#FF9800','#4CAF50','#F44336']
+                backgroundColor:['#FF9800','#4CAF50','#F44336']
             }]
         }
     });
 
-    /* ===== GRAFICO MENSUAL ===== */
-    if (chartMensual) chartMensual.destroy();
+    /* CHART MENSUAL */
+    if(chartMensual) chartMensual.destroy();
 
-    chartMensual = new Chart(document.getElementById('chartMensual'), {
-        type: 'bar',
-        data: {
-            labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-            datasets: [
+    chartMensual = new Chart(document.getElementById('chartMensual'),{
+        type:'bar',
+        data:{
+            labels:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+            datasets:[
                 {
-                    label: 'Monto',
-                    data: data.mensual.map(m => m.valor),
-                    backgroundColor: '#4CAF50'
+                    label:'Monto',
+                    data:data.mensual.map(m=>m.valor),
+                    backgroundColor:'#4CAF50'
                 },
                 {
-                    label: 'IVA',
-                    data: data.mensual.map(m => m.iva),
-                    backgroundColor: '#FF5722'
+                    label:'IVA',
+                    data:data.mensual.map(m=>m.iva),
+                    backgroundColor:'#FF5722'
                 }
             ]
         }
     });
 
-    /* ===== TABLA ===== */
-    const tbody = document.querySelector('#tabla-facturas tbody');
-
-    tbody.innerHTML = data.facturas.map(f => `
-        <tr>
-            <td>${f.fecha}</td>
-            <td>${f.nro_factura || '-'}</td>
-            <td>${f.proveedor}</td>
-            <td>$${Number(f.monto).toLocaleString('es-CL')}</td>
-            <td>$${Number(f.monto * 0.19).toLocaleString('es-CL')}</td>
-            <td><button class="acciones-btn" onclick="editarFactura(${f.id_factura})">✏️</button></td>
-            <td>${f.estado}</td>
-        </tr>
-    `).join('');
+    /* TABLA */
+    document.getElementById('tabla').innerHTML =
+        data.facturas.map(f=>`
+            <tr>
+                <td>${f.fecha}</td>
+                <td>${f.nro_factura||'-'}</td>
+                <td>${f.proveedor}</td>
+                <td>${money(f.monto)}</td>
+                <td>${money(f.monto*0.19)}</td>
+                <td><span class="badge ${f.estado}">${f.estado}</span></td>
+            </tr>
+        `).join('');
 }
 
-function editarFactura(id) {
-  alert('Edición de factura #' + id + ' (próximamente)');
-}
+/* EVENTS */
+document.getElementById('filtro-estado').onchange=cargar;
+document.getElementById('filtro-periodo').onchange=cargar;
 
-// Iniciar
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('filtro-periodo').value = 'hoy';
-  cargarDatos();
-});
+document.addEventListener('DOMContentLoaded', cargar);
 
 </script>
 
