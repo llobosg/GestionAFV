@@ -17,8 +17,7 @@ if ($_SESSION['rol'] !== 'admin') {
 
 body {
     background:#f4f6f9;
-    font-family:'Segoe UI';
-    margin:0;
+    font-family:'Segoe UI', sans-serif;
 }
 
 /* CONTENEDOR */
@@ -40,7 +39,7 @@ body {
     border-radius:12px;
     box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
-.kpi h4 { margin:0; color:#777; font-size:0.85rem; }
+.kpi h4 { margin:0; color:#777; }
 .kpi strong { font-size:1.4rem; }
 
 /* FILTROS */
@@ -50,10 +49,22 @@ body {
     margin-bottom:1rem;
 }
 
-select, input {
+input, select {
     padding:6px;
     border-radius:6px;
     border:1px solid #ccc;
+}
+
+/* BUSCADOR */
+.search-box {
+    position:relative;
+}
+.clear-btn {
+    position:absolute;
+    right:8px;
+    top:5px;
+    cursor:pointer;
+    font-size:14px;
 }
 
 /* TABLA */
@@ -95,30 +106,46 @@ tr:hover {
 .pagada{background:#4CAF50;}
 .anulada{background:#F44336;}
 
-/* PANEL LATERAL */
+/* DRAWER */
 .drawer {
     position:fixed;
     top:0;
-    right:-400px;
-    width:350px;
+    right:-420px;
+    width:400px;
     height:100%;
     background:white;
     box-shadow:-3px 0 10px rgba(0,0,0,0.2);
     padding:1.5rem;
     transition:0.3s;
-    z-index:999;
+    overflow:auto;
 }
-.drawer.open {
-    right:0;
-}
-.drawer h3 {
-    margin-top:0;
+.drawer.open { right:0; }
+
+.drawer-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
-.close-btn {
-    float:right;
+.icon-btn {
     cursor:pointer;
-    font-size:1.2rem;
+    margin-right:10px;
+}
+
+/* INPUT EDIT */
+.editable input {
+    width:100%;
+}
+
+/* MINI TABLA */
+.mini-table {
+    width:100%;
+    margin-top:1rem;
+    font-size:0.85rem;
+}
+
+.mini-table td {
+    padding:4px;
 }
 
 </style>
@@ -154,7 +181,10 @@ tr:hover {
         <option value="ytd">Año</option>
     </select>
 
-    <input type="text" id="buscador" placeholder="🔍 Buscar factura...">
+    <div class="search-box">
+        <input type="text" id="buscador" placeholder="🔍 Buscar...">
+        <span class="clear-btn" onclick="limpiarBusqueda()">✖</span>
+    </div>
 </div>
 
 <!-- TABLA -->
@@ -176,25 +206,36 @@ tr:hover {
 
 </div>
 
-<!-- PANEL LATERAL -->
+<!-- DRAWER -->
 <div class="drawer" id="drawer">
-<span class="close-btn" onclick="cerrarDrawer()">✖</span>
-<h3>Detalle Factura</h3>
+
+<div class="drawer-header">
+    <div>
+        <span class="icon-btn" onclick="activarEdicion()">✏️</span>
+    </div>
+    <span onclick="cerrarDrawer()">✖</span>
+</div>
+
+<h3>Factura</h3>
+
 <div id="detalle"></div>
+
+<h4>Productos</h4>
+<table class="mini-table" id="tabla-productos"></table>
+
 </div>
 
 <script>
 
 let dataGlobal = [];
+let facturaActual = null;
+let editMode = false;
 
 function money(v){
     return '$' + Number(v).toLocaleString('es-CL');
 }
 
-/* =========================
-   CARGA DATOS
-========================= */
-
+/* CARGA */
 async function cargarDatos(){
 
     const estado = document.getElementById('filtro-estado').value;
@@ -209,45 +250,37 @@ async function cargarDatos(){
 
     dataGlobal = data.facturas;
 
-    actualizarKPIs(data);
-    renderTabla();
-}
-
-/* =========================
-   KPIs
-========================= */
-
-function actualizarKPIs(data){
     document.getElementById('kpi-total').innerText = money(data.total_monto);
     document.getElementById('kpi-iva').innerText = money(data.total_iva);
     document.getElementById('kpi-cantidad').innerText = data.total_qty;
     document.getElementById('kpi-pendiente').innerText = money(data.pendiente.monto);
+
+    renderTabla();
 }
 
-/* =========================
-   BUSCADOR
-========================= */
-
+/* BUSCADOR */
 document.getElementById('buscador').addEventListener('input', renderTabla);
 
-/* =========================
-   TABLA
-========================= */
+function limpiarBusqueda(){
+    document.getElementById('buscador').value='';
+    renderTabla();
+}
 
+/* TABLA */
 function renderTabla(){
 
     const filtro = document.getElementById('buscador').value.toLowerCase();
 
     const filtrados = dataGlobal.filter(f =>
-        (f.proveedor || '').toLowerCase().includes(filtro) ||
-        (f.nro_factura || '').toString().includes(filtro)
+        (f.proveedor||'').toLowerCase().includes(filtro) ||
+        (f.nro_factura||'').toString().includes(filtro)
     );
 
     document.getElementById('tabla').innerHTML =
         filtrados.map(f=>`
             <tr onclick='abrirDrawer(${JSON.stringify(f)})'>
                 <td>${f.fecha}</td>
-                <td>${f.nro_factura || '-'}</td>
+                <td>${f.nro_factura||'-'}</td>
                 <td>${f.proveedor}</td>
                 <td>${money(f.monto)}</td>
                 <td>${money(f.monto*0.19)}</td>
@@ -256,33 +289,57 @@ function renderTabla(){
         `).join('');
 }
 
-/* =========================
-   DRAWER
-========================= */
-
+/* DRAWER */
 function abrirDrawer(f){
-    const drawer = document.getElementById('drawer');
+    facturaActual = f;
+    editMode = false;
+    renderDetalle();
+    document.getElementById('drawer').classList.add('open');
+}
+
+function renderDetalle(){
+
+    const f = facturaActual;
 
     document.getElementById('detalle').innerHTML = `
-        <p><strong>Proveedor:</strong> ${f.proveedor}</p>
-        <p><strong>Factura:</strong> ${f.nro_factura}</p>
-        <p><strong>Monto:</strong> ${money(f.monto)}</p>
-        <p><strong>IVA:</strong> ${money(f.monto*0.19)}</p>
-        <p><strong>Estado:</strong> ${f.estado}</p>
-        <p><strong>Fecha:</strong> ${f.fecha}</p>
+        <p><strong>Proveedor:</strong> ${campo('proveedor', f.proveedor)}</p>
+        <p><strong>Factura:</strong> ${campo('nro_factura', f.nro_factura)}</p>
+        <p><strong>Monto:</strong> ${campo('monto', f.monto)}</p>
+        <p><strong>Glosa:</strong> ${campo('glosa', f.glosa || '')}</p>
+        <p><strong>Estado:</strong> ${campo('estado', f.estado)}</p>
     `;
 
-    drawer.classList.add('open');
+    // Productos mock (puedes reemplazar por API)
+    const productos = f.productos || [
+        {nombre:'Producto A', cantidad:1, precio:1000}
+    ];
+
+    document.getElementById('tabla-productos').innerHTML =
+        productos.map(p=>`
+            <tr>
+                <td>${editMode?`<input value="${p.nombre}">`:p.nombre}</td>
+                <td>${editMode?`<input value="${p.cantidad}">`:p.cantidad}</td>
+                <td>${editMode?`<input value="${p.precio}">`:money(p.precio)}</td>
+            </tr>
+        `).join('');
+}
+
+function campo(key, value){
+    return editMode
+        ? `<input value="${value||''}" data-key="${key}">`
+        : value;
+}
+
+function activarEdicion(){
+    editMode = !editMode;
+    renderDetalle();
 }
 
 function cerrarDrawer(){
     document.getElementById('drawer').classList.remove('open');
 }
 
-/* =========================
-   EVENTOS
-========================= */
-
+/* EVENTOS */
 document.getElementById('filtro-estado').onchange = cargarDatos;
 document.getElementById('filtro-periodo').onchange = cargarDatos;
 
