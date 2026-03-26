@@ -235,6 +235,9 @@ tr:hover {
     </div>
     <span onclick="cerrarDrawer()">✖</span>
 </div>
+<button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
+    💾 Guardar cambios
+</button>
 
 <script>
 
@@ -331,10 +334,6 @@ function renderDetalle(){
         <p><strong>Glosa:</strong> ${campo('glosa', f.glosa || '')}</p>
         <p><strong>Estado:</strong> ${campo('estado', f.estado)}</p>
     `;
-
-    <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
-      💾 Guardar cambios
-    </button>
 }
 
 function campo(key, value){
