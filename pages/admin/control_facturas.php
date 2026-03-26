@@ -20,6 +20,18 @@ body {
     font-family:'Segoe UI', sans-serif;
 }
 
+.header {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .header h1 { margin: 0; font-size: 1.6rem; }
+    .header .app-name { font-weight: bold; }
+
 /* CONTENEDOR */
 .container {
     max-width:1300px;
@@ -150,8 +162,16 @@ tr:hover {
 
 </style>
 </head>
-
 <body>
+  <div class="header">
+    <div class="app-name">NegociosUP</div>
+      <h1>Panel de control 🥦🍎🥕</h1>
+      <a href="/public/home.php" 
+        style="background:#2E7D32; color:white; padding:0.4rem 0.8rem; border-radius:6px; text-decoration:none; font-size:0.9rem;">
+        ← Volver a Home
+      </a>
+    </div>
+  </div>
 
 <div class="container">
 
@@ -208,7 +228,7 @@ tr:hover {
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-
+<h3>Detalle Factura</h3>
 <div class="drawer-header">
     <div>
         <span class="icon-btn" onclick="activarEdicion()">✏️</span>
@@ -216,13 +236,23 @@ tr:hover {
     <span onclick="cerrarDrawer()">✖</span>
 </div>
 
-<h3>Factura</h3>
-
 <div id="detalle"></div>
 
-<h4>Productos</h4>
-<table class="mini-table" id="tabla-productos"></table>
-
+  <h4>Productos</h4>
+  <table id="tabla-productos">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Cant</th>
+        <th>Precio</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <table class="mini-table" id="tabla-productos"></table>
+  <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
+    💾 Guardar cambios
+  </button>
 </div>
 
 <script>
@@ -295,6 +325,19 @@ function abrirDrawer(f){
     editMode = false;
     renderDetalle();
     document.getElementById('drawer').classList.add('open');
+
+    const resProd = await fetch(`/api/admin/factura_productos.php?id_factura=${factura.id_factura}`);
+    const productos = await resProd.json();
+
+    const tbody = document.querySelector('#tabla-productos tbody');
+
+    tbody.innerHTML = productos.map(p => `
+      <tr>
+        <td><input class="prod-nombre" value="${p.nombre}"></td>
+        <td><input class="prod-cantidad" type="number" value="${p.cantidad}"></td>
+        <td><input class="prod-precio" type="number" value="${p.precio}"></td>
+      </tr>
+    `).join('');
 }
 
 function renderDetalle(){
@@ -345,6 +388,72 @@ document.getElementById('filtro-periodo').onchange = cargarDatos;
 
 /* INIT */
 cargarDatos();
+
+async function guardarFactura() {
+
+  const id = document.getElementById('panel-id').textContent;
+
+  const proveedor = document.getElementById('panel-proveedor').value.trim();
+  const monto = parseFloat(document.getElementById('panel-monto').value);
+  const estado = document.getElementById('panel-estado').value;
+  const glosa = document.getElementById('panel-glosa').value.trim();
+
+  /* VALIDACIONES */
+  if (!proveedor) {
+    alert("Proveedor requerido");
+    return;
+  }
+
+  if (isNaN(monto) || monto <= 0) {
+    alert("Monto inválido");
+    return;
+  }
+
+  if (!estado) {
+    alert("Estado requerido");
+    return;
+  }
+
+  const productos = [];
+
+  document.querySelectorAll('#tabla-productos tbody tr').forEach(tr => {
+    const nombre = tr.querySelector('.prod-nombre').value;
+    const cantidad = parseFloat(tr.querySelector('.prod-cantidad').value);
+    const precio = parseFloat(tr.querySelector('.prod-precio').value);
+
+    if (nombre && cantidad > 0 && precio > 0) {
+      productos.push({ nombre, cantidad, precio });
+    }
+  });
+
+  try {
+    const res = await fetch('/api/admin/factura_guardar.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_factura: id,
+        proveedor,
+        monto,
+        estado,
+        glosa,
+        productos
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      alert("✅ Guardado correctamente");
+      cargarDatos();
+    } else {
+      alert("❌ Error: " + data.message);
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert("Error de conexión");
+  }
+}
 
 </script>
 
