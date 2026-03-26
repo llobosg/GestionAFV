@@ -5,6 +5,9 @@ if ($_SESSION['rol'] !== 'admin') {
     header('Location: /public/home.php');
     exit;
 }
+
+$nombre_negocio = $_SESSION['nombre_negocio'] ?? 'Negocio';
+$nombre_usuario = $_SESSION['nombre_usuario'] ?? 'Admin';
 ?>
 
 <!DOCTYPE html>
@@ -18,19 +21,18 @@ if ($_SESSION['rol'] !== 'admin') {
 body {
     background:#f4f6f9;
     font-family:'Segoe UI', sans-serif;
+    margin:0;
 }
 
+/* HEADER */
 .header {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .header h1 { margin: 0; font-size: 1.6rem; }
-    .header .app-name { font-weight: bold; }
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color:white;
+    padding:1rem 2rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
 
 /* CONTENEDOR */
 .container {
@@ -51,8 +53,6 @@ body {
     border-radius:12px;
     box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
-.kpi h4 { margin:0; color:#777; }
-.kpi strong { font-size:1.4rem; }
 
 /* FILTROS */
 .filtros {
@@ -76,7 +76,6 @@ input, select {
     right:8px;
     top:5px;
     cursor:pointer;
-    font-size:14px;
 }
 
 /* TABLA */
@@ -107,6 +106,10 @@ tr:hover {
     cursor:pointer;
 }
 
+.active-row {
+    background:#e8f5e9 !important;
+}
+
 /* BADGES */
 .badge {
     padding:4px 8px;
@@ -119,6 +122,21 @@ tr:hover {
 .anulada{background:#F44336;}
 
 /* DRAWER */
+.drawer-overlay {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.3);
+    opacity:0;
+    pointer-events:none;
+    transition:0.3s;
+}
+
+.drawer-overlay.open {
+    opacity:1;
+    pointer-events:auto;
+}
+
 .drawer {
     position:fixed;
     top:0;
@@ -129,59 +147,52 @@ tr:hover {
     box-shadow:-3px 0 10px rgba(0,0,0,0.2);
     padding:1.5rem;
     transition:0.3s;
-    overflow:auto;
-}
-.drawer.open { right:0; }
-
-.drawer-header {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
 }
 
-.icon-btn {
-    cursor:pointer;
-    margin-right:10px;
+.drawer.open {
+    right:0;
 }
 
-/* INPUT EDIT */
-.editable input {
+.drawer h3 {
+    margin-top:0;
+}
+
+/* FORM */
+.form-group {
+    margin-bottom:1rem;
+}
+.form-group label {
+    font-size:0.8rem;
+    color:#777;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
     width:100%;
 }
 
-/* MINI TABLA */
-.mini-table {
-    width:100%;
-    margin-top:1rem;
-    font-size:0.85rem;
-}
-
-.mini-table td {
-    padding:4px;
-}
-
-.active-row {
-  background: #e8f5e9;
+/* SAVE INDICATOR */
+.save-status {
+    font-size:0.8rem;
+    color:#4CAF50;
+    margin-top:10px;
 }
 
 </style>
 </head>
+
 <body>
-  <div class="header">
-    <div class="app-name">NegociosUP</div>
-      <h1>Panel de control 🥦🍎🥕</h1>
-      <a href="/public/home.php" 
-        style="background:#2E7D32; color:white; padding:0.4rem 0.8rem; border-radius:6px; text-decoration:none; font-size:0.9rem;">
-        ← Volver a Home
-      </a>
-    </div>
-  </div>
+
+<div class="header">
+    <div><strong><?= $nombre_negocio ?></strong></div>
+    <div><?= $nombre_usuario ?></div>
+    <a href="/public/home.php" style="color:white;">← Home</a>
+</div>
 
 <div class="container">
 
 <h2>📊 Dashboard Facturas</h2>
 
-<!-- KPIs -->
 <div class="kpi-row">
     <div class="kpi"><h4>Total</h4><strong id="kpi-total">$0</strong></div>
     <div class="kpi"><h4>IVA</h4><strong id="kpi-iva">$0</strong></div>
@@ -189,7 +200,6 @@ tr:hover {
     <div class="kpi"><h4>Pendiente</h4><strong id="kpi-pendiente">$0</strong></div>
 </div>
 
-<!-- FILTROS -->
 <div class="filtros">
     <select id="filtro-estado">
         <option value="">Todos</option>
@@ -211,7 +221,6 @@ tr:hover {
     </div>
 </div>
 
-<!-- TABLA -->
 <div class="card">
 <table>
 <thead>
@@ -230,46 +239,45 @@ tr:hover {
 
 </div>
 
+<!-- OVERLAY -->
+<div class="drawer-overlay" id="overlay" onclick="cerrarDrawer()"></div>
+
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-    <h3>Detalle Factura</h3>
-    <div class="drawer-header">
-        <div>
-            <span class="icon-btn" onclick="activarEdicion()">✏️</span>
-        </div>
-        <span onclick="cerrarDrawer()">✖</span>
-        </div>
-        <div>ID: <span id="panel-id"></span></div>
-        <div>
-        Proveedor:
+    <h3>Factura #<span id="panel-id"></span></h3>
+
+    <div class="form-group">
+        <label>Proveedor</label>
         <input id="panel-proveedor">
-        </div>
-        <div>
-            Monto:
-            <input id="panel-monto" type="number">
-        </div>
-        <div>
-            Estado:
-            <select id="panel-estado">
+    </div>
+
+    <div class="form-group">
+        <label>Monto</label>
+        <input id="panel-monto" type="number">
+    </div>
+
+    <div class="form-group">
+        <label>Estado</label>
+        <select id="panel-estado">
             <option value="pendiente">Pendiente</option>
             <option value="pagada">Pagada</option>
             <option value="anulada">Anulada</option>
-            </select>
-        </div>
-        <div>
-            Glosa:
-            <textarea id="panel-glosa"></textarea>
-        </div>
-        <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
-            💾 Guardar cambios
-        </button>
+        </select>
     </div>
- </div>
+
+    <div class="form-group">
+        <label>Glosa</label>
+        <textarea id="panel-glosa"></textarea>
+    </div>
+
+    <div class="save-status" id="saveStatus"></div>
+</div>
+
 <script>
 
 let dataGlobal = [];
 let facturaActual = null;
-let editMode = false;
+let debounceTimer = null;
 
 function money(v){
     return '$' + Number(v).toLocaleString('es-CL');
@@ -311,14 +319,12 @@ function renderTabla(){
 
     const filtro = document.getElementById('buscador').value.toLowerCase();
 
-    const filtrados = dataGlobal.filter(f =>
-        (f.proveedor||'').toLowerCase().includes(filtro) ||
-        (f.nro_factura||'').toString().includes(filtro)
-    );
-
     document.getElementById('tabla').innerHTML =
-        filtrados.map(f=>`
-            <tr onclick='abrirDrawer(${JSON.stringify(f)})'>
+        dataGlobal.filter(f =>
+            (f.proveedor||'').toLowerCase().includes(filtro) ||
+            (f.nro_factura||'').toString().includes(filtro)
+        ).map(f=>`
+            <tr onclick="abrirDrawer(${f.id_factura})">
                 <td>${f.fecha}</td>
                 <td>${f.nro_factura||'-'}</td>
                 <td>${f.proveedor}</td>
@@ -330,119 +336,69 @@ function renderTabla(){
 }
 
 /* DRAWER */
-async function abrirDrawer(f){
+function abrirDrawer(id){
 
-  try {
-
-    facturaActual = f;
-    editMode = false;
+    facturaActual = dataGlobal.find(f => f.id_factura == id);
 
     document.getElementById('drawer').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
 
     renderDetalle();
-
-  } catch (err) {
-
-    console.error("Error abriendo drawer:", err);
-    alert("Error cargando detalle");
-
-  }
 }
 
-function renderDetalle() {
+function renderDetalle(){
 
-  if (!facturaActual) {
-    console.error("No hay factura seleccionada");
-    return;
-  }
-
-  const elId = document.getElementById('panel-id');
-  const elProveedor = document.getElementById('panel-proveedor');
-  const elMonto = document.getElementById('panel-monto');
-  const elEstado = document.getElementById('panel-estado');
-  const elGlosa = document.getElementById('panel-glosa');
-
-  if (!elId || !elProveedor || !elMonto || !elEstado || !elGlosa) {
-    console.error("Faltan elementos del panel", {
-      elId, elProveedor, elMonto, elEstado, elGlosa
-    });
-    return;
-  }
-
-  elId.textContent = facturaActual.id_factura;
-  elProveedor.value = facturaActual.proveedor || '';
-  elMonto.value = facturaActual.monto || 0;
-  elEstado.value = facturaActual.estado || 'pendiente';
-  elGlosa.value = facturaActual.glosa || '';
-  tr.classList.add('active-row')
-}
-
-function campo(key, value){
-    return editMode
-        ? `<input value="${value||''}" data-key="${key}">`
-        : value;
-}
-
-function activarEdicion(){
-    editMode = !editMode;
-    renderDetalle();
+    document.getElementById('panel-id').textContent = facturaActual.id_factura;
+    document.getElementById('panel-proveedor').value = facturaActual.proveedor || '';
+    document.getElementById('panel-monto').value = facturaActual.monto || 0;
+    document.getElementById('panel-estado').value = facturaActual.estado;
+    document.getElementById('panel-glosa').value = facturaActual.glosa || '';
 }
 
 function cerrarDrawer(){
     document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+}
+
+/* AUTO SAVE */
+['panel-proveedor','panel-monto','panel-estado','panel-glosa']
+.forEach(id=>{
+    document.getElementById(id).addEventListener('input', autoGuardar);
+});
+
+function autoGuardar(){
+
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(async () => {
+
+        const payload = {
+            id_factura: facturaActual.id_factura,
+            proveedor: panel-proveedor.value,
+            monto: panel-monto.value,
+            estado: panel-estado.value,
+            glosa: panel-glosa.value
+        };
+
+        document.getElementById('saveStatus').innerText = 'Guardando...';
+
+        await fetch('/api/admin/factura_guardar.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        document.getElementById('saveStatus').innerText = '✔ Guardado';
+        cargarDatos();
+
+    }, 600);
 }
 
 /* EVENTOS */
-document.getElementById('filtro-estado').onchange = cargarDatos;
-document.getElementById('filtro-periodo').onchange = cargarDatos;
+filtro-estado.onchange = cargarDatos;
+filtro-periodo.onchange = cargarDatos;
 
-/* INIT */
 cargarDatos();
-
-async function guardarFactura() {
-
-  const id = document.getElementById('panel-id').textContent;
-
-  const proveedor = document.getElementById('panel-proveedor').value.trim();
-  const monto = parseFloat(document.getElementById('panel-monto').value);
-  const estado = document.getElementById('panel-estado').value;
-  const glosa = document.getElementById('panel-glosa').value.trim();
-
-  /* VALIDACIONES */
-  if (!proveedor) return alert("Proveedor requerido");
-  if (isNaN(monto) || monto <= 0) return alert("Monto inválido");
-  if (!estado) return alert("Estado requerido");
-
-  try {
-
-    const res = await fetch('/api/admin/factura_guardar.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_factura: id,
-        proveedor,
-        monto,
-        estado,
-        glosa
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.status === 'ok') {
-      alert("✅ Guardado");
-      cargarDatos();
-    } else {
-      alert("❌ " + data.message);
-    }
-
-    document.getElementById('drawer').classList.remove('open');
-
-  } catch (e) {
-    console.error(e);
-    alert("Error conexión");
-  }
-}
 
 </script>
 
