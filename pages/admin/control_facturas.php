@@ -361,16 +361,55 @@ function cerrarDrawer(){
 }
 
 /* AUTO SAVE */
-['panel-proveedor','panel-monto','panel-estado','panel-glosa']
-.forEach(id=>{
-    document.getElementById(id).addEventListener('input', autoGuardar);
+document.addEventListener('DOMContentLoaded', () => {
+
+    const $ = id => document.getElementById(id);
+
+    ['panel-proveedor','panel-monto','panel-estado','panel-glosa']
+    .forEach(id => {
+        $(id).addEventListener('input', autoGuardar);
+    });
+
+    $('filtro-estado').onchange = cargarDatos;
+    $('filtro-periodo').onchange = cargarDatos;
+
+    cargarDatos();
 });
 
+function autoGuardar(){
 
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(async () => {
+        const $ = id => document.getElementById(id);
+
+        const payload = {
+            id_factura: facturaActual.id_factura,
+            proveedor: $('panel-proveedor').value,
+            monto: $('panel-monto').value,
+            estado: $('panel-estado').value,
+            glosa: $('panel-glosa').value
+        };
+
+        document.getElementById('saveStatus').innerText = 'Guardando...';
+
+        await fetch('/api/admin/factura_guardar.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        document.getElementById('saveStatus').innerText = '✔ Guardado';
+        cargarDatos();
+
+    }, 600);
+}
 
 /* EVENTOS */
-filtro-estado.onchange = cargarDatos;
-filtro-periodo.onchange = cargarDatos;
+const $ = id => document.getElementById(id);
+
+$('filtro-estado').onchange = cargarDatos;
+$('filtro-periodo').onchange = cargarDatos;
 
 cargarDatos();
 
