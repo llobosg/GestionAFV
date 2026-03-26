@@ -160,6 +160,10 @@ tr:hover {
     padding:4px;
 }
 
+.active-row {
+  background: #e8f5e9;
+}
+
 </style>
 </head>
 <body>
@@ -228,17 +232,39 @@ tr:hover {
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-<h3>Detalle Factura</h3>
-<div class="drawer-header">
-    <div>
-        <span class="icon-btn" onclick="activarEdicion()">✏️</span>
+    <h3>Detalle Factura</h3>
+    <div class="drawer-header">
+        <div>
+            <span class="icon-btn" onclick="activarEdicion()">✏️</span>
+        </div>
+        <span onclick="cerrarDrawer()">✖</span>
+        </div>
+        <div>ID: <span id="panel-id"></span></div>
+        <div>
+        Proveedor:
+        <input id="panel-proveedor">
+        </div>
+        <div>
+            Monto:
+            <input id="panel-monto" type="number">
+        </div>
+        <div>
+            Estado:
+            <select id="panel-estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="pagada">Pagada</option>
+            <option value="anulada">Anulada</option>
+            </select>
+        </div>
+        <div>
+            Glosa:
+            <textarea id="panel-glosa"></textarea>
+        </div>
+        <button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
+            💾 Guardar cambios
+        </button>
     </div>
-    <span onclick="cerrarDrawer()">✖</span>
-</div>
-<button onclick="guardarFactura()" style="margin-top:10px; background:#4CAF50; color:white; border:none; padding:8px 12px; border-radius:6px;">
-    💾 Guardar cambios
-</button>
-
+ </div>
 <script>
 
 let dataGlobal = [];
@@ -311,9 +337,9 @@ async function abrirDrawer(f){
     facturaActual = f;
     editMode = false;
 
-    renderDetalle();
-
     document.getElementById('drawer').classList.add('open');
+
+    renderDetalle();
 
   } catch (err) {
 
@@ -323,17 +349,32 @@ async function abrirDrawer(f){
   }
 }
 
-function renderDetalle(){
+function renderDetalle() {
 
-    const f = facturaActual;
+  if (!facturaActual) {
+    console.error("No hay factura seleccionada");
+    return;
+  }
 
-    document.getElementById('detalle').innerHTML = `
-        <p><strong>Proveedor:</strong> ${campo('proveedor', f.proveedor)}</p>
-        <p><strong>Factura:</strong> ${campo('nro_factura', f.nro_factura)}</p>
-        <p><strong>Monto:</strong> ${campo('monto', f.monto)}</p>
-        <p><strong>Glosa:</strong> ${campo('glosa', f.glosa || '')}</p>
-        <p><strong>Estado:</strong> ${campo('estado', f.estado)}</p>
-    `;
+  const elId = document.getElementById('panel-id');
+  const elProveedor = document.getElementById('panel-proveedor');
+  const elMonto = document.getElementById('panel-monto');
+  const elEstado = document.getElementById('panel-estado');
+  const elGlosa = document.getElementById('panel-glosa');
+
+  if (!elId || !elProveedor || !elMonto || !elEstado || !elGlosa) {
+    console.error("Faltan elementos del panel", {
+      elId, elProveedor, elMonto, elEstado, elGlosa
+    });
+    return;
+  }
+
+  elId.textContent = facturaActual.id_factura;
+  elProveedor.value = facturaActual.proveedor || '';
+  elMonto.value = facturaActual.monto || 0;
+  elEstado.value = facturaActual.estado || 'pendiente';
+  elGlosa.value = facturaActual.glosa || '';
+  tr.classList.add('active-row')
 }
 
 function campo(key, value){
