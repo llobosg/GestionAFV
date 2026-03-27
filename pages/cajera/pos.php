@@ -606,8 +606,8 @@ async function imprimirTicket(venta) {
               nombre_negocio: "<?= htmlspecialchars($nombre_negocio) ?>",
               cajero: "<?= htmlspecialchars($nombre_completo) ?>",
               total: carrito.reduce((sum, item) => sum + item.subtotal, 0),
-              neto: /* calcular */,
-              iva: /* calcular */,
+              neto: $venta['total'] / 1.19,
+              iva: $venta['total'] - $neto,
               metodo_pago: document.getElementById('metodo-pago').value === 'efectivo' ? 'Efectivo' : 'Tarjeta',
               detalles: carrito
             };
