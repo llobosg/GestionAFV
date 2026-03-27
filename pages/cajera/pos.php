@@ -257,6 +257,66 @@
     }
   </style>
 </head>
+<!-- Antes de </body> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.2.0/qz-tray.js"></script>
+<script>
+// Conectar a QZ Tray
+async function conectarImpresora() {
+  try {
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+    return true;
+  } catch (err) {
+    alert('❌ Instala QZ Tray en esta PC para imprimir');
+    console.error(err);
+    return false;
+  }
+}
+
+// Imprimir ticket
+async function imprimirTicket(venta) {
+  const conectado = await conectarImpresora();
+  if (!conectado) return;
+
+  // Formato ESC/POS básico
+  let commands = [
+    { type: 'raw', data: '\x1B\x40' }, // Inicializar
+    { type: 'text', data: venta.nombre_negocio + '\n', options: { align: 'center', bold: true } },
+    { type: 'text', data: new Date().toLocaleString('es-CL') + '\n', options: { align: 'center' } },
+    { type: 'text', data: 'Cajero: ' + venta.cajero + '\n\n' },
+    { type: 'raw', data: '--------------------------------\n' },
+
+    // Productos
+    ...venta.detalles.map(d => 
+      `${d.producto.substring(0,20).padEnd(20)} ${d.cantidad.toString().padStart(4)} ${('$' + d.precio_unitario).padStart(8)} ${('$' + d.subtotal).padStart(8)}\n`
+    ),
+
+    { type: 'raw', data: '--------------------------------\n\n' },
+
+    // Totales
+    { type: 'text', data: 'NETO:'.padEnd(30) + ('$' + venta.neto).padStart(10) + '\n' },
+    { type: 'text', data: 'IVA (19%):'.padEnd(30) + ('$' + venta.iva).padStart(10) + '\n' },
+    { type: 'text', data: 'TOTAL:'.padEnd(30) + ('$' + venta.total).padStart(10) + '\n\n' },
+
+    { type: 'text', data: 'Medio de pago: ' + venta.metodo_pago + '\n\n' },
+
+    // Código de barras (Code 128)
+    { type: 'barcode', data: venta.id_venta.toString().padStart(8, '0'), options: { type: '128', height: 50, width: 2 } },
+
+    { type: 'text', data: '\n\npowered by NegocioUP\n', options: { align: 'center', small: true } },
+    { type: 'raw', data: '\x1D\x56\x41\x03' } // Cortar papel
+  ];
+
+  try {
+    await qz.printers.find().then(async (printer) => {
+      await qz.print(printer, commands);
+    });
+  } catch (err) {
+    alert('Error al imprimir: ' + err.message);
+  }
+}
+</script>
 <body>
     <!-- BARRA SUPERIOR -->
     <div class="top-bar">
@@ -536,17 +596,30 @@
         if (result.success) {
           showToast('✅ Venta registrada con éxito');
           
-          // Descargar ticket
-          const url = `/api/cajera/imprimir_ticket.php?id_venta=${result.id_venta}`;
-          const link = document.createElement('a');
-          link.href = url;
-          link.target = '_blank';
-          link.click();
+          // En lugar de descargar PDF
+          if (result.success) {
+            showToast('✅ Venta registrada');
 
-          // Limpiar
-          carrito = [];
-          renderizarCarrito();
-          limpiarFormulario();
+            // Preparar datos para impresión
+            const ventaData = {
+              id_venta: result.id_venta,
+              nombre_negocio: "<?= htmlspecialchars($nombre_negocio) ?>",
+              cajero: "<?= htmlspecialchars($nombre_completo) ?>",
+              total: carrito.reduce((sum, item) => sum + item.subtotal, 0),
+              neto: /* calcular */,
+              iva: /* calcular */,
+              metodo_pago: document.getElementById('metodo-pago').value === 'efectivo' ? 'Efectivo' : 'Tarjeta',
+              detalles: carrito
+            };
+
+            // Imprimir en impresora local
+            imprimirTicket(ventaData);
+
+            // Limpiar
+            carrito = [];
+            renderizarCarrito();
+            limpiarFormulario();
+          }
         } else {
           showToast('❌ Error: ' + (result.message || 'No se pudo registrar'), 'error');
         }
