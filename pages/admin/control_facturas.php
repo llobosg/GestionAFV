@@ -41,17 +41,20 @@ body {
 }
 
 /* KPIs */
-.kpi-row {
-    display:flex;
-    gap:1rem;
-    margin-bottom:1rem;
-}
 .kpi {
-    flex:1;
-    background:white;
-    padding:1rem;
-    border-radius:12px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+    position:relative;
+    overflow:hidden;
+}
+
+.kpi::after {
+    content:'';
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:4px;
+    background:#4CAF50;
+    opacity:0.2;
 }
 
 /* FILTROS */
@@ -121,12 +124,13 @@ tr:hover {
 .pagada{background:#4CAF50;}
 .anulada{background:#F44336;}
 
-/* DRAWER */
+/* OVERLAY */
 .drawer-overlay {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
-    background:rgba(0,0,0,0.3);
+    background:rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
     opacity:0;
     pointer-events:none;
     transition:0.3s;
@@ -137,38 +141,41 @@ tr:hover {
     pointer-events:auto;
 }
 
+/* DRAWER */
 .drawer {
     position:fixed;
     top:0;
-    right:-420px;
-    width:400px;
+    right:-450px;
+    width:420px;
     height:100%;
-    background:white;
-    box-shadow:-3px 0 10px rgba(0,0,0,0.2);
-    padding:1.5rem;
+    background:#f4f6f9; /* 👈 mismo fondo que dashboard */
+    box-shadow:-5px 0 20px rgba(0,0,0,0.25);
+    padding:2rem;
     transition:0.3s;
+    overflow:auto;
 }
 
 .drawer.open {
     right:0;
 }
 
-.drawer h3 {
-    margin-top:0;
+.form-group {
+    display:flex;
+    align-items:center;
+    margin-bottom:1rem;
+    gap:1rem;
 }
 
-/* FORM */
-.form-group {
-    margin-bottom:1rem;
-}
 .form-group label {
-    font-size:0.8rem;
-    color:#777;
+    width:120px;
+    font-size:0.85rem;
+    color:#555;
 }
+
 .form-group input,
 .form-group textarea,
 .form-group select {
-    width:100%;
+    flex:1;
 }
 
 /* SAVE INDICATOR */
@@ -194,10 +201,30 @@ tr:hover {
 <h2>📊 Dashboard Facturas</h2>
 
 <div class="kpi-row">
-    <div class="kpi"><h4>Total</h4><strong id="kpi-total">$0</strong></div>
-    <div class="kpi"><h4>IVA</h4><strong id="kpi-iva">$0</strong></div>
-    <div class="kpi"><h4>Cantidad</h4><strong id="kpi-cantidad">0</strong></div>
-    <div class="kpi"><h4>Pendiente</h4><strong id="kpi-pendiente">$0</strong></div>
+    <div class="kpi">
+        <h4>IVA x Pagar</h4>
+        <strong id="kpi-iva">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>IVA Pagado</h4>
+        <strong id="kpi-iva-pagado">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>IVA Pendiente</h4>
+        <strong id="kpi-iva-pendiente">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>Total</h4>
+        <strong id="kpi-total">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>Pagadas</h4>
+        <strong id="kpi-pagadas">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>Cantidad</h4>
+        <strong id="kpi-cantidad">0</strong>
+    </div>
 </div>
 
 <div class="filtros">
@@ -298,10 +325,17 @@ async function cargarDatos(){
 
     dataGlobal = data.facturas;
 
+    const ivaTotal = data.total_monto * 0.19;
+    const ivaPagado = data.pagada.monto * 0.19;
+    const ivaPendiente = ivaTotal - ivaPagado;
+
+    document.getElementById('kpi-iva').innerText = money(ivaTotal);
+    document.getElementById('kpi-iva-pagado').innerText = money(ivaPagado);
+    document.getElementById('kpi-iva-pendiente').innerText = money(ivaPendiente);
+
     document.getElementById('kpi-total').innerText = money(data.total_monto);
-    document.getElementById('kpi-iva').innerText = money(data.total_iva);
+    document.getElementById('kpi-pagadas').innerText = money(data.pagada.monto);
     document.getElementById('kpi-cantidad').innerText = data.total_qty;
-    document.getElementById('kpi-pendiente').innerText = money(data.pendiente.monto);
 
     renderTabla();
 }
