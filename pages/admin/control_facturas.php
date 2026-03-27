@@ -121,13 +121,12 @@ tr:hover {
 .pagada{background:#4CAF50;}
 .anulada{background:#F44336;}
 
-/* OVERLAY */
+/* DRAWER */
 .drawer-overlay {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
-    background:rgba(0,0,0,0.4);
-    backdrop-filter: blur(2px);
+    background:rgba(0,0,0,0.3);
     opacity:0;
     pointer-events:none;
     transition:0.3s;
@@ -138,22 +137,24 @@ tr:hover {
     pointer-events:auto;
 }
 
-/* DRAWER */
 .drawer {
     position:fixed;
     top:0;
-    right:-450px;
-    width:420px;
+    right:-420px;
+    width:400px;
     height:100%;
-    background:#f4f6f9; /* 👈 mismo fondo que dashboard */
-    box-shadow:-5px 0 20px rgba(0,0,0,0.25);
-    padding:2rem;
+    background:white;
+    box-shadow:-3px 0 10px rgba(0,0,0,0.2);
+    padding:1.5rem;
     transition:0.3s;
-    overflow:auto;
 }
 
 .drawer.open {
     right:0;
+}
+
+.drawer h3 {
+    margin-top:0;
 }
 
 .form-group {
