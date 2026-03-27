@@ -138,16 +138,18 @@ tr:hover {
 }
 
 .drawer {
+    position: fixed;
+    top: 80px;
+    right: -420px;
+    width: 400px;
+    height: auto;
+    max-height: 75vh;
     background: #f4f6f9;
-    font-family:'Segoe UI', sans-serif;
-    position:fixed;
-    top:0;
-    right:-420px;
-    width:400px;
-    height:100%;
-    box-shadow:-3px 0 10px rgba(0,0,0,0.2);
-    padding:1.5rem;
-    transition:0.3s;
+    box-shadow: -3px 0 20px rgba(0,0,0,0.25);
+    padding: 1.5rem;
+    transition: 0.3s;
+    border-radius: 12px 0 0 12px;
+    overflow-y: auto;
 }
 
 .drawer.open {
@@ -270,7 +272,8 @@ tr:hover {
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-    <h3>Detalle Factura #<span id="panel-id"></span></h3>
+    <small style="color: #777;">Detalle de factura</small>
+    <h3 style="color: #2E7D32;">Detalle Factura #<span id="panel-nro"></span></h3>
 
     <div class="form-group">
         <label>Proveedor</label>
@@ -381,7 +384,7 @@ function abrirDrawer(id){
 
 function renderDetalle(){
 
-    document.getElementById('panel-id').textContent = facturaActual.id_factura;
+    document.getElementById('panel-nro').textContent = facturaActual.nro_factura || facturaActual.id_factura;
     document.getElementById('panel-proveedor').value = facturaActual.proveedor || '';
     document.getElementById('panel-monto').value = facturaActual.monto || 0;
     document.getElementById('panel-estado').value = facturaActual.estado;
