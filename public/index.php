@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🥦 Iniciar Sesión — NegocioUP</title>
+  <title>🥦🍎🥕 Iniciar Sesión — NegocioUP</title>
   <style>
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edc3 100%);

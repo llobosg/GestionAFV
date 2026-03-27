@@ -57,7 +57,7 @@ try {
     }
 
     $pdo->commit();
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'id_venta' => $id_venta]);
 
 } catch (Exception $e) {
     $pdo->rollBack();

@@ -535,6 +535,15 @@
         const result = await res.json();
         if (result.success) {
           showToast('✅ Venta registrada con éxito');
+          
+          // Descargar ticket
+          const url = `/api/cajera/imprimir_ticket.php?id_venta=${result.id_venta}`;
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          link.click();
+
+          // Limpiar
           carrito = [];
           renderizarCarrito();
           limpiarFormulario();
