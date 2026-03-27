@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🥦🍎🥕 Iniciar Sesión — NegocioUP</title>
+  <title> NegocioUP 🥦🍎🥕</title>
   <style>
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edc3 100%);
@@ -59,7 +59,7 @@
 </head>
 <body>
   <div class="container">
-    <div class="logo">🥦</div>
+    <div class="logo">🥦🍎🥕</div>
     <h1>Iniciar Sesión</h1>
 
     <div id="error-msg" class="error"></div>
