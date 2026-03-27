@@ -61,15 +61,15 @@ $pdf->Cell(0, 4, "Cajero: " . htmlspecialchars($venta['cajero']), 0, 1, 'C');
 $pdf->Ln(2);
 
 // --- Separador completo ---
-$pdf->Cell(0, 0, str_repeat('-', 44), 0, 1, 'L'); // 44 guiones ≈ 80mm
+$pdf->Cell(0, 2, str_repeat('-', 38), 0, 1, 'C');
 $pdf->Ln(1);
 
-// --- Cabecera de productos ---
+// Cabecera tabla
 $pdf->SetFont('', 'B', 8);
-$pdf->Cell(25, 4, 'Producto', 0, 0);
-$pdf->Cell(8, 4, 'Cant', 0, 0, 'R');
-$pdf->Cell(12, 4, 'P.Unit', 0, 0, 'R');
-$pdf->Cell(12, 4, 'TOTAL', 0, 1, 'R');
+$pdf->Cell(30, 4, 'Producto', 0, 0);
+$pdf->Cell(10, 4, 'Cant', 0, 0, 'R');
+$pdf->Cell(15, 4, 'P.Unit', 0, 0, 'R');
+$pdf->Cell(15, 4, 'TOTAL', 0, 1, 'R');
 
 $pdf->SetFont('', '', 8);
 foreach ($detalles as $d) {
@@ -80,7 +80,7 @@ foreach ($detalles as $d) {
 }
 
 $pdf->Ln(1);
-$pdf->Cell(0, 0, str_repeat('-', 44), 0, 1, 'L');
+$pdf->Cell(0, 0, str_repeat('-', 38), 0, 1, 'L');
 $pdf->Ln(2);
 
 // --- TOTALES: izquierda/derecha ---
