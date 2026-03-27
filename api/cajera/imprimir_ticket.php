@@ -61,7 +61,7 @@ $pdf->Cell(0, 4, "Cajero: " . htmlspecialchars($venta['cajero']), 0, 1, 'C');
 $pdf->Ln(2);
 
 // --- Separador completo ---
-$pdf->Cell(0, 2, str_repeat('-', 38), 0, 1, 'C');
+$pdf->Cell(0, 2, str_repeat('=', 50), 0, 1, 'C');
 $pdf->Ln(1);
 
 // Cabecera tabla
@@ -73,14 +73,14 @@ $pdf->Cell(15, 4, 'TOTAL', 0, 1, 'R');
 
 $pdf->SetFont('', '', 8);
 foreach ($detalles as $d) {
-    $pdf->Cell(25, 4, substr(htmlspecialchars($d['producto']), 0, 20), 0, 0);
-    $pdf->Cell(8, 4, number_format($d['cantidad'], 2), 0, 0, 'R');
-    $pdf->Cell(12, 4, '$' . number_format($d['precio_unitario'], 0), 0, 0, 'R');
-    $pdf->Cell(12, 4, '$' . number_format($d['subtotal'], 0), 0, 1, 'R');
+    $pdf->Cell(30, 4, substr(htmlspecialchars($d['producto']), 0, 20), 0, 0);
+    $pdf->Cell(10, 4, number_format($d['cantidad'], 2), 0, 0, 'R');
+    $pdf->Cell(15, 4, '$' . number_format($d['precio_unitario'], 0), 0, 0, 'R');
+    $pdf->Cell(15, 4, '$' . number_format($d['subtotal'], 0), 0, 1, 'R');
 }
 
 $pdf->Ln(1);
-$pdf->Cell(0, 0, str_repeat('-', 38), 0, 1, 'L');
+$pdf->Cell(0, 0, str_repeat('=', 50), 0, 1, 'C');
 $pdf->Ln(2);
 
 // --- TOTALES: izquierda/derecha ---
@@ -90,15 +90,15 @@ $iva = $venta['total'] - $neto;
 $pdf->SetFont('', 'B', 9);
 // NETO
 $pdf->Cell(35, 4, 'NETO:', 0, 0, 'L');
-$pdf->Cell(22, 4, '$' . number_format($neto, 0), 0, 1, 'R');
+$pdf->Cell(28, 4, '$' . number_format($neto, 0), 0, 1, 'R');
 
 // IVA
 $pdf->Cell(35, 4, 'IVA (19%):', 0, 0, 'L');
-$pdf->Cell(22, 4, '$' . number_format($iva, 0), 0, 1, 'R');
+$pdf->Cell(28, 4, '$' . number_format($iva, 0), 0, 1, 'R');
 
 // TOTAL
 $pdf->Cell(35, 4, 'TOTAL:', 0, 0, 'L');
-$pdf->Cell(22, 4, '$' . number_format($venta['total'], 0), 0, 1, 'R');
+$pdf->Cell(28, 4, '$' . number_format($venta['total'], 0), 0, 1, 'R');
 
 $pdf->Ln(2);
 
