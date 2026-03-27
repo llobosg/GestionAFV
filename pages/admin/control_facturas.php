@@ -41,20 +41,17 @@ body {
 }
 
 /* KPIs */
-.kpi {
-    position:relative;
-    overflow:hidden;
+.kpi-row {
+    display:flex;
+    gap:1rem;
+    margin-bottom:1rem;
 }
-
-.kpi::after {
-    content:'';
-    position:absolute;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:4px;
-    background:#4CAF50;
-    opacity:0.2;
+.kpi {
+    flex:1;
+    background:white;
+    padding:1rem;
+    border-radius:12px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
 
 /* FILTROS */
@@ -326,16 +323,16 @@ async function cargarDatos(){
     dataGlobal = data.facturas;
 
     const ivaTotal = data.total_monto * 0.19;
-    const ivaPagado = data.pagada.monto * 0.19;
-    const ivaPendiente = ivaTotal - ivaPagado;
+const ivaPagado = data.pagada.monto * 0.19;
+const ivaPendiente = ivaTotal - ivaPagado;
 
-    document.getElementById('kpi-iva').innerText = money(ivaTotal);
-    document.getElementById('kpi-iva-pagado').innerText = money(ivaPagado);
-    document.getElementById('kpi-iva-pendiente').innerText = money(ivaPendiente);
+document.getElementById('kpi-iva').innerText = money(ivaTotal);
+document.getElementById('kpi-iva-pagado').innerText = money(ivaPagado);
+document.getElementById('kpi-iva-pendiente').innerText = money(ivaPendiente);
 
-    document.getElementById('kpi-total').innerText = money(data.total_monto);
-    document.getElementById('kpi-pagadas').innerText = money(data.pagada.monto);
-    document.getElementById('kpi-cantidad').innerText = data.total_qty;
+document.getElementById('kpi-total').innerText = money(data.total_monto);
+document.getElementById('kpi-pagadas').innerText = money(data.pagada.monto);
+document.getElementById('kpi-cantidad').innerText = data.total_qty;
 
     renderTabla();
 }
