@@ -192,9 +192,9 @@ tr:hover {
 <body>
 
 <div class="header">
-    <div><strong><?= $nombre_negocio ?></strong></div>
-    <div><?= $nombre_usuario ?></div>
     <a href="/public/home.php" style="color:white;">← Home</a>
+    <div><strong><?= $nombre_negocio ?></strong></div>
+    <div><?= $nombre_usuario ?></div>  
 </div>
 
 <div class="container">
@@ -202,19 +202,11 @@ tr:hover {
 <h2>📊 Dashboard Facturas</h2>
 
 <div class="kpi-row">
-    <div class="kpi">
-        <h4>IVA x Pagar</h4>
-        <strong id="kpi-iva">$0</strong>
+     <div class="kpi">
+        <h4>Cantidad</h4>
+        <strong id="kpi-cantidad">0</strong>
     </div>
-    <div class="kpi">
-        <h4>IVA Pagado</h4>
-        <strong id="kpi-iva-pagado">$0</strong>
-    </div>
-    <div class="kpi">
-        <h4>IVA Pendiente</h4>
-        <strong id="kpi-iva-pendiente">$0</strong>
-    </div>
-    <div class="kpi">
+     <div class="kpi">
         <h4>Total</h4>
         <strong id="kpi-total">$0</strong>
     </div>
@@ -222,10 +214,18 @@ tr:hover {
         <h4>Pagadas</h4>
         <strong id="kpi-pagadas">$0</strong>
     </div>
-    <div class="kpi">
-        <h4>Cantidad</h4>
-        <strong id="kpi-cantidad">0</strong>
+     <div class="kpi">
+        <h4>IVA Pagado</h4>
+        <strong id="kpi-iva-pagado">$0</strong>
     </div>
+    <div class="kpi">
+        <h4>IVA x Pagar</h4>
+        <strong id="kpi-iva">$0</strong>
+    </div>
+    <div class="kpi">
+        <h4>IVA Pendiente</h4>
+        <strong id="kpi-iva-pendiente">$0</strong>
+    </div>  
 </div>
 
 <div class="filtros">
@@ -272,7 +272,6 @@ tr:hover {
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-    <small style="color: #777;">Detalle de factura</small>
     <h3 style="color: #2E7D32;">Detalle Factura #<span id="panel-nro"></span></h3>
 
     <div class="form-group">
@@ -328,19 +327,19 @@ async function cargarDatos(){
     dataGlobal = data.facturas;
 
     const ivaTotal = data.total_monto * 0.19;
-const ivaPagado = data.pagada.monto * 0.19;
-const ivaPendiente = ivaTotal - ivaPagado;
+    const ivaPagado = data.pagada.monto * 0.19;
+    const ivaPendiente = ivaTotal - ivaPagado;
 
-document.getElementById('kpi-iva').innerText = money(ivaTotal);
-document.getElementById('kpi-iva-pagado').innerText = money(ivaPagado);
-document.getElementById('kpi-iva-pendiente').innerText = money(ivaPendiente);
+    document.getElementById('kpi-iva').innerText = money(ivaTotal);
+    document.getElementById('kpi-iva-pagado').innerText = money(ivaPagado);
+    document.getElementById('kpi-iva-pendiente').innerText = money(ivaPendiente);
 
-document.getElementById('kpi-total').innerText = money(data.total_monto);
-document.getElementById('kpi-pagadas').innerText = money(data.pagada.monto);
-document.getElementById('kpi-cantidad').innerText = data.total_qty;
+    document.getElementById('kpi-total').innerText = money(data.total_monto);
+    document.getElementById('kpi-pagadas').innerText = money(data.pagada.monto);
+    document.getElementById('kpi-cantidad').innerText = data.total_qty;
 
-    renderTabla();
-}
+        renderTabla();
+    }
 
 /* BUSCADOR */
 document.getElementById('buscador').addEventListener('input', renderTabla);

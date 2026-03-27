@@ -56,7 +56,7 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
 </head>
 <body>
   <div class="header">
-    <h1>Home 🏠</h1>
+    <h1>Home 🏠 🥦🍎🥕</h1>
     <p>Bienvenido/a, <strong><?= htmlspecialchars($nombre_completo) ?></strong></p>
     <p>Negocio: <strong><?= htmlspecialchars($nombre_negocio) ?></strong> | Rol: <?= htmlspecialchars(ucfirst($rol)) ?></p>
   </div>
