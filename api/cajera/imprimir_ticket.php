@@ -1,6 +1,8 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php'; // TCPDF
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../includes/config.php';
+
+use TCPDF;
 
 if (!in_array($_SESSION['rol'], ['cajera', 'admin'])) {
     http_response_code(403);
@@ -15,9 +17,10 @@ if (!$id_venta) {
 
 // Obtener venta
 $stmt = $pdo->prepare("
-    SELECT v.*, u.nombre as cajero 
+    SELECT v.*, u.nombre as cajero, n.nombre as nombre_negocio
     FROM ventas v
     JOIN usuarios u ON v.id_cajera = u.id_usuario
+    JOIN negocios n ON v.id_negocio = n.id_negocio
     WHERE v.id_venta = ? AND v.id_negocio = ?
 ");
 $stmt->execute([$id_venta, $_SESSION['id_negocio']]);
@@ -41,79 +44,86 @@ $detalles = $stmt->fetchAll();
 
 // === Generar PDF ===
 $pdf = new TCPDF('P', 'mm', [80, 150], true, 'UTF-8', false);
-$pdf->SetMargins(5, 5, 5);
-$pdf->SetAutoPageBreak(true, 5);
+$pdf->SetMargins(2, 2, 2); // márgenes mínimos
+$pdf->SetAutoPageBreak(true, 2);
 $pdf->AddPage();
-$pdf->SetFont('helvetica', '', 10);
+$pdf->SetFont('helvetica', '', 9);
 
-// Negocio
+// --- HEADER: Nombre del negocio ---
 $pdf->SetFont('', 'B', 12);
-$pdf->Cell(0, 5, htmlspecialchars($venta['nombre_negocio']), 0, 1, 'C');
-$pdf->Ln(2);
+$pdf->Cell(0, 6, htmlspecialchars($venta['nombre_negocio']), 0, 1, 'C');
+$pdf->Ln(1);
 
 // Fecha y cajero
-$pdf->SetFont('', '', 9);
+$pdf->SetFont('', '', 8);
 $pdf->Cell(0, 4, date('d/m/Y H:i', strtotime($venta['fecha'] . ' ' . $venta['hora'])), 0, 1, 'C');
 $pdf->Cell(0, 4, "Cajero: " . htmlspecialchars($venta['cajero']), 0, 1, 'C');
 $pdf->Ln(2);
 
-// Separador
-$pdf->Cell(0, 2, str_repeat('-', 30), 0, 1, 'C');
+// --- Separador completo ---
+$pdf->Cell(0, 0, str_repeat('-', 44), 0, 1, 'L'); // 44 guiones ≈ 80mm
 $pdf->Ln(1);
 
-// Cabecera tabla
+// --- Cabecera de productos ---
 $pdf->SetFont('', 'B', 8);
-$pdf->Cell(30, 4, 'Producto', 0, 0);
-$pdf->Cell(10, 4, 'Cant', 0, 0, 'R');
-$pdf->Cell(15, 4, 'P.Unit', 0, 0, 'R');
-$pdf->Cell(15, 4, 'TOTAL', 0, 1, 'R');
+$pdf->Cell(25, 4, 'Producto', 0, 0);
+$pdf->Cell(8, 4, 'Cant', 0, 0, 'R');
+$pdf->Cell(12, 4, 'P.Unit', 0, 0, 'R');
+$pdf->Cell(12, 4, 'TOTAL', 0, 1, 'R');
 
 $pdf->SetFont('', '', 8);
 foreach ($detalles as $d) {
-    $pdf->Cell(30, 4, substr(htmlspecialchars($d['producto']), 0, 20), 0, 0);
-    $pdf->Cell(10, 4, number_format($d['cantidad'], 2), 0, 0, 'R');
-    $pdf->Cell(15, 4, '$' . number_format($d['precio_unitario'], 0), 0, 0, 'R');
-    $pdf->Cell(15, 4, '$' . number_format($d['subtotal'], 0), 0, 1, 'R');
+    $pdf->Cell(25, 4, substr(htmlspecialchars($d['producto']), 0, 20), 0, 0);
+    $pdf->Cell(8, 4, number_format($d['cantidad'], 2), 0, 0, 'R');
+    $pdf->Cell(12, 4, '$' . number_format($d['precio_unitario'], 0), 0, 0, 'R');
+    $pdf->Cell(12, 4, '$' . number_format($d['subtotal'], 0), 0, 1, 'R');
 }
 
-$pdf->Ln(2);
-$pdf->Cell(0, 2, str_repeat('-', 30), 0, 1, 'C');
+$pdf->Ln(1);
+$pdf->Cell(0, 0, str_repeat('-', 44), 0, 1, 'L');
 $pdf->Ln(2);
 
-// Totales
+// --- TOTALES: izquierda/derecha ---
 $neto = $venta['total'] / 1.19;
 $iva = $venta['total'] - $neto;
 
 $pdf->SetFont('', 'B', 9);
-$pdf->Cell(40, 4, 'NETO:', 0, 0, 'R');
-$pdf->Cell(20, 4, '$' . number_format($neto, 0), 0, 1, 'R');
+// NETO
+$pdf->Cell(35, 4, 'NETO:', 0, 0, 'L');
+$pdf->Cell(22, 4, '$' . number_format($neto, 0), 0, 1, 'R');
 
-$pdf->Cell(40, 4, 'IVA (19%):', 0, 0, 'R');
-$pdf->Cell(20, 4, '$' . number_format($iva, 0), 0, 1, 'R');
+// IVA
+$pdf->Cell(35, 4, 'IVA (19%):', 0, 0, 'L');
+$pdf->Cell(22, 4, '$' . number_format($iva, 0), 0, 1, 'R');
 
-$pdf->Cell(40, 4, 'TOTAL:', 0, 0, 'R');
-$pdf->Cell(20, 4, '$' . number_format($venta['total'], 0), 0, 1, 'R');
+// TOTAL
+$pdf->Cell(35, 4, 'TOTAL:', 0, 0, 'L');
+$pdf->Cell(22, 4, '$' . number_format($venta['total'], 0), 0, 1, 'R');
 
 $pdf->Ln(2);
 
 // Medio de pago
-$metodo = $venta['metodo_pago'] === 'efectivo' ? 'Efectivo' : 
-          ($venta['metodo_pago'] === 'tarjeta' ? 'Tarjeta' : 'Merma');
+$metodo = match($venta['metodo_pago']) {
+    'efectivo' => 'Efectivo',
+    'tarjeta' => 'Tarjeta',
+    'merma' => 'Merma',
+    default => ucfirst($venta['metodo_pago'])
+};
+$pdf->SetFont('', '', 8);
 $pdf->Cell(0, 4, "Medio de pago: $metodo", 0, 1, 'L');
 
 $pdf->Ln(3);
 
-// Código QR (opcional)
-$qrData = "Venta #{$venta['id_venta']} - {$venta['nombre_negocio']} - Total: {$venta['total']}";
-$pdf->write2DBarcode($qrData, 'QRCODE,M', 15, $pdf->GetY(), 30, 30, [], 'N');
+// --- Código de barras lineal (Code 128) ---
+$codigo = sprintf('%08d', $venta['id_venta']); // Ej: 00012345
+$pdf->write1DBarcode($codigo, 'C128A', '', '', 60, 12, 0.4, ['position'=>'C']);
 
-$pdf->Ln(35);
+$pdf->Ln(15);
 
 // Footer
 $pdf->SetFont('', 'I', 7);
 $pdf->Cell(0, 4, 'powered by NegocioUP', 0, 1, 'C');
 
-// Salida
-$pdf->Output("ticket_venta_{$venta['id_venta']}.pdf", 'D');
+$pdf->Output("ticket_{$venta['id_venta']}.pdf", 'D');
 exit;
 ?>
