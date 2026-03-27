@@ -19,7 +19,7 @@ $nombre_usuario = $_SESSION['nombre_usuario'] ?? 'Admin';
 <style>
 
 body {
-    background:#f4f6f9;
+    background: #f4f6f9;
     font-family:'Segoe UI', sans-serif;
     margin:0;
 }
@@ -138,12 +138,13 @@ tr:hover {
 }
 
 .drawer {
+    background: #f4f6f9;
+    font-family:'Segoe UI', sans-serif;
     position:fixed;
     top:0;
     right:-420px;
     width:400px;
     height:100%;
-    background:white;
     box-shadow:-3px 0 10px rgba(0,0,0,0.2);
     padding:1.5rem;
     transition:0.3s;
@@ -167,7 +168,7 @@ tr:hover {
 .form-group label {
     width:120px;
     font-size:0.85rem;
-    color:#555;
+    color: #555;
 }
 
 .form-group input,
@@ -269,7 +270,7 @@ tr:hover {
 
 <!-- DRAWER -->
 <div class="drawer" id="drawer">
-    <h3>Factura #<span id="panel-id"></span></h3>
+    <h3>Detalle Factura #<span id="panel-id"></span></h3>
 
     <div class="form-group">
         <label>Proveedor</label>
