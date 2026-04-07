@@ -257,7 +257,7 @@
     }
   </style>
 </head>
-<!-- Antes de </body> -->
+<!-- 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.2.0/qz-tray.js"></script>
 <script>
 // Conectar a QZ Tray
@@ -317,6 +317,7 @@ async function imprimirTicket(venta) {
   }
 }
 </script>
+-->
 <body>
     <!-- BARRA SUPERIOR -->
     <div class="top-bar">
@@ -600,6 +601,7 @@ async function imprimirTicket(venta) {
           if (result.success) {
             showToast('✅ Venta registrada');
 
+            /*
             // Preparar datos para impresión
             const ventaData = {
               id_venta: result.id_venta,
@@ -614,6 +616,7 @@ async function imprimirTicket(venta) {
 
             // Imprimir en impresora local
             imprimirTicket(ventaData);
+            */
 
             // Limpiar
             carrito = [];
