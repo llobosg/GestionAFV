@@ -42,12 +42,13 @@ try {
     }
 
     // ✅ REDIRECCIÓN REAL (no JSON)
-    header('Location: recuperar_password.php?mensaje=' . urlencode('¡Listo! Revisa tu correo para restablecer tu contraseña.'));
+    header('Location: /recuperar_password.php?mensaje=' . urlencode('¡Listo! Revisa tu correo para restablecer tu contraseña.'));
+exit;
     exit;
 
 } catch (Exception $e) {
     error_log("Error en enviar_recuperacion.php: " . $e->getMessage());
-    header('Location: recuperar_password.php?mensaje=' . urlencode('Si los datos son correctos, recibirás un enlace en tu correo.'));
+    header('Location: /recuperar_password.php?mensaje=' . urlencode('Si los datos son correctos, recibirás un enlace en tu correo.'));
     exit;
 }
 ?>
