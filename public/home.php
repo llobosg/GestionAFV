@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../includes/config.php';
 
-// Proteger acceso sin login
+session_start();
 if (!isset($_SESSION['id_usuario'])) {
-    header('Location: index.php');
+    header('Location: /public/login.php');
     exit;
 }
 
@@ -60,7 +60,13 @@ $nombre_completo = trim("{$nombre} {$apellido}") ?: $nombre;
     <p>Bienvenido/a, <strong><?= htmlspecialchars($nombre_completo) ?></strong></p>
     <p>Negocio: <strong><?= htmlspecialchars($nombre_negocio) ?></strong> | Rol: <?= htmlspecialchars(ucfirst($rol)) ?></p>
   </div>
-
+  <!-- Botón Salir -->
+  <div>
+        <a href="/public/logout.php" 
+           style="background:#e74c3c; color:white; text-decoration:none; padding:0.5rem 1rem; border-radius:6px; font-weight:bold; display:inline-block;">
+            Salir
+        </a>
+  </div>
   <?php if ($rol === 'admin'): ?>
     <div class="module admin">
       <h2>⚙️ Panel de Administración</h2>
