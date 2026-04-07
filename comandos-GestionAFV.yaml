@@ -36,16 +36,9 @@ mysql://root:WugMxfRGVHoNZQzwmNpormqREZxOoHNH@caboose.proxy.rlwy.net:44626/railw
   --user=root \
   --password=WugMxfRGVHoNZQzwmNpormqREZxOoHNH \
   --database=railway \
-  -e "CREATE TABLE recuperacion_password (
-    id_recuperacion INT PRIMARY KEY AUTO_INCREMENT,
-    id_usuario INT NOT NULL,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    expires_at DATETIME NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
-);"
+  -e "DESCRIBE facturas;"
 
 
 git add .
-git commit -m "feat: brevomail link"
+git commit -m "feat: imprimir ticket,6"
 git push
