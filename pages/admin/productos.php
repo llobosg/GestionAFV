@@ -2,7 +2,7 @@
 // === DETECTAR RAÍZ DEL PROYECTO DE FORMA CONFIABLE ===
 $possibleRoots = [
     '/app', // Railway
-    dirname(__DIR__, 2), // Desarrollo local: /proyecto/api → /proyecto
+    dirname(__DIR__, 2), // Desarrollo local
     $_SERVER['DOCUMENT_ROOT'] ? dirname($_SERVER['DOCUMENT_ROOT']) : null,
 ];
 
@@ -15,12 +15,12 @@ foreach ($possibleRoots as $path) {
 }
 
 if (!$root) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error interno: configuración no encontrada']);
-    exit;
+    die('Error: configuración no encontrada');
 }
 
 require_once $root . '/includes/config.php';
+
+session_start(); // ← Asegúrate de tener esto
 
 // Validación segura de sesión
 if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'admin') {
