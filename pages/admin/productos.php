@@ -1,6 +1,4 @@
 <?php
-header('Content-Type: application/json');
-
 // === DETECTAR RAÍZ DEL PROYECTO DE FORMA CONFIABLE ===
 $possibleRoots = [
     '/app', // Railway
