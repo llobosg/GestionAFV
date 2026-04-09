@@ -769,55 +769,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       cacheProductosBase = await res.json();
     }
 
-    // Abrir submodal
-    function abrirEditarPromo(idPromo) {
-        // Buscar promo en la tabla
-        const fila = document.querySelector(`tr[data-id-promo="${idPromo}"]`);
-        if (!fila) return;
-
-        // Extraer datos (puedes mejorar esto con dataset)
-        const nombre = fila.cells[0].textContent.trim();
-        const precioPromo = parseFloat(fila.cells[1].textContent.replace('$', '').replace(/\./g, '').replace(',', '.'));
-        const activo = fila.cells[3].textContent.includes('Sí');
-
-        // Llenar formulario
-        document.getElementById('edit_id_promo').value = idPromo;
-        document.getElementById('edit_nombre').value = nombre;
-        document.getElementById('edit_precio_promo').value = precioPromo;
-        document.getElementById('edit_activo').value = activo ? '1' : '0';
-
-        // Mostrar submodal
-        document.getElementById('submodalPromo').style.display = 'flex';
-    }
-
-    function cerrarSubmodalPromo() {
-        document.getElementById('submodalPromo').style.display = 'none';
-    }
-
-    // Guardar cambios
-    document.getElementById('formEditarPromo').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = {
-        id_promo: document.getElementById('edit_id_promo').value,
-        nombre: document.getElementById('edit_nombre').value,
-        precio_promo: document.getElementById('edit_precio_promo').value,
-        activo: document.getElementById('edit_activo').value
-      };
-
-      const res = await fetch('/api/admin/guardar_promo.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-      });
-
-      if (res.ok) {
-        alert('✅ Promoción actualizada');
-        location.reload();
-      } else {
-        alert('❌ Error al guardar');
-      }
-    });
-
     // Inicializar
     cargarProductosBase();
   </script>
