@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../../includes/session.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 $id_detalle = $data['id_detalle'];

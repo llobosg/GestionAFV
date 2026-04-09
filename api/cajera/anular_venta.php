@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../../includes/session.php';
 
 // Validar rol
 if (!isset($_SESSION['rol']) || !in_array($_SESSION['rol'], ['cajera', 'admin'])) {

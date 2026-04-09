@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../../includes/session.php'; // ← usa el nuevo sistema
+require_once __DIR__ . '/../../includes/session.php';
 require_once __DIR__ . '/../../includes/config.php';
 
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
