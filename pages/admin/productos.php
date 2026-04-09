@@ -1,5 +1,21 @@
 <?php
-require_once __DIR__ . '/../../includes/config.php';
+header('Content-Type: application/json');
+
+// Detectar raíz del proyecto de forma robusta
+if (isset($_SERVER['DOCUMENT_ROOT']) && strpos($_SERVER['DOCUMENT_ROOT'], '/public') !== false) {
+    // Ej: DOCUMENT_ROOT = /app/public → raíz = /app
+    $root = dirname($_SERVER['DOCUMENT_ROOT']);
+} else {
+    // Fallback para desarrollo local
+    $root = dirname(__DIR__, 2);
+}
+
+// Asegurar que la ruta no esté vacía
+if (empty($root) || !is_dir($root)) {
+    $root = '/app'; // Ruta explícita para Railway
+}
+
+require_once $root . '/includes/config.php';
 
 // Validación segura de sesión
 if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'admin') {

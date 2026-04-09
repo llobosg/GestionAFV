@@ -1,8 +1,19 @@
 <?php
 header('Content-Type: application/json');
 
-// Detectar la raíz del proyecto dinámicamente
-$root = dirname(__DIR__, 2); // Sube 2 niveles: /api → / → raíz
+// Detectar raíz del proyecto de forma robusta
+if (isset($_SERVER['DOCUMENT_ROOT']) && strpos($_SERVER['DOCUMENT_ROOT'], '/public') !== false) {
+    // Ej: DOCUMENT_ROOT = /app/public → raíz = /app
+    $root = dirname($_SERVER['DOCUMENT_ROOT']);
+} else {
+    // Fallback para desarrollo local
+    $root = dirname(__DIR__, 2);
+}
+
+// Asegurar que la ruta no esté vacía
+if (empty($root) || !is_dir($root)) {
+    $root = '/app'; // Ruta explícita para Railway
+}
 
 require_once $root . '/includes/config.php';
 
