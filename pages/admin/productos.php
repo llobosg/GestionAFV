@@ -253,6 +253,12 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       text-align: center;
       margin-top: 0.5rem;
     }
+    
+    .form-group { margin-bottom: 1rem; }
+    .form-control { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-primary { background: #2196F3; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
   </style>
 </head>
 <body>
@@ -426,6 +432,43 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       </div>
     </div>
 
+  </div>
+
+  <!-- Submodal para editar promoción -->
+  <div id="submodalPromo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+    <div style="background:white; padding:2rem; border-radius:12px; max-width:500px; width:90%;">
+      <h3>✏️ Editar Promoción</h3>
+      <form id="formEditarPromo">
+        <input type="hidden" id="edit_id_promo">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="edit_nombre" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Producto base</label>
+          <select id="edit_id_producto_base" class="form-control" disabled>
+            <!-- Se llenará con JS -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" id="edit_cantidad_unidades" min="2" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Precio promoción ($)</label>
+          <input type="number" step="0.01" id="edit_precio_promo" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Activo</label>
+          <select id="edit_activo" class="form-control">
+            <option value="1">Sí</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" onclick="cerrarSubmodalPromo()" class="btn btn-secondary" style="margin-left:0.5rem;">Cancelar</button>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -722,51 +765,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
 
     document.addEventListener('DOMContentLoaded', cargarProductos);
-
-    <!-- Submodal para editar promoción -->
-    <div id="submodalPromo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
-      <div style="background:white; padding:2rem; border-radius:12px; max-width:500px; width:90%;">
-        <h3>✏️ Editar Promoción</h3>
-        <form id="formEditarPromo">
-          <input type="hidden" id="edit_id_promo">
-          <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" id="edit_nombre" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Producto base</label>
-            <select id="edit_id_producto_base" class="form-control" disabled>
-              <!-- Se llenará con JS -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Cantidad</label>
-            <input type="number" id="edit_cantidad_unidades" min="2" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Precio promoción ($)</label>
-            <input type="number" step="0.01" id="edit_precio_promo" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Activo</label>
-            <select id="edit_activo" class="form-control">
-              <option value="1">Sí</option>
-              <option value="0">No</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Guardar</button>
-          <button type="button" onclick="cerrarSubmodalPromo()" class="btn btn-secondary" style="margin-left:0.5rem;">Cancelar</button>
-        </form>
-      </div>
-    </div>
-
-    <style>
-    .form-group { margin-bottom: 1rem; }
-    .form-control { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
-    .btn { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
-    .btn-primary { background: #2196F3; color: white; }
-    .btn-secondary { background: #6c757d; color: white; }
-    </style>
 
     let cacheProductosBase = [];
 
