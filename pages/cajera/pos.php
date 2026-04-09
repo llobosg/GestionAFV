@@ -475,13 +475,18 @@ async function imprimirTicket(venta) {
     });
 
     function seleccionarProducto(id) {
-      const p = productosCache.find(x => x.id_producto == id);
+      // Buscar en productos normales y promocionales
+      let p = productosCache.find(x => 
+        (x.tipo === 'normal' && x.id_producto == id) ||
+        (x.tipo === 'promo' && x.id_producto == id)
+      );
+      
       if (!p) return;
 
       productoSeleccionado = p;
       document.getElementById('buscador-producto').value = p.producto;
       document.getElementById('precio').value = parseFloat(p.precio_venta).toFixed(2);
-      document.getElementById('cantidad').value = 1;
+      document.getElementById('cantidad').value = p.tipo === 'promo' ? p.cantidad_unidades : 1;
       calcularSubtotal();
       document.getElementById('resultados-producto').style.display = 'none';
     }

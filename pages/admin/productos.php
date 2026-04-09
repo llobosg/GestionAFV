@@ -453,31 +453,41 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       tbody.innerHTML = '';
 
       const filtrados = productosCache.filter(p => {
-        const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
-        const matchTipo = !tipo || p.tipo === tipo;
-        const matchFamilia = !familia || p.familia.toLowerCase().includes(familia);
-        const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
-        const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
-        return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
+          const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
+          const matchTipo = !tipo || p.tipo === tipo;
+          const matchFamilia = !familia || p.familia?.toLowerCase().includes(familia);
+          const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
+          const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
+          return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
       }).sort((a, b) => a.producto.localeCompare(b.producto));
 
-      tbody.innerHTML = filtrados.map(p => `
-        <tr>
-          <td>${p.producto}</td>
-          <td>${p.tipo}</td>
-          <td>${p.familia}</td>
-          <td>${p.subfamilia}</td>
-          <td>${p.unidad_medida}</td>
-          <td>$${parseFloat(p.precio_compra).toFixed(2)}</td>
-          <td>${parseFloat(p.porc_utilidad).toFixed(1)}%</td>
-          <td>$${parseFloat(p.precio_venta).toFixed(2)}</td>
-          <td>${parseFloat(p.stock_actual).toFixed(2)}</td>
-          <td class="acciones">
-            <button onclick="editarProducto(${p.id_producto})">✏️</button>
-            <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = filtrados.map(p => {
+          // Determinar botón de edición según el tipo
+          let botonEdicion = '';
+          if (p.tipo === 'promo') {
+              botonEdicion = `<button onclick="abrirEditarPromo(${p.id_producto})">✏️ Editar Promo</button>`;
+          } else {
+              botonEdicion = `<button onclick="editarProducto(${p.id_producto})">✏️ Editar</button>`;
+          }
+
+          return `
+            <tr>
+              <td>${p.producto}</td>
+              <td>${p.tipo || '-'}</td>
+              <td>${p.familia || '-'}</td>
+              <td>${p.subfamilia || '-'}</td>
+              <td>${p.unidad_medida || '-'}</td>
+              <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
+              <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
+              <td class="acciones">
+                ${botonEdicion}
+                <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
+              </td>
+            </tr>
+          `;
+      }).join('');
     }
 
     ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
@@ -623,6 +633,87 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       cargarProductos();
     }
 
+    function abrirEditarPromo(idPromo) {
+        // Buscar el producto promocional en el cache global
+        const promo = productosCache.find(p => p.id_producto == idPromo && p.tipo === 'promo');
+        
+        if (!promo) {
+            alert('❌ Promoción no encontrada');
+            return;
+        }
+
+        // Llenar el formulario del submodal
+        document.getElementById('edit_id_promo').value = promo.id_producto;
+        document.getElementById('edit_nombre').value = promo.producto;
+        document.getElementById('edit_precio_promo').value = parseFloat(promo.precio_venta).toFixed(2);
+        document.getElementById('edit_cantidad_unidades').value = promo.cantidad_unidades || 2;
+        document.getElementById('edit_activo').value = promo.activo ? '1' : '0';
+
+        // Cargar lista de productos base en el select (si no está cargada)
+        if (cacheProductosBase.length === 0) {
+            cargarProductosBase().then(() => {
+                llenarSelectProductosBase(promo.id_producto_base);
+            });
+        } else {
+            llenarSelectProductosBase(promo.id_producto_base);
+        }
+
+        // Mostrar submodal
+        document.getElementById('submodalPromo').style.display = 'flex';
+    }
+
+    function llenarSelectProductosBase(idProductoBase) {
+        const select = document.getElementById('edit_id_producto_base');
+        select.innerHTML = '<option value="">Cargando...</option>';
+        
+        if (cacheProductosBase.length === 0) {
+            select.innerHTML = '<option value="">No hay productos</option>';
+            return;
+        }
+
+        let options = '<option value="">Seleccionar...</option>';
+        cacheProductosBase.forEach(p => {
+            options += `<option value="${p.id_producto}" ${p.id_producto == idProductoBase ? 'selected' : ''}>${p.producto}</option>`;
+        });
+        select.innerHTML = options;
+    }
+
+    // Cerrar submodal
+    function cerrarSubmodalPromo() {
+        document.getElementById('submodalPromo').style.display = 'none';
+    }
+
+    // Guardar cambios
+    document.getElementById('formEditarPromo')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('id_promo', document.getElementById('edit_id_promo').value);
+        formData.append('nombre', document.getElementById('edit_nombre').value.trim());
+        formData.append('id_producto_base', document.getElementById('edit_id_producto_base').value);
+        formData.append('cantidad_unidades', document.getElementById('edit_cantidad_unidades').value);
+        formData.append('precio_promo', document.getElementById('edit_precio_promo').value);
+        formData.append('activo', document.getElementById('edit_activo').value);
+
+        try {
+            const res = await fetch('/api/admin/guardar_promo.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert('✅ Promoción actualizada con éxito');
+                location.reload(); // Recargar para ver cambios
+            } else {
+                alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('❌ Error de conexión al guardar');
+        }
+    });
+
     function limpiarForm() {
       document.getElementById('producto-form').reset();
       document.getElementById('id_producto').value = '';
@@ -631,6 +722,111 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     }
 
     document.addEventListener('DOMContentLoaded', cargarProductos);
+
+    <!-- Submodal para editar promoción -->
+    <div id="submodalPromo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+      <div style="background:white; padding:2rem; border-radius:12px; max-width:500px; width:90%;">
+        <h3>✏️ Editar Promoción</h3>
+        <form id="formEditarPromo">
+          <input type="hidden" id="edit_id_promo">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="edit_nombre" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Producto base</label>
+            <select id="edit_id_producto_base" class="form-control" disabled>
+              <!-- Se llenará con JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" id="edit_cantidad_unidades" min="2" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Precio promoción ($)</label>
+            <input type="number" step="0.01" id="edit_precio_promo" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Activo</label>
+            <select id="edit_activo" class="form-control">
+              <option value="1">Sí</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" onclick="cerrarSubmodalPromo()" class="btn btn-secondary" style="margin-left:0.5rem;">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+    <style>
+    .form-group { margin-bottom: 1rem; }
+    .form-control { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-primary { background: #2196F3; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    </style>
+
+    let cacheProductosBase = [];
+
+    // Cargar lista de productos base al inicio
+    async function cargarProductosBase() {
+      const res = await fetch('/api/admin/listar_productos_base.php');
+      cacheProductosBase = await res.json();
+    }
+
+    // Abrir submodal
+    function abrirEditarPromo(idPromo) {
+        // Buscar promo en la tabla
+        const fila = document.querySelector(`tr[data-id-promo="${idPromo}"]`);
+        if (!fila) return;
+
+        // Extraer datos (puedes mejorar esto con dataset)
+        const nombre = fila.cells[0].textContent.trim();
+        const precioPromo = parseFloat(fila.cells[1].textContent.replace('$', '').replace(/\./g, '').replace(',', '.'));
+        const activo = fila.cells[3].textContent.includes('Sí');
+
+        // Llenar formulario
+        document.getElementById('edit_id_promo').value = idPromo;
+        document.getElementById('edit_nombre').value = nombre;
+        document.getElementById('edit_precio_promo').value = precioPromo;
+        document.getElementById('edit_activo').value = activo ? '1' : '0';
+
+        // Mostrar submodal
+        document.getElementById('submodalPromo').style.display = 'flex';
+    }
+
+    function cerrarSubmodalPromo() {
+        document.getElementById('submodalPromo').style.display = 'none';
+    }
+
+    // Guardar cambios
+    document.getElementById('formEditarPromo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        id_promo: document.getElementById('edit_id_promo').value,
+        nombre: document.getElementById('edit_nombre').value,
+        precio_promo: document.getElementById('edit_precio_promo').value,
+        activo: document.getElementById('edit_activo').value
+      };
+
+      const res = await fetch('/api/admin/guardar_promo.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert('✅ Promoción actualizada');
+        location.reload();
+      } else {
+        alert('❌ Error al guardar');
+      }
+    });
+
+    // Inicializar
+    cargarProductosBase();
   </script>
 </body>
 </html>
