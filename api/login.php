@@ -1,42 +1,40 @@
 <?php
 header('Content-Type: application/json');
+
+// Primero cargar configuración
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../../includes/session.php';
+
+// Luego iniciar sesión (sin depender de config)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 try {
-    // Leer datos (soporta tanto POST normal como JSON)
     $input = json_decode(file_get_contents('php://input'), true);
-    if ($input) {
-        $nombre = trim($input['usuario'] ?? '');
-        $password = $input['password'] ?? '';
-    } else {
-        $nombre = trim($_POST['usuario'] ?? '');
-        $password = $_POST['password'] ?? '';
+    
+    $email = trim($input['email'] ?? '');
+    $password = $input['password'] ?? '';
+
+    if (!$email || !$password) {
+        throw new Exception('Email y contraseña son obligatorios');
     }
 
-    if (empty($nombre) || empty($password)) {
-        throw new Exception('Nombre y contraseña son obligatorios');
+    // Validar email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('Email inválido');
     }
 
-    // Buscar solo por nombre (asume unicidad global o por diseño)
+    // Buscar usuario
     $stmt = $pdo->prepare("
-        SELECT 
-            u.id_usuario, 
-            u.nombre, 
-            u.apellido, 
-            u.rol, 
-            u.password,
-            u.id_negocio,
-            n.nombre AS nombre_negocio
-        FROM usuarios u
-        JOIN negocios n ON u.id_negocio = n.id_negocio
-        WHERE u.nombre = ?
+        SELECT id_usuario, nombre, apellido, rol, id_negocio, password_hash 
+        FROM usuarios 
+        WHERE email = ? AND activo = 1
     ");
-    $stmt->execute([$nombre]);
+    $stmt->execute([$email]);
     $usuario = $stmt->fetch();
 
-    if (!$usuario || !password_verify($password, $usuario['password'])) {
-        throw new Exception('Nombre o contraseña incorrectos');
+    if (!$usuario || !password_verify($password, $usuario['password_hash'])) {
+        throw new Exception('Credenciales incorrectas');
     }
 
     // Guardar en sesión
@@ -45,13 +43,20 @@ try {
     $_SESSION['apellido_usuario'] = $usuario['apellido'];
     $_SESSION['rol'] = $usuario['rol'];
     $_SESSION['id_negocio'] = $usuario['id_negocio'];
-    $_SESSION['nombre_negocio'] = $usuario['nombre_negocio'];
-    $_SESSION['email'] = $usuario['email'];
 
-    echo json_encode(['success' => true]);
+    // Obtener nombre del negocio
+    $stmt_negocio = $pdo->prepare("SELECT nombre FROM negocios WHERE id_negocio = ?");
+    $stmt_negocio->execute([$usuario['id_negocio']]);
+    $negocio = $stmt_negocio->fetch();
+    $_SESSION['nombre_negocio'] = $negocio['nombre'] ?? 'Negocio';
+
+    echo json_encode([
+        'success' => true,
+        'redirect' => '/public/home.php'
+    ]);
 
 } catch (Exception $e) {
-    http_response_code(401);
+    error_log("Login error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 ?>
