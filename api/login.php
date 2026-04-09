@@ -1,11 +1,11 @@
 <?php
 header('Content-Type: application/json');
 
-// === DETECTAR RAÍZ DEL PROYECTO DE FORMA CONFIABLE ===
+// === DETECTAR RAÍZ DEL PROYECTO ===
 $possibleRoots = [
-    '/app', // Railway
-    dirname(__DIR__, 2), // Desarrollo local: /proyecto/api → /proyecto
-    $_SERVER['DOCUMENT_ROOT'] ? dirname($_SERVER['DOCUMENT_ROOT']) : null,
+    '/app',
+    dirname(__DIR__, 2),
+    ($_SERVER['DOCUMENT_ROOT'] ?? '') ? dirname($_SERVER['DOCUMENT_ROOT']) : null,
 ];
 
 $root = null;
@@ -18,7 +18,7 @@ foreach ($possibleRoots as $path) {
 
 if (!$root) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error interno: configuración no encontrada']);
+    echo json_encode(['success' => false, 'message' => 'Configuración no encontrada']);
     exit;
 }
 
@@ -29,28 +29,37 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 try {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    $email = trim($input['email'] ?? '');
+    $rawInput = file_get_contents('php://input');
+    $input = [];
+
+    if (!empty($rawInput)) {
+        $input = json_decode($rawInput, true);
+    }
+
+    if (!$input || !isset($input['usuario'])) {
+        $input = [
+            'usuario' => $_POST['usuario'] ?? '',
+            'password' => $_POST['password'] ?? ''
+        ];
+    }
+
+    $usuario = trim($input['usuario'] ?? '');
     $password = $input['password'] ?? '';
 
-    if (!$email || !$password) {
-        throw new Exception('Email y contraseña son obligatorios');
+    if (!$usuario || !$password) {
+        throw new Exception('Nombre de usuario y contraseña son obligatorios');
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        throw new Exception('Email inválido');
-    }
-
+    // Buscar por NOMBRE (no por email)
     $stmt = $pdo->prepare("
         SELECT id_usuario, nombre, apellido, rol, id_negocio, password_hash 
         FROM usuarios 
-        WHERE email = ? AND activo = 1
+        WHERE nombre = ? AND activo = 1
     ");
-    $stmt->execute([$email]);
-    $usuario = $stmt->fetch();
+    $stmt->execute([$usuario]);
+    $user = $stmt->fetch();
 
-    if (!$usuario || !password_verify($password, $usuario['password_hash'])) {
+    if (!$user || !password_verify($password, $user['password_hash'])) {
         throw new Exception('Credenciales incorrectas');
     }
 
