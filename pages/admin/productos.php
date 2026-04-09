@@ -759,24 +759,24 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         };
 
         try {
-            fetch('/api/admin/guardar_promo.php', {
+            const res = await fetch('/api/admin/guardar_promo.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
-
             });
+
             const result = await res.json();
-              if (result.success) {
-                  alert('✅ Promoción actualizada con éxito');
-                  location.reload(); // Recargar para ver cambios
-              } else {
-                  alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
-              }
-          } catch (err) {
-              console.error(err);
-              alert('❌ Error de conexión al guardar');
-          }
-        })
+            if (result.success) {
+                alert('✅ Promoción actualizada con éxito');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('❌ Error de conexión al guardar');
+        }
+    });
 
    
         
