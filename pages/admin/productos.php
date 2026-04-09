@@ -316,11 +316,11 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     <!-- LADO DERECHO -->
     <div class="right-column">
       <div class="form-container">
-        <h2 id="form-title">Agregar Producto</h2>
         <a href="crear_promo.php" 
           style="display:inline-block;background:#FF9800;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-weight:bold;margin-bottom:1.5rem;">
             ➕ Crear Producto Promocional
         </a>
+        <h2 id="form-title">Agregar Producto</h2>
         <form id="producto-form">
           <input type="hidden" id="id_producto">
           <input type="hidden" id="codigo">
