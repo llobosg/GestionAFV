@@ -673,7 +673,10 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
     function abrirEditarPromo(idPromo) {
         // Buscar el producto promocional en el cache global
-        const promo = productosCache.find(p => p.id_producto == idPromo && p.tipo === 'promo');
+        const promo = productosCache.find(p => 
+            p.id_producto == idPromo && 
+            p.tipo_registro === 'promo'  // ← ¡CORREGIDO!
+        );
         
         if (!promo) {
             alert('❌ Promoción no encontrada');
@@ -687,7 +690,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         document.getElementById('edit_cantidad_unidades').value = promo.cantidad_unidades || 2;
         document.getElementById('edit_activo').value = promo.activo ? '1' : '0';
 
-        // Cargar lista de productos base en el select (si no está cargada)
+        // Cargar lista de productos base
         if (cacheProductosBase.length === 0) {
             cargarProductosBase().then(() => {
                 llenarSelectProductosBase(promo.id_producto_base);
