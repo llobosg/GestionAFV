@@ -52,25 +52,25 @@ try {
 
     // Buscar por NOMBRE (no por email)
     $stmt = $pdo->prepare("
-        SELECT id_usuario, nombre, apellido, rol, id_negocio, password_hash 
+    SELECT id_usuario, nombre, apellido, rol, id_negocio, password 
         FROM usuarios 
         WHERE nombre = ? AND activo = 1
     ");
     $stmt->execute([$usuario]);
     $user = $stmt->fetch();
 
-    if (!$user || !password_verify($password, $user['password_hash'])) {
+    if (!$user || !password_verify($password, $user['password'])) {
         throw new Exception('Credenciales incorrectas');
     }
 
-    $_SESSION['id_usuario'] = $usuario['id_usuario'];
-    $_SESSION['nombre_usuario'] = $usuario['nombre'];
-    $_SESSION['apellido_usuario'] = $usuario['apellido'];
-    $_SESSION['rol'] = $usuario['rol'];
-    $_SESSION['id_negocio'] = $usuario['id_negocio'];
+    $_SESSION['id_usuario'] = $user['id_usuario'];
+    $_SESSION['nombre_usuario'] = $user['nombre'];
+    $_SESSION['apellido_usuario'] = $user['apellido'];
+    $_SESSION['rol'] = $user['rol'];
+    $_SESSION['id_negocio'] = $user['id_negocio'];
 
     $stmt_negocio = $pdo->prepare("SELECT nombre FROM negocios WHERE id_negocio = ?");
-    $stmt_negocio->execute([$usuario['id_negocio']]);
+    $stmt_negocio->execute([$user['id_negocio']]);
     $negocio = $stmt_negocio->fetch();
     $_SESSION['nombre_negocio'] = $negocio['nombre'] ?? 'Negocio';
 
