@@ -253,7 +253,7 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       text-align: center;
       margin-top: 0.5rem;
     }
-    
+
     .form-group { margin-bottom: 1rem; }
     .form-control { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
     .btn { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
@@ -484,68 +484,6 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
       document.getElementById(id).addEventListener('input', actualizarGenerados);
     });
 
-    // Filtros
-    function aplicarFiltros() {
-      const busqueda = document.getElementById('buscador-global').value.toLowerCase();
-      const tipo = document.getElementById('filtro-tipo').value;
-      const familia = document.getElementById('filtro-familia').value.toLowerCase();
-      const producto = document.getElementById('filtro-producto').value.toLowerCase();
-      const stockMin = parseFloat(document.getElementById('filtro-stock').value) || -1;
-
-      const tbody = document.querySelector('#tabla-productos tbody');
-      tbody.innerHTML = '';
-
-      const filtrados = productosCache.filter(p => {
-          const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
-          const matchTipo = !tipo || p.tipo === tipo;
-          const matchFamilia = !familia || p.familia?.toLowerCase().includes(familia);
-          const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
-          const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
-          return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
-      }).sort((a, b) => a.producto.localeCompare(b.producto));
-
-      tbody.innerHTML = filtrados.map(p => {
-          // Determinar botón de edición según el tipo
-          let botonEdicion = '';
-          if (p.tipo === 'promo') {
-              botonEdicion = `<button onclick="abrirEditarPromo(${p.id_producto})">✏️ Editar Promo</button>`;
-          } else {
-              botonEdicion = `<button onclick="editarProducto(${p.id_producto})">✏️ Editar</button>`;
-          }
-
-          return `
-            <tr>
-              <td>${p.producto}</td>
-              <td>${p.tipo || '-'}</td>
-              <td>${p.familia || '-'}</td>
-              <td>${p.subfamilia || '-'}</td>
-              <td>${p.unidad_medida || '-'}</td>
-              <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
-              <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
-              <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
-              <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
-              <td class="acciones">
-                ${botonEdicion}
-                <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
-              </td>
-            </tr>
-          `;
-      }).join('');
-    }
-
-    ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
-      document.getElementById(id).addEventListener('input', aplicarFiltros);
-    });
-
-    function limpiarFiltros() {
-      document.getElementById('buscador-global').value = '';
-      document.getElementById('filtro-tipo').value = '';
-      document.getElementById('filtro-familia').value = '';
-      document.getElementById('filtro-producto').value = '';
-      document.getElementById('filtro-stock').value = '';
-      aplicarFiltros();
-    }
-
     // Cargar productos
     async function cargarProductos() {
       const res = await fetch('/api/admin/listar_productos.php');
@@ -620,8 +558,69 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
         document.getElementById('light-green').classList.add('active');
         document.getElementById('promedio-stock').textContent = '✅ Estable';
       }
-  }
+    }
 
+    // Filtros
+    function aplicarFiltros() {
+      const busqueda = document.getElementById('buscador-global').value.toLowerCase();
+      const tipo = document.getElementById('filtro-tipo').value;
+      const familia = document.getElementById('filtro-familia').value.toLowerCase();
+      const producto = document.getElementById('filtro-producto').value.toLowerCase();
+      const stockMin = parseFloat(document.getElementById('filtro-stock').value) || -1;
+
+      const tbody = document.querySelector('#tabla-productos tbody');
+      tbody.innerHTML = '';
+
+      const filtrados = productosCache.filter(p => {
+          const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
+          const matchTipo = !tipo || p.tipo === tipo;
+          const matchFamilia = !familia || p.familia?.toLowerCase().includes(familia);
+          const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
+          const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
+          return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
+      }).sort((a, b) => a.producto.localeCompare(b.producto));
+
+      tbody.innerHTML = filtrados.map(p => {
+          // Determinar botón de edición según el tipo
+          let botonEdicion = '';
+          if (p.tipo === 'promo') {
+              botonEdicion = `<button onclick="abrirEditarPromo(${p.id_producto})">✏️ Editar Promo</button>`;
+          } else {
+              botonEdicion = `<button onclick="editarProducto(${p.id_producto})">✏️ Editar</button>`;
+          }
+
+          return `
+            <tr>
+              <td>${p.producto}</td>
+              <td>${p.tipo || '-'}</td>
+              <td>${p.familia || '-'}</td>
+              <td>${p.subfamilia || '-'}</td>
+              <td>${p.unidad_medida || '-'}</td>
+              <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
+              <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
+              <td class="acciones">
+                ${botonEdicion}
+                <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
+              </td>
+            </tr>
+          `;
+      }).join('');
+    }
+
+    ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
+      document.getElementById(id).addEventListener('input', aplicarFiltros);
+    });
+
+    function limpiarFiltros() {
+      document.getElementById('buscador-global').value = '';
+      document.getElementById('filtro-tipo').value = '';
+      document.getElementById('filtro-familia').value = '';
+      document.getElementById('filtro-producto').value = '';
+      document.getElementById('filtro-stock').value = '';
+      aplicarFiltros();
+    }
 
     // Formulario
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
