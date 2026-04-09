@@ -728,32 +728,37 @@ $id_negocio = $_SESSION['id_negocio'] ?? 1;
     document.getElementById('formEditarPromo')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const formData = new FormData();
-        formData.append('id_promo', document.getElementById('edit_id_promo').value);
-        formData.append('nombre', document.getElementById('edit_nombre').value.trim());
-        formData.append('id_producto_base', document.getElementById('edit_id_producto_base').value);
-        formData.append('cantidad_unidades', document.getElementById('edit_cantidad_unidades').value);
-        formData.append('precio_promo', document.getElementById('edit_precio_promo').value);
-        formData.append('activo', document.getElementById('edit_activo').value);
+        const data = {
+            id_promo: document.getElementById('edit_id_promo').value,
+            nombre: document.getElementById('edit_nombre').value.trim(),
+            id_producto_base: document.getElementById('edit_id_producto_base').value,
+            cantidad_unidades: document.getElementById('edit_cantidad_unidades').value,
+            precio_promo: document.getElementById('edit_precio_promo').value,
+            activo: document.getElementById('edit_activo').value
+        };
 
         try {
-            const res = await fetch('/api/admin/guardar_promo.php', {
+            fetch('/api/admin/guardar_promo.php', {
                 method: 'POST',
-                body: formData
-            });
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
 
+            });
             const result = await res.json();
-            if (result.success) {
-                alert('✅ Promoción actualizada con éxito');
-                location.reload(); // Recargar para ver cambios
-            } else {
-                alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
-            }
-        } catch (err) {
-            console.error(err);
-            alert('❌ Error de conexión al guardar');
-        }
-    });
+              if (result.success) {
+                  alert('✅ Promoción actualizada con éxito');
+                  location.reload(); // Recargar para ver cambios
+              } else {
+                  alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
+              }
+          } catch (err) {
+              console.error(err);
+              alert('❌ Error de conexión al guardar');
+          }
+        })
+
+   
+        
 
     function limpiarForm() {
       document.getElementById('producto-form').reset();
