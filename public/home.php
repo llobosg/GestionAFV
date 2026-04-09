@@ -1,18 +1,25 @@
 <?php
 header('Content-Type: application/json');
 
-// Detectar raíz del proyecto de forma robusta
-if (isset($_SERVER['DOCUMENT_ROOT']) && strpos($_SERVER['DOCUMENT_ROOT'], '/public') !== false) {
-    // Ej: DOCUMENT_ROOT = /app/public → raíz = /app
-    $root = dirname($_SERVER['DOCUMENT_ROOT']);
-} else {
-    // Fallback para desarrollo local
-    $root = dirname(__DIR__, 2);
+// === DETECTAR RAÍZ DEL PROYECTO DE FORMA CONFIABLE ===
+$possibleRoots = [
+    '/app', // Railway
+    dirname(__DIR__, 2), // Desarrollo local: /proyecto/api → /proyecto
+    $_SERVER['DOCUMENT_ROOT'] ? dirname($_SERVER['DOCUMENT_ROOT']) : null,
+];
+
+$root = null;
+foreach ($possibleRoots as $path) {
+    if ($path && is_dir($path . '/includes') && file_exists($path . '/includes/config.php')) {
+        $root = $path;
+        break;
+    }
 }
 
-// Asegurar que la ruta no esté vacía
-if (empty($root) || !is_dir($root)) {
-    $root = '/app'; // Ruta explícita para Railway
+if (!$root) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Error interno: configuración no encontrada']);
+    exit;
 }
 
 require_once $root . '/includes/config.php';
