@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/session.php'; // ← usa el nuevo sistema
 
 try {
     // Leer datos (soporta tanto POST normal como JSON)

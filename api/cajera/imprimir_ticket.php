@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../includes/session.php';
 
 use TCPDF;
 

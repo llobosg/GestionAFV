@@ -1,7 +1,13 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
+require_once __DIR__ . '/../includes/session.php';
 
+if ($_SESSION['rol'] !== 'admin') {
+    http_response_code(403);
+    exit;
+}
+    
 $stmt = $pdo->prepare("
     SELECT producto, tipo, stock_actual, stock_critico 
     FROM productos 
