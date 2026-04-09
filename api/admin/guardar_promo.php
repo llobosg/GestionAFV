@@ -1,9 +1,18 @@
 <?php
+// Iniciar buffer de salida para capturar advertencias
+ob_start();
+
 header('Content-Type: application/json');
+
 require_once __DIR__ . '/../../includes/config.php';
-session_start();
+
+// Evitar session_start() duplicado
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
+    ob_end_clean(); // Limpiar buffer
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
     exit;
@@ -17,12 +26,12 @@ $precio_promo = (float)($input['precio_promo'] ?? 0);
 $activo = !empty($input['activo']) && $input['activo'] !== '0';
 
 if (!$id_promo || !$nombre || $precio_promo <= 0) {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
     exit;
 }
 
 try {
-    // ✅ Verificar que la promoción pertenezca al negocio del admin
     $stmt_check = $pdo->prepare("
         SELECT pp.id_promo 
         FROM productos_promo pp
@@ -32,11 +41,11 @@ try {
     $stmt_check->execute([$id_promo, $_SESSION['id_negocio']]);
     
     if (!$stmt_check->fetch()) {
+        ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Promoción no encontrada o sin permisos']);
         exit;
     }
 
-    // ✅ Actualizar sin subconsulta problemática
     $stmt_update = $pdo->prepare("
         UPDATE productos_promo 
         SET nombre = ?, precio_promo = ?, activo = ?
@@ -44,10 +53,13 @@ try {
     ");
     $stmt_update->execute([$nombre, $precio_promo, $activo, $id_promo]);
 
+    ob_end_clean(); // Descartar cualquier advertencia previa
     echo json_encode(['success' => true]);
+    exit;
 
 } catch (Exception $e) {
     error_log("Error al guardar promo: " . $e->getMessage());
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Error interno']);
 }
 ?>
