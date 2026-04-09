@@ -54,7 +54,7 @@ try {
     $stmt = $pdo->prepare("
     SELECT id_usuario, nombre, apellido, rol, id_negocio, password 
         FROM usuarios 
-        WHERE nombre = ? AND activo = 1
+        WHERE nombre = ?
     ");
     $stmt->execute([$usuario]);
     $user = $stmt->fetch();
