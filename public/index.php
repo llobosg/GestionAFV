@@ -67,7 +67,7 @@
     <form id="login-form">
       <div class="form-group">
         <label for="usuario">Nombre</label>
-        <input type="text" id="usuario" name="usuario" placeholder="Ej: Ana" required>
+        <input type="text" id="usuario" name="usuario" placeholder="Ej: Andrea" required>
       </div>
       <div class="form-group">
         <label for="password">Contraseña</label>

@@ -38,7 +38,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Home — Gestión AFV</title>
+  <title>Home — NegocioUP</title>
     <style>
       body { 
         font-family: sans-serif; 
