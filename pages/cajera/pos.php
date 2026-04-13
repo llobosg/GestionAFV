@@ -520,58 +520,76 @@ async function imprimirTicket(venta) {
         });
     }
 
-    // 2. Función para seleccionar producto (con protección de errores)
+    // 2. Función para seleccionar producto (CORREGIDA)
     function seleccionarProducto(id) {
         console.log(`👆 Intentando seleccionar producto ID: ${id}`);
 
         try {
-            if (!Array.isArray(productosCache)) throw new Error('Cache no cargado');
+            // 1. Validar cache
+            if (!Array.isArray(productosCache)) {
+                throw new Error('productosCache no está cargado');
+            }
 
+            // 2. Buscar el producto UNA SOLA VEZ
             const p = productosCache.find(x => x.id_producto == id);
+            
             if (!p) {
-                console.error('❌ Producto no encontrado');
+                console.error('❌ Producto no encontrado con ID:', id);
+                alert('Error: Producto no encontrado.');
                 return;
             }
 
             console.log('✅ Producto seleccionado:', p.producto, '| Tipo:', p.tipo_registro);
             productoSeleccionado = p;
 
-            // Referencias al DOM
+            // 3. Referencias al DOM
             const inputNombre = document.getElementById('buscador-producto');
-            const p = productosCache.find(x => x.id_producto == id);
-    
-            if (!p) return;
-
-            document.getElementById('buscador-producto').value = p.producto;
-            
-            // Guardar referencias de precio en el input de cantidad para usarlas luego
-            const inputCantidad = document.getElementById('cantidad');
             const inputPrecio = document.getElementById('precio');
+            const inputCantidad = document.getElementById('cantidad');
 
+            if (!inputNombre || !inputPrecio || !inputCantidad) {
+                throw new Error('Faltan elementos del formulario en el DOM');
+            }
+
+            // 4. Llenar datos básicos
+            inputNombre.value = p.producto;
+
+            // 5. Lógica específica según tipo (Promo vs Normal)
             if (p.tipo_registro === 'promo') {
-                // ES PROMO
-                inputCantidad.value = p.cantidad_unidades;
+                // --- CASO PROMO ---
+                const cantidadPack = parseInt(p.cantidad_unidades) || 1;
+                const precioPack = parseFloat(p.precio_venta);
+                
+                // Buscar producto base para obtener precio unitario real (para calcular sobrantes)
+                const productoBase = productosCache.find(base => 
+                    base.id_producto == p.id_base_referencia && base.tipo_registro === 'normal'
+                );
+                
+                // Si no encuentra el base, calculamos un unitario estimado (precio pack / cantidad)
+                const precioUnitarioReal = productoBase 
+                    ? parseFloat(productoBase.precio_venta) 
+                    : (precioPack / cantidadPack);
+
+                inputPrecio.value = precioPack.toFixed(2); // Muestra precio del pack inicialmente
+                inputCantidad.value = cantidadPack;
+                
+                // Guardar metadatos para el cálculo posterior
                 inputCantidad.dataset.esPromo = "true";
-                inputCantidad.dataset.minPromo = p.cantidad_unidades;
-                
-                // Precio UNITARIO real (para calcular sobrantes)
-                // Asumimos que el producto base tiene el precio normal en el cache o lo calculamos
-                // Si no lo tienes en el objeto 'p', deberías buscar el producto base en el cache
-                const productoBase = productosCache.find(base => base.id_producto == p.id_base_referencia && base.tipo_registro === 'normal');
-                const precioUnitarioNormal = productoBase ? parseFloat(productoBase.precio_venta) : (parseFloat(p.precio_venta) / p.cantidad_unidades);
-                
-                inputCantidad.dataset.precioUnitarioNormal = precioUnitarioNormal.toFixed(2);
-                inputCantidad.dataset.precioPackPromo = parseFloat(p.precio_venta).toFixed(2);
-                
-                inputPrecio.value = p.precio_venta; // Muestra el precio del pack inicialmente
+                inputCantidad.dataset.minPromo = cantidadPack;
+                inputCantidad.dataset.precioPackPromo = precioPack.toFixed(2);
+                inputCantidad.dataset.precioUnitarioNormal = precioUnitarioReal.toFixed(2);
 
             } else {
-                // ES NORMAL
-                inputCantidad.value = 1;
-                inputCantidad.dataset.esPromo = "false";
-                inputCantidad.dataset.precioUnitarioNormal = parseFloat(p.precio_venta).toFixed(2);
+                // --- CASO NORMAL ---
+                const precioUnitario = parseFloat(p.precio_venta);
                 
-                // Verificar si existe promo asociada
+                inputPrecio.value = precioUnitario.toFixed(2);
+                inputCantidad.value = 1;
+                
+                inputCantidad.dataset.esPromo = "false";
+                inputCantidad.dataset.precioUnitarioNormal = precioUnitario.toFixed(2);
+                
+                // Verificar si existe promo asociada a este producto
                 const promoAsociada = productosCache.find(prod => 
                     prod.tipo_registro === 'promo' && 
                     prod.id_base_referencia == p.id_producto
@@ -585,16 +603,16 @@ async function imprimirTicket(venta) {
                 } else {
                     inputCantidad.dataset.tienePromo = "false";
                 }
-                
-                inputPrecio.value = p.precio_venta;
             }
 
-            calcularSubtotal(); // Calcular inicial
+            // 6. Calcular subtotal inicial y ocultar resultados
+            calcularSubtotal();
             document.getElementById('resultados-producto').style.display = 'none';
+            document.getElementById('resultados-producto').innerHTML = '';
 
         } catch (error) {
-            console.error('💥 Error en selección:', error);
-            alert('Error al procesar el producto.');
+            console.error('💥 Error crítico en selección:', error);
+            alert('Ocurrió un error al seleccionar el producto.');
         }
     }
 
