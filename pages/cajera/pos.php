@@ -538,61 +538,59 @@ async function imprimirTicket(venta) {
 
             // Referencias al DOM
             const inputNombre = document.getElementById('buscador-producto');
-            const inputPrecio = document.getElementById('precio');
+            const p = productosCache.find(x => x.id_producto == id);
+    
+            if (!p) return;
+
+            document.getElementById('buscador-producto').value = p.producto;
+            
+            // Guardar referencias de precio en el input de cantidad para usarlas luego
             const inputCantidad = document.getElementById('cantidad');
-            
-            if (!inputNombre || !inputPrecio || !inputCantidad) throw new Error('Faltan inputs');
+            const inputPrecio = document.getElementById('precio');
 
-            // 1. Llenar datos básicos
-            inputNombre.value = p.producto;
-            
-            // 2. Lógica específica para PROMOS vs NORMAL
             if (p.tipo_registro === 'promo') {
-                // --- CASO A: Es una PROMO ---
-                const cantidadPromo = parseInt(p.cantidad_unidades) || 1;
-                const precioPromo = parseFloat(p.precio_venta);
-
-                inputPrecio.value = precioPromo.toFixed(2);
-                inputCantidad.value = cantidadPromo; // Inicia con la cantidad de la promo (ej: 2)
-                
-                // Guardamos metadata en el input para validar después
+                // ES PROMO
+                inputCantidad.value = p.cantidad_unidades;
                 inputCantidad.dataset.esPromo = "true";
-                inputCantidad.dataset.minPromo = cantidadPromo;
-                inputCantidad.dataset.precioUnitarioPromo = (precioPromo / cantidadPromo).toFixed(2); // Precio unitario real
-
-                console.log(`️ Modo PROMO activado: Min ${cantidadPromo}, Precio Total $${precioPromo}`);
+                inputCantidad.dataset.minPromo = p.cantidad_unidades;
+                
+                // Precio UNITARIO real (para calcular sobrantes)
+                // Asumimos que el producto base tiene el precio normal en el cache o lo calculamos
+                // Si no lo tienes en el objeto 'p', deberías buscar el producto base en el cache
+                const productoBase = productosCache.find(base => base.id_producto == p.id_base_referencia && base.tipo_registro === 'normal');
+                const precioUnitarioNormal = productoBase ? parseFloat(productoBase.precio_venta) : (parseFloat(p.precio_venta) / p.cantidad_unidades);
+                
+                inputCantidad.dataset.precioUnitarioNormal = precioUnitarioNormal.toFixed(2);
+                inputCantidad.dataset.precioPackPromo = parseFloat(p.precio_venta).toFixed(2);
+                
+                inputPrecio.value = p.precio_venta; // Muestra el precio del pack inicialmente
 
             } else {
-                // --- CASO B: Es PRODUCTO NORMAL ---
-                inputPrecio.value = parseFloat(p.precio_venta).toFixed(2);
+                // ES NORMAL
                 inputCantidad.value = 1;
-                
                 inputCantidad.dataset.esPromo = "false";
+                inputCantidad.dataset.precioUnitarioNormal = parseFloat(p.precio_venta).toFixed(2);
                 
-                // Verificar si existe una PROMO asociada a este mismo producto base
-                // (Asumimos que el nombre es igual o tienes un id_producto_base)
+                // Verificar si existe promo asociada
                 const promoAsociada = productosCache.find(prod => 
                     prod.tipo_registro === 'promo' && 
-                    prod.producto === p.producto // O comparar IDs base si los tienes
+                    prod.id_base_referencia == p.id_producto
                 );
 
                 if (promoAsociada) {
-                    console.log(`ℹ️ Existe promo para este producto: ${promoAsociada.cantidad_unidades} x $${promoAsociada.precio_venta}`);
-                    inputCantidad.dataset.tienePromoDisponible = "true";
-                    inputCantidad.dataset.cantidadMinimaPromo = promoAsociada.cantidad_unidades;
-                    inputCantidad.dataset.idPromoAsociada = promoAsociada.id_producto;
-                    inputCantidad.dataset.precioPromoTotal = promoAsociada.precio_venta;
+                    inputCantidad.dataset.tienePromo = "true";
+                    inputCantidad.dataset.minPromo = promoAsociada.cantidad_unidades;
+                    inputCantidad.dataset.precioPackPromo = promoAsociada.precio_venta;
+                    inputCantidad.dataset.idPromo = promoAsociada.id_producto;
                 } else {
-                    inputCantidad.dataset.tienePromoDisponible = "false";
+                    inputCantidad.dataset.tienePromo = "false";
                 }
+                
+                inputPrecio.value = p.precio_venta;
             }
 
-            // 3. Calcular subtotal inicial
-            calcularSubtotal();
-
-            // Ocultar resultados
+            calcularSubtotal(); // Calcular inicial
             document.getElementById('resultados-producto').style.display = 'none';
-            document.getElementById('resultados-producto').innerHTML = '';
 
         } catch (error) {
             console.error('💥 Error en selección:', error);
@@ -680,9 +678,45 @@ async function imprimirTicket(venta) {
     });
 
     function calcularSubtotal() {
-      const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
-      const precio = parseFloat(document.getElementById('precio').value) || 0;
-      document.getElementById('subtotal').value = (cantidad * precio).toFixed(2);
+        const inputCantidad = document.getElementById('cantidad');
+        const inputPrecio = document.getElementById('precio'); // Este campo mostraremos el subtotal final
+        
+        let qty = parseInt(inputCantidad.value) || 0;
+        if (qty < 0) qty = 0;
+
+        let subtotal = 0;
+        let esPromoActiva = inputCantidad.dataset.esPromo === "true";
+        
+        if (esPromoActiva) {
+            // === LÓGICA DE PROMOCIÓN (PACKS + SUeltos) ===
+            const minPack = parseInt(inputCantidad.dataset.minPromo) || 1;
+            const precioPack = parseFloat(inputCantidad.dataset.precioPackPromo) || 0;
+            const precioUnitario = parseFloat(inputCantidad.dataset.precioUnitarioNormal) || 0;
+
+            // Calcular packs completos y sobrantes
+            const packsCompletos = Math.floor(qty / minPack);
+            const unidadesSueltas = qty % minPack;
+
+            // Fórmula: (Packs * PrecioPack) + (Sueltos * PrecioUnitario)
+            subtotal = (packsCompletos * precioPack) + (unidadesSueltas * precioUnitario);
+
+            // Opcional: Mostrar detalle en consola o UI
+            console.log(` Packs: ${packsCompletos} x $${precioPack} | 🥒 Sueltos: ${unidadesSueltas} x $${precioUnitario}`);
+
+        } else {
+            // === LÓGICA NORMAL ===
+            const precioUnitario = parseFloat(inputCantidad.dataset.precioUnitarioNormal) || 0;
+            subtotal = qty * precioUnitario;
+
+            // === ALERTA INTELIGENTE DE PROMO ===
+            verificarAlertaPromo(qty, inputCantidad);
+        }
+
+        // Actualizar el campo de precio (que ahora actúa como Subtotal)
+        inputPrecio.value = subtotal.toFixed(2);
+        
+        // Aquí podrías actualizar también el total general de la venta si tienes esa variable
+        // actualizarTotalVenta(subtotal); 
     }
 
     function setMetodoPago(metodo) {
@@ -909,6 +943,49 @@ async function imprimirTicket(venta) {
     }
     setInterval(actualizarFechaHora, 1000);
     actualizarFechaHora(); // Inicial
+
+    function verificarAlertaPromo(cantidadActual, inputCantidad) {
+        const tienePromo = inputCantidad.dataset.tienePromo === "true";
+        
+        if (!tienePromo) return;
+
+        const minPromo = parseInt(inputCantidad.dataset.minPromo);
+        const precioPackPromo = parseFloat(inputCantidad.dataset.precioPackPromo);
+        const precioUnitarioNormal = parseFloat(inputCantidad.dataset.precioUnitarioNormal);
+        const idPromo = inputCantidad.dataset.idPromo;
+
+        // Si la cantidad actual es mayor o igual al mínimo de la promo
+        if (cantidadActual >= minPromo) {
+            const costoActual = cantidadActual * precioUnitarioNormal;
+            
+            // Calcular cuánto costaría si cambiáramos a la promo (redondeando hacia abajo a packs completos + sueltos)
+            // Ejemplo: Qty 3, Promo 2x1500. 
+            // Opción A: 1 Pack (2) + 1 Suelto (1000) = 2500.
+            // Opción B: Todo normal = 3000.
+            
+            const packsPosibles = Math.floor(cantidadActual / minPromo);
+            const sueltosPosibles = cantidadActual % minPromo;
+            const costoConPromo = (packsPosibles * precioPackPromo) + (sueltosPosibles * precioUnitarioNormal);
+
+            if (costoConPromo < costoActual) {
+                const ahorro = costoActual - costoConPromo;
+                
+                // Usamos setTimeout para no bloquear el evento change immediate
+                setTimeout(() => {
+                    const msg = `💡 ¡Oportunidad de Ahorro!\n\nLlevas ${cantidadActual} unidades.\n\n❌ Costo Normal: $${costoActual}\n✅ Costo con Promo (${minPromo}x$${precioPackPromo}): $${costoConPromo}\n\n💰 Te ahorras: $${ahorro}\n\n¿Deseas aplicar la promoción automáticamente?`;
+                    
+                    if (confirm(msg)) {
+                        // CAMBIAR AL PRODUCTO PROMO
+                        seleccionarProducto(idPromo);
+                        
+                        // Ajustar cantidad si es necesario (ej: si tenía 3 y la promo es de 2, dejar en 2 o preguntar)
+                        // Aquí dejamos que el usuario ajuste si quiere, o forzamos al múltiplo:
+                        // document.getElementById('cantidad').value = packsPosibles * minPromo; 
+                    }
+                }, 100);
+            }
+        }
+    }
   </script>
   <div class="toast-container" id="toast-container"></div>
 </body>
