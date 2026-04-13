@@ -741,36 +741,75 @@ async function imprimirTicket(venta) {
     }
 
     function agregarAlCarrito() {
-      if (!productoSeleccionado) {
-        alert('Selecciona un producto primero');
-        return;
-      }
+        if (!productoSeleccionado) {
+            alert('️ Selecciona un producto primero');
+            return;
+        }
 
-      const cantidad = parseFloat(document.getElementById('cantidad').value);
-      const precio = parseFloat(document.getElementById('precio').value);
-      const stock = parseFloat(productoSeleccionado.stock_actual);
+        const inputCantidadEl = document.getElementById('cantidad');
+        const inputPrecioUnitarioEl = document.getElementById('precio'); // Campo Unitario
+        const inputSubtotalEl = document.getElementById('subtotal');     // Campo Total Línea
 
-      if (cantidad > stock) {
-        alert(`❌ Stock insuficiente. Disponible: ${stock}`);
-        return;
-      }
+        let cantidad = parseFloat(inputCantidadEl.value);
+        
+        // Obtener precios LIMPIOS (sin símbolos $ ni comas)
+        // Usamos replace para quitar puntos de miles y signos $ si los hubiera
+        let precioUnitarioStr = inputPrecioUnitarioEl.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
+        let subtotalStr = inputSubtotalEl.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
 
-      const existente = carrito.find(item => item.id_producto === productoSeleccionado.id_producto);
-      if (existente) {
-        existente.cantidad += cantidad;
-        existente.subtotal = existente.cantidad * existente.precio_unitario;
-      } else {
-        carrito.push({
-          id_producto: productoSeleccionado.id_producto,
-          producto: productoSeleccionado.producto,
-          cantidad: cantidad,
-          precio_unitario: precio,
-          subtotal: cantidad * precio
-        });
-      }
+        let precioUnitario = parseFloat(precioUnitarioStr);
+        let subtotalLinea = parseFloat(subtotalStr);
 
-      renderizarCarrito();
-      limpiarFormulario();
+        // Validaciones básicas de números
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert('❌ La cantidad debe ser mayor a 0');
+            return;
+        }
+        if (isNaN(precioUnitario) || isNaN(subtotalLinea)) {
+            console.error('Error de precios:', precioUnitario, subtotalLinea);
+            alert(' Error en los precios calculados. Intenta seleccionar el producto nuevamente.');
+            return;
+        }
+
+        // === VALIDACIÓN DE STOCK (ANTES DE AGREGAR) ===
+        const stockDisponible = parseFloat(productoSeleccionado.stock_actual);
+        
+        if (cantidad > stockDisponible) {
+            alert(`❌ Stock insuficiente.\nProducto: ${productoSeleccionado.producto}\nSolicitado: ${cantidad}\nDisponible: ${stockDisponible}`);
+            return; // DETENEMOS LA EJECUCIÓN AQUÍ
+        }
+
+        // Buscar si ya existe en el carrito para sumar cantidades
+        const existente = carrito.find(item => item.id_producto === productoSeleccionado.id_producto);
+        
+        if (existente) {
+            // Si ya existe, sumamos cantidad y recalculamos subtotal
+            const nuevaCantidadTotal = existente.cantidad + cantidad;
+            
+            // Re-validar stock con la nueva cantidad total
+            if (nuevaCantidadTotal > stockDisponible) {
+                alert(`❌ No hay suficiente stock para sumar más unidades.\nStock total disponible: ${stockDisponible}`);
+                return;
+            }
+
+            existente.cantidad = nuevaCantidadTotal;
+            existente.subtotal = nuevaCantidadTotal * existente.precio_unitario; // Recalcular basado en unitario fijo
+        } else {
+            // Agregar nuevo ítem
+            carrito.push({
+                id_producto: productoSeleccionado.id_producto,
+                producto: productoSeleccionado.producto,
+                cantidad: cantidad,
+                precio_unitario: precioUnitario, // Guardamos el unitario limpio
+                subtotal: subtotalLinea          // Guardamos el subtotal calculado correctamente
+            });
+        }
+
+        renderizarCarrito();
+        limpiarFormulario();
+        
+        // Feedback visual opcional
+        // showToast('✅ Producto agregado', 'success');
     }
 
     function eliminarDelCarrito(index) {
