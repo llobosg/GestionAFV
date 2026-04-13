@@ -697,14 +697,16 @@ async function imprimirTicket(venta) {
 
     function calcularSubtotal() {
         const inputCantidad = document.getElementById('cantidad');
-        const inputPrecio = document.getElementById('precio'); // Este campo mostraremos el subtotal final
+        const inputPrecioTotal = document.getElementById('precio'); // Este campo mostrará el SUBTOTAL
         
         let qty = parseInt(inputCantidad.value) || 0;
         if (qty < 0) qty = 0;
 
-        let subtotal = 0;
+        let subtotalFinal = 0;
         let esPromoActiva = inputCantidad.dataset.esPromo === "true";
         
+        console.log(` Calculando... Qty: ${qty}, Es Promo: ${esPromoActiva}`);
+
         if (esPromoActiva) {
             // === LÓGICA DE PROMOCIÓN (PACKS + SUeltos) ===
             const minPack = parseInt(inputCantidad.dataset.minPromo) || 1;
@@ -716,25 +718,34 @@ async function imprimirTicket(venta) {
             const unidadesSueltas = qty % minPack;
 
             // Fórmula: (Packs * PrecioPack) + (Sueltos * PrecioUnitario)
-            subtotal = (packsCompletos * precioPack) + (unidadesSueltas * precioUnitario);
+            subtotalFinal = (packsCompletos * precioPack) + (unidadesSueltas * precioUnitario);
 
-            // Opcional: Mostrar detalle en consola o UI
-            console.log(` Packs: ${packsCompletos} x $${precioPack} | 🥒 Sueltos: ${unidadesSueltas} x $${precioUnitario}`);
+            console.log(`✅ PACKS: ${packsCompletos} x $${precioPack} = $${packsCompletos * precioPack}`);
+            console.log(`✅ SUELTOS: ${unidadesSueltas} x $${precioUnitario} = $${unidadesSueltas * precioUnitario}`);
+            console.log(`💰 SUBTOTAL FINAL: $${subtotalFinal}`);
 
         } else {
             // === LÓGICA NORMAL ===
             const precioUnitario = parseFloat(inputCantidad.dataset.precioUnitarioNormal) || 0;
-            subtotal = qty * precioUnitario;
+            subtotalFinal = qty * precioUnitario;
+            
+            console.log(`💰 SUBTOTAL NORMAL: ${qty} x $${precioUnitario} = $${subtotalFinal}`);
 
-            // === ALERTA INTELIGENTE DE PROMO ===
+            // Verificar alerta de promo solo si es normal
             verificarAlertaPromo(qty, inputCantidad);
         }
 
-        // Actualizar el campo de precio (que ahora actúa como Subtotal)
-        inputPrecio.value = subtotal.toFixed(2);
+        // ⚠️ CLAVE: Actualizar el campo de Precio con el SUBTOTAL calculado
+        // En un POS, el campo "Precio" usualmente muestra el Total de la línea, no el unitario.
+        if (inputPrecioTotal) {
+            inputPrecioTotal.value = subtotalFinal.toFixed(2);
+            console.log(`✍️ Campo 'precio' actualizado a: $${inputPrecioTotal.value}`);
+        } else {
+            console.error('❌ No se encontró el input #precio para actualizar el subtotal');
+        }
         
-        // Aquí podrías actualizar también el total general de la venta si tienes esa variable
-        // actualizarTotalVenta(subtotal); 
+        // Si tienes un campo separado para "Total Venta", actualízalo aquí también
+        // actualizarGranTotal(subtotalFinal); 
     }
 
     function setMetodoPago(metodo) {
