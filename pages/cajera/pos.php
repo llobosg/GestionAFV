@@ -498,13 +498,17 @@ async function imprimirTicket(venta) {
 
             // Renderizar lista
             let html = '';
+            // Dentro del bucle forEach donde generas el html...
             resultados.forEach(p => {
-                const tipoLabel = p.tipo === 'promo' ? '🏷️ Promo' : '🥦 Normal';
+                // ⚠️ AGREGA ESTE LOG PARA VERIFICAR EL ID REAL
+                console.log(`🆔 Renderizando: ${p.producto} | ID Real DB: ${p.id_producto}`);
+
+                const tipoLabel = p.tipo === 'promo' ? '🏷️ Promo' : ' Normal';
                 const precioDisplay = `$${parseFloat(p.precio_venta).toLocaleString('es-CL')}`;
                 
                 html += `
                     <div class="resultado-item" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between;" 
-                        onclick="seleccionarProducto(${p.id_producto})">
+                        onclick="seleccionarProducto(${p.id_producto})"> <!-- Aquí se pasa el ID -->
                         <span><strong>${p.producto}</strong> <small>(${tipoLabel})</small></span>
                         <span>${precioDisplay}</span>
                     </div>
@@ -518,62 +522,162 @@ async function imprimirTicket(venta) {
 
     // 2. Función para seleccionar producto (con protección de errores)
     function seleccionarProducto(id) {
-        console.log(` Intentando seleccionar producto ID: ${id}`);
+        console.log(`👆 Intentando seleccionar producto ID: ${id}`);
 
         try {
-            // Buscar en el cache
-            if (!Array.isArray(productosCache)) {
-                throw new Error('productosCache no es un array válido');
-            }
+            if (!Array.isArray(productosCache)) throw new Error('Cache no cargado');
 
-            const p = productosCache.find(x => 
-                (x.id_producto == id) // Simplificamos la búsqueda, el ID debe ser único
-            );
-            
+            const p = productosCache.find(x => x.id_producto == id);
             if (!p) {
-                console.error('❌ Producto no encontrado en cache con ID:', id);
-                alert('Error: Producto no encontrado en memoria.');
+                console.error('❌ Producto no encontrado');
                 return;
             }
 
-            console.log('✅ Producto encontrado:', p);
+            console.log('✅ Producto seleccionado:', p.producto, '| Tipo:', p.tipo_registro);
             productoSeleccionado = p;
 
-            // Actualizar campos del formulario
+            // Referencias al DOM
             const inputNombre = document.getElementById('buscador-producto');
             const inputPrecio = document.getElementById('precio');
             const inputCantidad = document.getElementById('cantidad');
+            
+            if (!inputNombre || !inputPrecio || !inputCantidad) throw new Error('Faltan inputs');
 
-            if (!inputNombre || !inputPrecio || !inputCantidad) {
-                throw new Error('Faltan campos del formulario (precio, cantidad o buscador)');
-            }
-
+            // 1. Llenar datos básicos
             inputNombre.value = p.producto;
-            inputPrecio.value = parseFloat(p.precio_venta).toFixed(2);
             
-            // Si es promo, usar cantidad de unidades, sino 1
-            inputCantidad.value = (p.tipo === 'promo' && p.cantidad_unidades) ? p.cantidad_unidades : 1;
+            // 2. Lógica específica para PROMOS vs NORMAL
+            if (p.tipo_registro === 'promo') {
+                // --- CASO A: Es una PROMO ---
+                const cantidadPromo = parseInt(p.cantidad_unidades) || 1;
+                const precioPromo = parseFloat(p.precio_venta);
 
-            console.log('🧮 Campos actualizados. Calculando subtotal...');
-            
-            // Llamar a la función de cálculo (asegúrate de que exista)
-            if (typeof calcularSubtotal === 'function') {
-                calcularSubtotal();
+                inputPrecio.value = precioPromo.toFixed(2);
+                inputCantidad.value = cantidadPromo; // Inicia con la cantidad de la promo (ej: 2)
+                
+                // Guardamos metadata en el input para validar después
+                inputCantidad.dataset.esPromo = "true";
+                inputCantidad.dataset.minPromo = cantidadPromo;
+                inputCantidad.dataset.precioUnitarioPromo = (precioPromo / cantidadPromo).toFixed(2); // Precio unitario real
+
+                console.log(`️ Modo PROMO activado: Min ${cantidadPromo}, Precio Total $${precioPromo}`);
+
             } else {
-                console.warn('⚠️ Función calcularSubtotal() no definida.');
+                // --- CASO B: Es PRODUCTO NORMAL ---
+                inputPrecio.value = parseFloat(p.precio_venta).toFixed(2);
+                inputCantidad.value = 1;
+                
+                inputCantidad.dataset.esPromo = "false";
+                
+                // Verificar si existe una PROMO asociada a este mismo producto base
+                // (Asumimos que el nombre es igual o tienes un id_producto_base)
+                const promoAsociada = productosCache.find(prod => 
+                    prod.tipo_registro === 'promo' && 
+                    prod.producto === p.producto // O comparar IDs base si los tienes
+                );
+
+                if (promoAsociada) {
+                    console.log(`ℹ️ Existe promo para este producto: ${promoAsociada.cantidad_unidades} x $${promoAsociada.precio_venta}`);
+                    inputCantidad.dataset.tienePromoDisponible = "true";
+                    inputCantidad.dataset.cantidadMinimaPromo = promoAsociada.cantidad_unidades;
+                    inputCantidad.dataset.idPromoAsociada = promoAsociada.id_producto;
+                    inputCantidad.dataset.precioPromoTotal = promoAsociada.precio_venta;
+                } else {
+                    inputCantidad.dataset.tienePromoDisponible = "false";
+                }
             }
+
+            // 3. Calcular subtotal inicial
+            calcularSubtotal();
 
             // Ocultar resultados
-            contenedorResultados.style.display = 'none';
-            contenedorResultados.innerHTML = ''; // Limpiar para la próxima
-            
-            console.log('✅ Selección completada exitosamente.');
+            document.getElementById('resultados-producto').style.display = 'none';
+            document.getElementById('resultados-producto').innerHTML = '';
 
         } catch (error) {
-            console.error('💥 ERROR FATAL EN seleccionProducto:', error);
-            alert('Ocurrió un error al seleccionar el producto. Revisa la consola para más detalles.');
+            console.error('💥 Error en selección:', error);
+            alert('Error al procesar el producto.');
         }
     }
+
+    // === NUEVA FUNCIÓN: Validar cambios en Cantidad ===
+    // Debes agregar un listener al input de cantidad
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputCantidad = document.getElementById('cantidad');
+        
+        if (inputCantidad) {
+            inputCantidad.addEventListener('change', function() {
+                let val = parseInt(this.value);
+                if (isNaN(val) || val < 1) val = 1;
+
+                // ESCENARIO 1: Es un producto en PROMO
+                if (this.dataset.esPromo === "true") {
+                    const min = parseInt(this.dataset.minPromo);
+                    
+                    // Forzar múltiplos
+                    if (val % min !== 0) {
+                        // Redondear al múltiplo más cercano (hacia arriba o abajo, tú decides)
+                        // Aquí redondeamos hacia abajo para no cobrar de más accidentalmente, o arriba para forzar venta
+                        const nuevoVal = Math.floor(val / min) * min;
+                        
+                        if (nuevoVal === 0) {
+                            alert(`⚠️ Este producto solo se vende en packs de ${min} unidades.`);
+                            this.value = min;
+                            val = min;
+                        } else {
+                            const confirmacion = confirm(`⚠️ La promoción es de a ${min} unidades.\nLa cantidad ${val} no es válida.\n¿Deseas ajustar a ${nuevoVal} (${nuevoVal/min} packs)?`);
+                            if (confirmacion) {
+                                this.value = nuevoVal;
+                                val = nuevoVal;
+                            } else {
+                                this.value = min; // Volver al mínimo
+                                val = min;
+                            }
+                        }
+                    }
+                    
+                    // Recalcular precio si es necesario (aunque el precio total ya viene fijo por pack, a veces se quiere mostrar unitario)
+                    // En tu caso, el precio en el input 'precio' parece ser el TOTAL del pack.
+                    // Si cambias cantidad de 2 a 4, el precio debería duplicarse? 
+                    // SI ES PROMO FIJA (2x1200), usualmente el precio unitario baja, pero el total sube.
+                    // Ajuste lógico: Si es promo, el precio unitario es (PrecioPromo / CantidadPromo).
+                    const precioUnitarioReal = parseFloat(this.dataset.precioUnitarioPromo);
+                    document.getElementById('precio').value = (precioUnitarioReal * val).toFixed(2);
+
+                } 
+                // ESCENARIO 2: Es producto NORMAL pero tiene PROMO disponible
+                else if (this.dataset.tienePromoDisponible === "true") {
+                    const minPromo = parseInt(this.dataset.cantidadMinimaPromo);
+                    
+                    if (val >= minPromo) {
+                        const idPromo = this.dataset.idPromoAsociada;
+                        const precioPromoTotal = parseFloat(this.dataset.precioPromoTotal);
+                        const precioActualNormal = parseFloat(document.getElementById('precio').value);
+                        const costoNormalActual = precioActualNormal * val;
+                        
+                        // Comparar costos
+                        if (precioPromoTotal < costoNormalActual) {
+                            const msg = `🔥 ¡Oferta Detectada!\n\nLlevas ${val} unidades de "${productoSeleccionado.producto}".\n\n💰 Comprando normal: $${costoNormalActual}\n✨ Comprando en PROMO (${minPromo}x): $${precioPromoTotal}\n\n¿Quieres cambiar automáticamente a la promoción?`;
+                            
+                            if (confirm(msg)) {
+                                // CAMBIAR AL PRODUCTO PROMO
+                                seleccionarProducto(idPromo); 
+                                // Ajustar cantidad al múltiplo exacto si excede
+                                const inputCant = document.getElementById('cantidad');
+                                if (val > minPromo && val % minPromo !== 0) {
+                                    inputCant.value = Math.floor(val / minPromo) * minPromo;
+                                }
+                                return; // Salir para no ejecutar el resto
+                            }
+                        }
+                    }
+                }
+
+                // Actualizar subtotal final
+                calcularSubtotal();
+            });
+        }
+    });
 
     function calcularSubtotal() {
       const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
