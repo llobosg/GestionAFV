@@ -384,13 +384,11 @@ async function imprimirTicket(venta) {
         <input type="number" step="0.01" id="cantidad" class="form-control" value="1" min="0.01">
       </div>
 
-      <<!-- CAMPO PRECIO UNITARIO (Solo lectura, se llena al seleccionar) -->
       <div class="form-group">
         <label>Precio Unitario</label>
         <input type="text" id="precio" class="form-control" readonly style="background-color: #f8f9fa; color: #555;">
       </div>
 
-      <!-- NUEVO CAMPO SUBTOTAL (Se actualiza con la cantidad) -->
       <div class="form-group">
         <label>Subtotal</label>
         <input type="text" id="subtotal" class="form-control" readonly style="background-color: #e3f2fd; color: #071289; font-weight: bold; font-size: 1.1rem;">
