@@ -1,8 +1,8 @@
 <?php
 // === DETECTAR RAÍZ DEL PROYECTO DE FORMA CONFIABLE ===
 $possibleRoots = [
-    '/app', // Railway
-    dirname(__DIR__, 2), // Desarrollo local
+    '/app', 
+    dirname(__DIR__, 2), 
     $_SERVER['DOCUMENT_ROOT'] ? dirname($_SERVER['DOCUMENT_ROOT']) : null,
 ];
 
@@ -20,7 +20,10 @@ if (!$root) {
 
 require_once $root . '/includes/config.php';
 
-session_start(); // ← Asegúrate de tener esto
+// ✅ CORRECCIÓN DE SESIÓN: Verificar antes de iniciar
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Validación segura de sesión
 if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'admin') {
@@ -29,6 +32,9 @@ if (!isset($_SESSION['id_usuario']) || ($_SESSION['rol'] ?? '') !== 'admin') {
 }
 
 $id_negocio = $_SESSION['id_negocio'] ?? 1;
+
+// Log inicial para trazar flujo
+error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
 ?>
 <!DOCTYPE html>
 <html>

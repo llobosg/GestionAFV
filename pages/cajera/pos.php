@@ -436,7 +436,6 @@ async function imprimirTicket(venta) {
   <script>
     let carrito = [];
     let productosCache = [];
-    let productoSeleccionado = null;
 
     // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
@@ -450,46 +449,130 @@ async function imprimirTicket(venta) {
       productosCache = await res.json();
     }
 
-    // Buscador
-    document.getElementById('buscador-producto').addEventListener('input', function(e) {
-      const query = e.target.value.toLowerCase();
-      const contenedor = document.getElementById('resultados-producto');
-      if (!query) {
-        contenedor.style.display = 'none';
-        return;
-      }
+    // === DEPURACIÓN Y LÓGICA DEL BUSCADOR POS ===
 
-      const resultados = productosCache.filter(p => 
-        p.producto.toLowerCase().includes(query)
-      ).slice(0, 10);
+    // Variable global para el producto seleccionado (asegúrate de declararla arriba si no existe)
+    let productoSeleccionado = null; 
 
-      if (resultados.length > 0) {
-        contenedor.innerHTML = resultados.map(p => `
-          <div class="producto-item" onclick="seleccionarProducto(${p.id_producto})">
-            ${p.producto} • $${parseFloat(p.precio_venta).toFixed(2)} • Stock: ${p.stock_actual}
-          </div>
-        `).join('');
-        contenedor.style.display = 'block';
-      } else {
-        contenedor.style.display = 'none';
-      }
-    });
+    // 1. Escuchar el input del buscador
+    const inputBuscador = document.getElementById('buscador-producto');
+    const contenedorResultados = document.getElementById('resultados-producto');
 
+    if (!inputBuscador || !contenedorResultados) {
+        console.error('❌ ERROR CRÍTICO: Faltan elementos del DOM (#buscador-producto o #resultados-producto)');
+    } else {
+        console.log('✅ Elementos del buscador encontrados correctamente.');
+
+        inputBuscador.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            
+            // Limpiar resultados si está vacío
+            if (!query || query.length < 2) {
+                contenedorResultados.style.display = 'none';
+                contenedorResultados.innerHTML = '';
+                return;
+            }
+
+            console.log(`🔍 Buscando: "${query}"...`);
+            
+            // Verificar cache
+            if (typeof productosCache === 'undefined' || !Array.isArray(productosCache)) {
+                console.error('❌ productosCache no está definido o no es un array.');
+                contenedorResultados.innerHTML = '<div style="padding:10px; color:red;">Error de carga de datos</div>';
+                contenedorResultados.style.display = 'block';
+                return;
+            }
+
+            // Filtrar productos (normales y promos)
+            const resultados = productosCache.filter(p => 
+                p.producto && p.producto.toLowerCase().includes(query)
+            );
+
+            console.log(`📊 Resultados encontrados: ${resultados.length}`);
+
+            if (resultados.length === 0) {
+                contenedorResultados.innerHTML = '<div style="padding:10px;">No se encontraron productos</div>';
+                contenedorResultados.style.display = 'block';
+                return;
+            }
+
+            // Renderizar lista
+            let html = '';
+            resultados.forEach(p => {
+                const tipoLabel = p.tipo === 'promo' ? '🏷️ Promo' : '🥦 Normal';
+                const precioDisplay = `$${parseFloat(p.precio_venta).toLocaleString('es-CL')}`;
+                
+                html += `
+                    <div class="resultado-item" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; display:flex; justify-content:space-between;" 
+                        onclick="seleccionarProducto(${p.id_producto})">
+                        <span><strong>${p.producto}</strong> <small>(${tipoLabel})</small></span>
+                        <span>${precioDisplay}</span>
+                    </div>
+                `;
+            });
+
+            contenedorResultados.innerHTML = html;
+            contenedorResultados.style.display = 'block';
+        });
+    }
+
+    // 2. Función para seleccionar producto (con protección de errores)
     function seleccionarProducto(id) {
-      // Buscar en productos normales y promocionales
-      let p = productosCache.find(x => 
-        (x.tipo === 'normal' && x.id_producto == id) ||
-        (x.tipo === 'promo' && x.id_producto == id)
-      );
-      
-      if (!p) return;
+        console.log(` Intentando seleccionar producto ID: ${id}`);
 
-      productoSeleccionado = p;
-      document.getElementById('buscador-producto').value = p.producto;
-      document.getElementById('precio').value = parseFloat(p.precio_venta).toFixed(2);
-      document.getElementById('cantidad').value = p.tipo === 'promo' ? p.cantidad_unidades : 1;
-      calcularSubtotal();
-      document.getElementById('resultados-producto').style.display = 'none';
+        try {
+            // Buscar en el cache
+            if (!Array.isArray(productosCache)) {
+                throw new Error('productosCache no es un array válido');
+            }
+
+            const p = productosCache.find(x => 
+                (x.id_producto == id) // Simplificamos la búsqueda, el ID debe ser único
+            );
+            
+            if (!p) {
+                console.error('❌ Producto no encontrado en cache con ID:', id);
+                alert('Error: Producto no encontrado en memoria.');
+                return;
+            }
+
+            console.log('✅ Producto encontrado:', p);
+            productoSeleccionado = p;
+
+            // Actualizar campos del formulario
+            const inputNombre = document.getElementById('buscador-producto');
+            const inputPrecio = document.getElementById('precio');
+            const inputCantidad = document.getElementById('cantidad');
+
+            if (!inputNombre || !inputPrecio || !inputCantidad) {
+                throw new Error('Faltan campos del formulario (precio, cantidad o buscador)');
+            }
+
+            inputNombre.value = p.producto;
+            inputPrecio.value = parseFloat(p.precio_venta).toFixed(2);
+            
+            // Si es promo, usar cantidad de unidades, sino 1
+            inputCantidad.value = (p.tipo === 'promo' && p.cantidad_unidades) ? p.cantidad_unidades : 1;
+
+            console.log('🧮 Campos actualizados. Calculando subtotal...');
+            
+            // Llamar a la función de cálculo (asegúrate de que exista)
+            if (typeof calcularSubtotal === 'function') {
+                calcularSubtotal();
+            } else {
+                console.warn('⚠️ Función calcularSubtotal() no definida.');
+            }
+
+            // Ocultar resultados
+            contenedorResultados.style.display = 'none';
+            contenedorResultados.innerHTML = ''; // Limpiar para la próxima
+            
+            console.log('✅ Selección completada exitosamente.');
+
+        } catch (error) {
+            console.error('💥 ERROR FATAL EN seleccionProducto:', error);
+            alert('Ocurrió un error al seleccionar el producto. Revisa la consola para más detalles.');
+        }
     }
 
     function calcularSubtotal() {
