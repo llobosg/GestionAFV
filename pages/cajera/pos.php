@@ -750,74 +750,82 @@ async function imprimirTicket(venta) {
 
     function agregarAlCarrito() {
         if (!productoSeleccionado) {
-            alert('️ Selecciona un producto primero');
+            alert('⚠️ Selecciona un producto primero');
             return;
         }
 
         const inputCantidadEl = document.getElementById('cantidad');
-        const inputPrecioUnitarioEl = document.getElementById('precio'); // Campo Unitario
-        const inputSubtotalEl = document.getElementById('subtotal');     // Campo Total Línea
-
-        let cantidad = parseFloat(inputCantidadEl.value);
+        const inputSubtotalEl = document.getElementById('subtotal');
         
-        // Obtener precios LIMPIOS (sin símbolos $ ni comas)
-        // Usamos replace para quitar puntos de miles y signos $ si los hubiera
-        let precioUnitarioStr = inputPrecioUnitarioEl.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
-        let subtotalStr = inputSubtotalEl.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
-
-        let precioUnitario = parseFloat(precioUnitarioStr);
-        let subtotalLinea = parseFloat(subtotalStr);
-
-        // Validaciones básicas de números
+        // 1. Obtener Cantidad
+        let cantidad = parseFloat(inputCantidadEl.value);
         if (isNaN(cantidad) || cantidad <= 0) {
             alert('❌ La cantidad debe ser mayor a 0');
             return;
         }
+
+        // 2. Obtener Precio Unitario DESDE EL DATASET (Fuente de verdad)
+        // En seleccionarProducto guardamos: inputCantidad.dataset.precioUnitarioNormal
+        let precioUnitarioStr = inputCantidadEl.dataset.precioUnitarioNormal;
+        
+        if (!precioUnitarioStr) {
+            console.error('❌ Faltan datos de precio en el dataset. Re-selecciona el producto.');
+            alert('Error interno: Falta el precio unitario. Intenta seleccionar el producto nuevamente.');
+            return;
+        }
+
+        let precioUnitario = parseFloat(precioUnitarioStr);
+
+        // 3. Obtener Subtotal DESDE EL INPUT (ya calculado por calcularSubtotal)
+        // Limpiamos formato moneda ($ y puntos de miles)
+        let subtotalStr = inputSubtotalEl.value.replace(/\$/g, '').replace(/\./g, '').replace(',', '.');
+        let subtotalLinea = parseFloat(subtotalStr);
+
         if (isNaN(precioUnitario) || isNaN(subtotalLinea)) {
-            console.error('Error de precios:', precioUnitario, subtotalLinea);
+            console.error('Error de conversión:', { precioUnitarioStr, subtotalStr, precioUnitario, subtotalLinea });
             alert(' Error en los precios calculados. Intenta seleccionar el producto nuevamente.');
             return;
         }
 
-        // === VALIDACIÓN DE STOCK (ANTES DE AGREGAR) ===
+        // === VALIDACIÓN DE STOCK ===
         const stockDisponible = parseFloat(productoSeleccionado.stock_actual);
-        
         if (cantidad > stockDisponible) {
-            alert(`❌ Stock insuficiente.\nProducto: ${productoSeleccionado.producto}\nSolicitado: ${cantidad}\nDisponible: ${stockDisponible}`);
-            return; // DETENEMOS LA EJECUCIÓN AQUÍ
+            alert(` Stock insuficiente.\nSolicitado: ${cantidad}\nDisponible: ${stockDisponible}`);
+            return;
         }
 
-        // Buscar si ya existe en el carrito para sumar cantidades
+        // Buscar existente en carrito
         const existente = carrito.find(item => item.id_producto === productoSeleccionado.id_producto);
         
         if (existente) {
-            // Si ya existe, sumamos cantidad y recalculamos subtotal
             const nuevaCantidadTotal = existente.cantidad + cantidad;
-            
-            // Re-validar stock con la nueva cantidad total
             if (nuevaCantidadTotal > stockDisponible) {
-                alert(`❌ No hay suficiente stock para sumar más unidades.\nStock total disponible: ${stockDisponible}`);
+                alert(`❌ No hay suficiente stock para sumar más unidades.`);
                 return;
             }
-
             existente.cantidad = nuevaCantidadTotal;
-            existente.subtotal = nuevaCantidadTotal * existente.precio_unitario; // Recalcular basado en unitario fijo
+            // Recalcular subtotal basado en unitario fijo * nueva cantidad
+            // NOTA: Si es promo, esta lógica simple falla si hay sueltos. 
+            // Para simplificar, si es promo, forzamos que solo agregue packs completos o usamos la lógica de packs aquí también.
+            // POR AHORA, asumiremos que el subtotal viene correcto del formulario si es un caso complejo.
+            // Pero lo ideal es: existente.subtotal += (cantidad * precioUnitario); (Solo válido si no hay mezcla pack/suelto compleja)
+            
+            // MEJOR ESTRATEGIA PARA CARRITO CON PROMOS:
+            // Simplemente sumamos el subtotal actual del formulario al subtotal existente
+            existente.subtotal += subtotalLinea; 
+            existente.cantidad = nuevaCantidadTotal; // Actualizamos cantidad total visual
         } else {
-            // Agregar nuevo ítem
             carrito.push({
                 id_producto: productoSeleccionado.id_producto,
                 producto: productoSeleccionado.producto,
                 cantidad: cantidad,
-                precio_unitario: precioUnitario, // Guardamos el unitario limpio
-                subtotal: subtotalLinea          // Guardamos el subtotal calculado correctamente
+                precio_unitario: precioUnitario, // Usamos el unitario limpio del dataset
+                subtotal: subtotalLinea
             });
         }
 
         renderizarCarrito();
         limpiarFormulario();
-        
-        // Feedback visual opcional
-        // showToast('✅ Producto agregado', 'success');
     }
 
     function eliminarDelCarrito(index) {
