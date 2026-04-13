@@ -525,12 +525,8 @@ async function imprimirTicket(venta) {
         console.log(`👆 Intentando seleccionar producto ID: ${id}`);
 
         try {
-            // 1. Validar cache
-            if (!Array.isArray(productosCache)) {
-                throw new Error('productosCache no está cargado');
-            }
+            if (!Array.isArray(productosCache)) throw new Error('productosCache no está cargado');
 
-            // 2. Buscar el producto UNA SOLA VEZ
             const p = productosCache.find(x => x.id_producto == id);
             
             if (!p) {
@@ -542,58 +538,56 @@ async function imprimirTicket(venta) {
             console.log('✅ Producto seleccionado:', p.producto, '| Tipo:', p.tipo_registro);
             productoSeleccionado = p;
 
-            // 3. Referencias al DOM
             const inputNombre = document.getElementById('buscador-producto');
-            const inputPrecio = document.getElementById('precio');
+            const inputPrecio = document.getElementById('precio'); // Unitario
+            const inputSubtotal = document.getElementById('subtotal'); // Total línea
             const inputCantidad = document.getElementById('cantidad');
 
-            if (!inputNombre || !inputPrecio || !inputCantidad) {
-                throw new Error('Faltan elementos del formulario en el DOM');
+            if (!inputNombre || !inputPrecio || !inputCantidad || !inputSubtotal) {
+                throw new Error('Faltan elementos del formulario');
             }
 
-            // 4. Llenar datos básicos
             inputNombre.value = p.producto;
 
-            // 5. Lógica específica según tipo (Promo vs Normal)
+            let precioUnitarioFinal = 0;
+            let subtotalInicial = 0;
+
             if (p.tipo_registro === 'promo') {
                 // --- CASO PROMO ---
                 const cantidadPack = parseInt(p.cantidad_unidades) || 1;
                 const precioPack = parseFloat(p.precio_venta);
                 
-                // Buscar producto base para obtener precio unitario real (para calcular sobrantes)
+                // Buscar producto base para obtener precio unitario real
                 const productoBase = productosCache.find(base => 
                     base.id_producto == p.id_base_referencia && base.tipo_registro === 'normal'
                 );
                 
-                 const precioUnitarioReal = productoBase 
-                    ? parseFloat(productoBase.precio_venta) 
-                    : (precioPack / cantidadPack);
+                // Calcular unitario: Si existe base, usar su precio. Si no, dividir pack/cantidad.
+                if (productoBase) {
+                    precioUnitarioFinal = parseFloat(productoBase.precio_venta);
+                } else {
+                    precioUnitarioFinal = precioPack / cantidadPack;
+                    console.warn('⚠️ No se encontró producto base, se estimó unitario:', precioUnitarioFinal);
+                }
 
-                // 1. Llenar Precio Unitario (Campo 'precio')
-                inputPrecio.value = precioUnitarioReal.toFixed(2); 
+                subtotalInicial = precioPack; // El subtotal inicial es el precio del pack completo
                 
-                // 2. Llenar Subtotal Inicial (Campo 'subtotal')
-                document.getElementById('subtotal').value = precioPack.toFixed(2); // El subtotal inicial es el precio del pack
-                  // Guardar metadatos para el cálculo posterior
-                  inputCantidad.value = cantidadPack;
-                  inputCantidad.dataset.esPromo = "true";
-                  inputCantidad.dataset.minPromo = cantidadPack;
-                  inputCantidad.dataset.precioPackPromo = precioPack.toFixed(2);
-                  inputCantidad.dataset.precioUnitarioNormal = precioUnitarioReal.toFixed(2);
+                inputCantidad.value = cantidadPack;
+                inputCantidad.dataset.esPromo = "true";
+                inputCantidad.dataset.minPromo = cantidadPack;
+                inputCantidad.dataset.precioPackPromo = precioPack.toFixed(2);
+                inputCantidad.dataset.precioUnitarioNormal = precioUnitarioFinal.toFixed(2);
 
             } else {
                 // --- CASO NORMAL ---
-                const precioUnitario = parseFloat(p.precio_venta);
-    
-                // 1. Llenar Precio Unitario
-                inputPrecio.value = precioUnitario.toFixed(2);
-                
-                // 2. Llenar Subtotal Inicial (1 unidad)
-                document.getElementById('subtotal').value = precioUnitario.toFixed(2);
+                precioUnitarioFinal = parseFloat(p.precio_venta);
+                subtotalInicial = precioUnitarioFinal; // 1 unidad = precio unitario
+
+                inputCantidad.value = 1;
                 inputCantidad.dataset.esPromo = "false";
-                inputCantidad.dataset.precioUnitarioNormal = precioUnitario.toFixed(2);
+                inputCantidad.dataset.precioUnitarioNormal = precioUnitarioFinal.toFixed(2);
                 
-                // Verificar si existe promo asociada a este producto
+                // Verificar promo asociada
                 const promoAsociada = productosCache.find(prod => 
                     prod.tipo_registro === 'promo' && 
                     prod.id_base_referencia == p.id_producto
@@ -609,8 +603,22 @@ async function imprimirTicket(venta) {
                 }
             }
 
-            // 6. Calcular subtotal inicial y ocultar resultados
+            // ⚠️ CRÍTICO: Asegurar que los inputs tengan valores numéricos válidos ANTES de calcular
+            if (isNaN(precioUnitarioFinal) || precioUnitarioFinal <= 0) {
+                console.error('❌ Precio unitario inválido calculado:', precioUnitarioFinal);
+                alert('Error de datos: El precio del producto es incorrecto.');
+                return;
+            }
+
+            // Escribir en los inputs
+            inputPrecio.value = precioUnitarioFinal.toFixed(2);
+            inputSubtotal.value = subtotalInicial.toFixed(2);
+
+            console.log(`💰 Valores asignados -> Unitario: ${inputPrecio.value}, Subtotal: ${inputSubtotal.value}`);
+
+            // Ahora sí, calcular subtotal (que validará y posiblemente reformateará)
             calcularSubtotal();
+            
             document.getElementById('resultados-producto').style.display = 'none';
             document.getElementById('resultados-producto').innerHTML = '';
 
