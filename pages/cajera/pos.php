@@ -701,7 +701,7 @@ async function imprimirTicket(venta) {
 
     function calcularSubtotal() {
         const inputCantidad = document.getElementById('cantidad');
-        const inputSubtotal = document.getElementById('subtotal'); // ⚠️ Apuntamos al nuevo ID
+        const inputSubtotal = document.getElementById('subtotal'); 
         
         let qty = parseInt(inputCantidad.value) || 0;
         if (qty < 0) qty = 0;
@@ -728,23 +728,10 @@ async function imprimirTicket(venta) {
 
         // ✅ ACTUALIZAR SOLO EL CAMPO SUBTOTAL
         if (inputSubtotal) {
+            // Usamos toLocaleString para formato con comas, o toFixed(2) si prefieres punto
             inputSubtotal.value = subtotalFinal.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            // Opcional: Formato con signo $
-            // inputSubtotal.value = '$' + subtotalFinal.toLocaleString('es-CL'); 
         }
-      
-
-            // ⚠️ CLAVE: Actualizar el campo de Precio con el SUBTOTAL calculado
-            // En un POS, el campo "Precio" usualmente muestra el Total de la línea, no el unitario.
-            if (inputPrecioTotal) {
-                inputPrecioTotal.value = subtotalFinal.toFixed(2);
-                console.log(`✍️ Campo 'precio' actualizado a: $${inputPrecioTotal.value}`);
-            } else {
-                console.error('❌ No se encontró el input #precio para actualizar el subtotal');
-            }
-            
-            // Si tienes un campo separado para "Total Venta", actualízalo aquí también
-            // actualizarGranTotal(subtotalFinal); 
+        // ✅ AQUÍ TERMINA LA FUNCIÓN CORRECTAMENTE
     }
 
     function setMetodoPago(metodo) {
