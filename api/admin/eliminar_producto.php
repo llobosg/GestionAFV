@@ -1,61 +1,56 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
-require_once __DIR__ . '/../../includes/session.php';
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-// Validación de sesión
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+if (!isset($_SESSION['id_negocio'])) {
+    echo json_encode(['success' => false, 'message' => 'Sesión no válida']);
     exit;
 }
-
-$id_negocio = $_SESSION['id_negocio'] ?? 1;
-
-// Obtener datos del body
-$input = file_get_contents('php://input');
-$data = json_decode($input, true);
-
-if (!isset($data['id_producto'])) {
-    echo json_encode(['success' => false, 'message' => 'ID no proporcionado']);
-    exit;
-}
-
-$id_producto = intval($data['id_producto']);
 
 try {
-    // Paso 1: Verificar si es una promoción
-    // Buscamos en productos_promo usando id_promo (que enviamos como id_producto en el frontend)
-    $stmt_check = $pdo->prepare("SELECT id_promo FROM productos_promo WHERE id_promo = ? AND id_negocio = ?");
-    $stmt_check->execute([$id_producto, $id_negocio]);
-    $es_promo = $stmt_check->fetch();
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    
+    if (!$data || !isset($data['id_producto'])) {
+        throw new Exception("ID no proporcionado");
+    }
+
+    $id_producto = (int)$data['id_producto'];
+    $id_negocio = $_SESSION['id_negocio'];
+
+    // 1. VERIFICAR SI ES UNA PROMOCIÓN
+    // Asumiendo que la PK de productos_promo es id_promo, pero en el frontend enviamos id_producto
+    // Si tu tabla productos_promo usa id_promo como PK, ajusta la consulta.
+    // Si usas id_producto como referencia cruzada, ajusta según tu estructura.
+    // Basado en tu estructura anterior, asumimos que buscamos por id_promo si es promo.
+    
+    // Intentamos buscar en promos primero
+    $stmt_check_promo = $pdo->prepare("SELECT id_promo FROM productos_promo WHERE id_promo = ? AND id_negocio = ?");
+    $stmt_check_promo->execute([$id_producto, $id_negocio]);
+    $es_promo = $stmt_check_promo->fetch();
 
     if ($es_promo) {
-        // Paso 2a: Eliminar Promoción
+        // ELIMINAR PROMOCIÓN
         $stmt_del = $pdo->prepare("DELETE FROM productos_promo WHERE id_promo = ? AND id_negocio = ?");
         $stmt_del->execute([$id_producto, $id_negocio]);
+        echo json_encode(['success' => true, 'message' => 'Promoción eliminada']);
         
-        echo json_encode(['success' => true, 'message' => 'Promoción eliminada correctamente']);
     } else {
-        // Paso 2b: Eliminar Producto Normal
-        // Verificamos primero que exista y pertenezca al negocio
-        $stmt_check_prod = $pdo->prepare("SELECT id_producto FROM productos WHERE id_producto = ? AND id_negocio = ?");
-        $stmt_check_prod->execute([$id_producto, $id_negocio]);
-        
-        if (!$stmt_check_prod->fetch()) {
-            echo json_encode(['success' => false, 'message' => 'Producto no encontrado o no pertenece a este negocio']);
-            exit;
-        }
-
+        // ELIMINAR PRODUCTO NORMAL
         $stmt_del = $pdo->prepare("DELETE FROM productos WHERE id_producto = ? AND id_negocio = ?");
         $stmt_del->execute([$id_producto, $id_negocio]);
         
-        echo json_encode(['success' => true, 'message' => 'Producto eliminado correctamente']);
+        if ($stmt_del->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'Producto eliminado']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Producto no encontrado']);
+        }
     }
 
 } catch (Exception $e) {
-    error_log("Error al eliminar producto: " . $e->getMessage());
+    error_log("Error en eliminar_producto.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 ?>

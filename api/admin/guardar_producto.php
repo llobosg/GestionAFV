@@ -1,33 +1,30 @@
 <?php
 header('Content-Type: application/json');
-// Asegúrate que la ruta a config.php sea correcta según tu estructura
-require_once __DIR__ . '/../../includes/config.php'; 
+require_once __DIR__ . '/../../includes/config.php';
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-// Iniciar sesión si no está activa
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Validación básica de sesión (Ajusta según tu variable de sesión real, ej: $_SESSION['rol'] o $_SESSION['id_negocio'])
 if (!isset($_SESSION['id_negocio'])) {
     echo json_encode(['success' => false, 'message' => 'Sesión no válida']);
     exit;
 }
 
 try {
-    // Obtener datos JSON
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
 
     if (!$data) {
-        throw new Exception("Datos inválidos o vacíos");
+        throw new Exception("Datos inválidos");
     }
 
     $id_negocio = $_SESSION['id_negocio'];
     $isUpdate = !empty($data['id_producto']);
 
+    // Asegurar valores por defecto
+    $stock_actual = isset($data['stock_actual']) ? floatval($data['stock_actual']) : 0;
+    $stock_critico = isset($data['stock_critico']) ? floatval($data['stock_critico']) : 10; // Default 10 si no viene
+
     if ($isUpdate) {
-        // === ACTUALIZAR PRODUCTO EXISTENTE ===
+        // === ACTUALIZAR ===
         $stmt = $pdo->prepare("
             UPDATE productos 
             SET 
@@ -38,7 +35,7 @@ try {
                 precio_compra = ?, 
                 porc_utilidad = ?, 
                 stock_actual = ?, 
-                stock_critico = ?
+                stock_critico = ?  -- <--- AGREGADO
             WHERE id_producto = ? AND id_negocio = ?
         ");
         
@@ -49,16 +46,14 @@ try {
             $data['unidad_medida'],
             $data['precio_compra'],
             $data['porc_utilidad'],
-            $data['stock_actual'] ?? 0,
-            $data['stock_critico'] ?? 10,
+            $stock_actual,
+            $stock_critico,
             $data['id_producto'],
             $id_negocio
         ]);
 
     } else {
-        // === CREAR NUEVO PRODUCTO ===
-        
-        // Generar código único
+        // === INSERTAR ===
         $tipoCode = strtoupper(substr($data['tipo'] ?? 'GEN', 0, 3));
         $famCode = strtoupper(str_replace(' ', '', $data['familia'] ?? 'OTROS'));
         $subCode = strtoupper(str_replace(' ', '', $data['subfamilia'] ?? 'GEN'));
@@ -81,17 +76,13 @@ try {
             $data['unidad_medida'],
             $data['precio_compra'],
             $data['porc_utilidad'],
-            $data['stock_actual'] ?? 0,
-            $data['stock_critico'] ?? 10
+            $stock_actual,
+            $stock_critico // <--- AGREGADO
         ]);
 
-        // OBTENER EL ID DEL NUEVO PRODUCTO
         $id_producto = $pdo->lastInsertId();
 
-        // === REGISTRO DE INGRESO DE STOCK (Opcional) ===
-        // Solo ejecutamos esto si el frontend envía 'cantidad'. 
-        // Como tu formulario actual NO tiene campo cantidad/factura, esto probablemente se saltará
-        // a menos que agregues esos campos al form HTML.
+        // Si hay cantidad inicial, registrar ingreso
         if (isset($data['cantidad']) && $data['cantidad'] > 0) {
             $stmtIngreso = $pdo->prepare("
                 INSERT INTO ingresos_stock (
@@ -114,22 +105,16 @@ try {
                 $data['fecha_pago'] ?? null
             ]);
 
-            // Actualizar stock del producto con la cantidad ingresada
-            $stmtUpdateStock = $pdo->prepare("
-                UPDATE productos 
-                SET stock_actual = stock_actual + ?
-                WHERE id_producto = ?
-            ");
-            $stmtUpdateStock->execute([$data['cantidad'], $id_producto]);
+            // Actualizar stock
+            $pdo->prepare("UPDATE productos SET stock_actual = stock_actual + ? WHERE id_producto = ?")
+                ->execute([$data['cantidad'], $id_producto]);
         }
     }
 
     echo json_encode(['success' => true, 'message' => 'Guardado correctamente']);
 
 } catch (Exception $e) {
-    // Log del error para Railway/Backend
     error_log("Error en guardar_producto.php: " . $e->getMessage());
-    // Respuesta JSON de error para el Frontend
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
