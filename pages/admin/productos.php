@@ -404,9 +404,9 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
                 <option value="pack">Pack</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group readonly">
               <label>% Utilidad *</label>
-              <input type="number" step="0.1" id="porc_utilidad" required min="0" value="30">
+              <input type="number" step="0.1" id="porc_utilidad" min="0" readonly value="0">
             </div>
           </div>
 
@@ -416,9 +416,9 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               <label>Precio Compra ($)*</label>
               <input type="number" step="0.01" id="precio_compra" required min="0">
             </div>
-            <div class="form-group readonly">
+            <div class="form-group">
               <label>Precio Venta ($)</label>
-              <input type="text" id="precio_venta-generado" readonly>
+              <input type="text" id="precio_venta-generado" required>
             </div>
           </div>
 
@@ -503,8 +503,9 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
 
     function actualizarGenerados() {
       const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
+      const venta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
       const utilidad = parseFloat(document.getElementById('porc_utilidad').value) || 0;
-      document.getElementById('precio_venta-generado').value = (compra * (1 + utilidad / 100)).toFixed(2);
+      document.getElementById('porc_utilidad').value = ((venta - compra) / compra * 100).toFixed(2);
     }
 
     ['precio_compra', 'porc_utilidad'].forEach(id => {
