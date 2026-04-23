@@ -426,11 +426,11 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
           <div class="form-row">
             <div class="form-group">
               <label>Stock Actual</label>
-              <input type="number" step="0.01" id="stock_actual" value="0">
+              <input type="number" step="0.01" id="stock_actual">
             </div>
             <div class="form-group">
               <label>Stock Crítico</label>
-              <input type="number" step="0.01" id="stock_critico" value="10">
+              <input type="number" step="0.01" id="stock_critico">
             </div>
           </div>
 
