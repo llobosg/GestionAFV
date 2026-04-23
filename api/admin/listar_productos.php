@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/session.php';
 
+// Validación de sesión
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
     http_response_code(403);
     echo json_encode(['error' => 'Acceso denegado']);
@@ -12,7 +13,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
 $id_negocio = $_SESSION['id_negocio'] ?? 1;
 
 try {
-    // Productos normales
+    // 1. Productos normales
     $stmt_normales = $pdo->prepare("
         SELECT 
             id_producto,
@@ -33,7 +34,8 @@ try {
     $stmt_normales->execute([$id_negocio]);
     $normales = $stmt_normales->fetchAll(PDO::FETCH_ASSOC);
 
-    // Productos promocionales
+    // 2. Productos promocionales
+    // Nota: Asumimos que ya agregaste la columna id_negocio a productos_promo
     $stmt_promo = $pdo->prepare("
         SELECT 
             pp.id_promo AS id_producto,
@@ -58,13 +60,13 @@ try {
     $stmt_promo->execute([$id_negocio]);
     $promos = $stmt_promo->fetchAll(PDO::FETCH_ASSOC);
 
-    // Combinar
+    // Combinar resultados
     $todos = array_merge($normales, $promos);
     echo json_encode($todos);
 
 } catch (Exception $e) {
     error_log("Error al listar productos: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Error interno']);
+    echo json_encode(['error' => 'Error interno: ' . $e->getMessage()]);
 }
 ?>

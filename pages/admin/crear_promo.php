@@ -2,14 +2,17 @@
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/session.php';
 
+// Validar sesión y rol
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'admin') {
     header('Location: /public/login.php');
     exit;
 }
 
+$id_negocio = $_SESSION['id_negocio']; // <--- OBTENER ID DEL NEGOCIO
+
 // Obtener lista de productos
-$stmt = $pdo->prepare("SELECT id_producto, producto FROM productos WHERE activo = 1 ORDER BY producto");
-$stmt->execute();
+$stmt = $pdo->prepare("SELECT id_producto, producto FROM productos WHERE activo = 1 AND id_negocio = ? ORDER BY producto");
+$stmt->execute([$id_negocio]);
 $productos = $stmt->fetchAll();
 
 $message = '';
@@ -26,18 +29,19 @@ if ($_POST) {
             throw new Exception('Todos los campos son obligatorios y válidos.');
         }
 
-        // Verificar que el producto base exista
-        $stmt_check = $pdo->prepare("SELECT 1 FROM productos WHERE id_producto = ?");
-        $stmt_check->execute([$id_producto_base]);
+        // Verificar que el producto base exista Y pertenezca a este negocio
+        $stmt_check = $pdo->prepare("SELECT 1 FROM productos WHERE id_producto = ? AND id_negocio = ?");
+        $stmt_check->execute([$id_producto_base, $id_negocio]);
         if (!$stmt_check->fetch()) {
-            throw new Exception('Producto base no válido.');
+            throw new Exception('Producto base no válido o no pertenece a tu negocio.');
         }
 
+        // INSERT con id_negocio
         $stmt_ins = $pdo->prepare("
-            INSERT INTO productos_promo (nombre, descripcion, id_producto_base, cantidad_unidades, precio_promo)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO productos_promo (id_negocio, nombre, descripcion, id_producto_base, cantidad_unidades, precio_promo)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
-        $stmt_ins->execute([$nombre, $descripcion, $id_producto_base, $cantidad_unidades, $precio_promo]);
+        $stmt_ins->execute([$id_negocio, $nombre, $descripcion, $id_producto_base, $cantidad_unidades, $precio_promo]);
 
         $message = '✅ Promoción creada con éxito.';
     } catch (Exception $e) {
