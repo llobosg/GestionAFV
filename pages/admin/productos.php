@@ -505,10 +505,10 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
       const venta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
       const utilidad = parseFloat(document.getElementById('porc_utilidad').value) || 0;
-      document.getElementById('porc_utilidad').value = ((venta - compra) * 100).toFixed(2);
+      document.getElementById('porc_utilidad').value = (((venta - compra) / compra) * 100).toFixed(2);
     }
 
-    ['precio_compra', 'porc_utilidad'].forEach(id => {
+    ['precio_venta-generado', 'porc_utilidad'].forEach(id => {
       document.getElementById(id).addEventListener('input', actualizarGenerados);
     });
 
