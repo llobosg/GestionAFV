@@ -383,8 +383,8 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               <input type="text" id="familia" required>
             </div>
             <div class="form-group">
-              <label>Subfamilia *</label>
-              <input type="text" id="subfamilia" required>
+              <label>Subfamilia</label>
+              <input type="text" id="subfamilia">
             </div>
           </div>
 
@@ -505,7 +505,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
       const venta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
       const utilidad = parseFloat(document.getElementById('porc_utilidad').value) || 0;
-      document.getElementById('porc_utilidad').value = ((venta - compra) / compra * 100).toFixed(2);
+      document.getElementById('porc_utilidad').value = ((venta - compra) * 100).toFixed(2);
     }
 
     ['precio_compra', 'porc_utilidad'].forEach(id => {
