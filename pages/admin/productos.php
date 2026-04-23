@@ -500,31 +500,73 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
 
   <script>
     let productosCache = [];
+    let cacheProductosBase = [];
 
-    function actualizarGenerados() {
-      const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
-      const venta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
-      const utilidad = parseFloat(document.getElementById('porc_utilidad').value) || 0;
-      document.getElementById('porc_utilidad').value = (((venta - compra) / compra) * 100).toFixed(2);
+    // === SISTEMA DE TOAST SIMPLE ===
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; 
+            padding: 15px 25px; border-radius: 8px; color: white; 
+            font-weight: bold; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            background: ${type === 'success' ? '#4CAF50' : '#F44336'};
+            animation: slideIn 0.3s ease-out forwards;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        // Estilo de animación
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = '0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
-    ['precio_venta-generado', 'porc_utilidad'].forEach(id => {
-      document.getElementById(id).addEventListener('input', actualizarGenerados);
-    });
+    // === CÁLCULO DE UTILIDAD ===
+    function actualizarGenerados() {
+      const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
+      // Usamos el ID correcto del input
+      const ventaInput = document.getElementById('precio_venta-generado');
+      const venta = parseFloat(ventaInput.value) || 0;
+      
+      let utilidad = 0;
+      if (compra > 0) {
+          utilidad = ((venta - compra) / compra) * 100;
+      }
+      
+      document.getElementById('porc_utilidad').value = utilidad.toFixed(2);
+    }
 
-    // Cargar productos
+    // Escuchar cambios en Precio Venta para recalcular %
+    document.getElementById('precio_venta-generado').addEventListener('input', actualizarGenerados);
+    // También escuchar precio compra por si cambia
+    document.getElementById('precio_compra').addEventListener('input', actualizarGenerados);
+
+    // === CARGAR PRODUCTOS ===
     async function cargarProductos() {
-      const res = await fetch('/api/admin/listar_productos.php');
-      productosCache = await res.json();
-      aplicarFiltros();
-      renderizarGraficos(productosCache);
+      try {
+        const res = await fetch('/api/admin/listar_productos.php');
+        productosCache = await res.json();
+        aplicarFiltros();
+        renderizarGraficos(productosCache);
+      } catch (error) {
+        console.error("Error cargando productos:", error);
+      }
     }
 
     function renderizarGraficos(productos) {
-      // === Productos por Tipo (barras verticales) ===
+      // === Productos por Tipo ===
       const tipos = {};
       productos.forEach(p => {
-        tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
+        if(p.tipo_registro !== 'promo') { // Excluir promos del gráfico de tipos normales si se desea
+            tipos[p.tipo] = (tipos[p.tipo] || 0) + 1;
+        }
       });
 
       const maxCount = Math.max(...Object.values(tipos), 1);
@@ -543,7 +585,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         });
       document.getElementById('grafico-tipos').innerHTML = html || '<div style="color:#999;text-align:center;width:100%;">Sin datos</div>';
 
-      // === Semáforo basado en stock_actual vs stock_critico ===
+      // === Semáforo Stock ===
       if (productos.length === 0) {
         document.getElementById('promedio-stock').textContent = '0.00';
         document.getElementById('light-green').classList.remove('active');
@@ -552,9 +594,9 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         return;
       }
 
-      // Contar estados
       let rojos = 0, amarillos = 0, verdes = 0;
       productos.forEach(p => {
+        if(p.tipo_registro === 'promo') return; // Ignorar promos en semáforo de stock
         const actual = parseFloat(p.stock_actual) || 0;
         const critico = parseFloat(p.stock_critico) || 10;
         if (actual >= critico) {
@@ -566,12 +608,10 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         }
       });
 
-      // Determinar estado predominante
-      const total = productos.length;
+      const total = productos.filter(p => p.tipo_registro !== 'promo').length || 1;
       const rojoPct = rojos / total;
       const amarilloPct = amarillos / total;
 
-      // Reset luces
       document.getElementById('light-green').classList.remove('active');
       document.getElementById('light-yellow').classList.remove('active');
       document.getElementById('light-red').classList.remove('active');
@@ -608,7 +648,6 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         }).sort((a, b) => a.producto.localeCompare(b.producto));
 
         tbody.innerHTML = filtrados.map(p => {
-            // ✅ Determinar qué función llamar según el tipo
             const onClickEditar = p.tipo_registro === 'promo' 
                 ? `abrirEditarPromo(${p.id_producto})` 
                 : `editarProducto(${p.id_producto})`;
@@ -646,9 +685,20 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       aplicarFiltros();
     }
 
-    // Formulario
+    // === GUARDAR PRODUCTO (CORREGIDO) ===
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Obtener valores
+      const precioCompra = parseFloat(document.getElementById('precio_compra').value) || 0;
+      const precioVenta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
+      
+      // Recalcular utilidad para asegurar precisión al guardar
+      let porcUtilidad = 0;
+      if (precioCompra > 0) {
+          porcUtilidad = ((precioVenta - precioCompra) / precioCompra) * 100;
+      }
+
       const data = {
         id_producto: document.getElementById('id_producto').value || null,
         id_negocio: <?= $id_negocio ?>,
@@ -656,22 +706,36 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         familia: document.getElementById('familia').value,
         subfamilia: document.getElementById('subfamilia').value,
         unidad_medida: document.getElementById('unidad_medida').value,
-        precio_compra: document.getElementById('precio_compra').value,
-        porc_utilidad: document.getElementById('porc_utilidad').value,
-        stock_actual: document.getElementById('stock_actual').value || 0
+        precio_compra: precioCompra,
+        precio_venta: precioVenta, // Clave corregida (sin guiones)
+        porc_utilidad: porcUtilidad.toFixed(2), // Enviar utilidad calculada
+        stock_actual: document.getElementById('stock_actual').value || 0,
+        stock_critico: document.getElementById('stock_critico').value || 10
       };
 
-      await fetch('/api/admin/guardar_producto.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-      });
-
-      limpiarForm();
-      cargarProductos();
+      try {
+        const res = await fetch('/api/admin/guardar_producto.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+            showToast("✅ Producto guardado correctamente", "success");
+            limpiarForm();
+            cargarProductos(); // Recargar tabla
+        } else {
+            showToast("❌ Error: " + (result.message || "No se pudo guardar"), "error");
+        }
+      } catch (error) {
+        console.error(error);
+        showToast("❌ Error de conexión", "error");
+      }
     });
 
-    // Edición
+    // === EDICIÓN ===
     async function editarProducto(id) {
       const producto = productosCache.find(p => p.id_producto == id);
       if (!producto) return;
@@ -682,80 +746,76 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       document.getElementById('subfamilia').value = producto.subfamilia;
       document.getElementById('unidad_medida').value = producto.unidad_medida;
       document.getElementById('precio_compra').value = producto.precio_compra;
-      document.getElementById('porc_utilidad').value = producto.porc_utilidad;
+      document.getElementById('precio_venta-generado').value = producto.precio_venta;
       document.getElementById('stock_actual').value = producto.stock_actual;
-      document.getElementById('form-title').textContent = 'Editar Producto';
+      document.getElementById('stock_critico').value = producto.stock_critico;
+      
+      // Calcular utilidad visualmente
       actualizarGenerados();
+      
+      document.getElementById('form-title').textContent = 'Editar Producto';
+      // Scroll hacia el formulario en móvil
+      document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Eliminación
+    // === ELIMINACIÓN CON TOAST ===
     async function eliminarProducto(id) {
-      if (!confirm('¿Eliminar este producto?')) return;
-      await fetch('/api/admin/eliminar_producto.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id_producto: id })
-      });
-      cargarProductos();
+      if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+      
+      try {
+        const res = await fetch('/api/admin/eliminar_producto.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ id_producto: id })
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+            showToast("🗑️ Producto eliminado", "success");
+            cargarProductos(); // Recargar tabla para reflejar cambio
+        } else {
+            showToast("❌ Error al eliminar: " + (result.message || ""), "error");
+        }
+      } catch (error) {
+        console.error(error);
+        showToast("❌ Error de conexión", "error");
+      }
     }
 
+    // === PROMOCIONES (Mantenido igual) ===
     function abrirEditarPromo(idPromo) {
-        // Buscar el producto promocional en el cache global
-        const promo = productosCache.find(p => 
-            p.id_producto == idPromo && 
-            p.tipo_registro === 'promo'  // ← ¡CORREGIDO!
-        );
-        
-        if (!promo) {
-            alert('❌ Promoción no encontrada');
-            return;
-        }
+        const promo = productosCache.find(p => p.id_producto == idPromo && p.tipo_registro === 'promo');
+        if (!promo) { alert('❌ Promoción no encontrada'); return; }
 
-        // Llenar el formulario del submodal
         document.getElementById('edit_id_promo').value = promo.id_producto;
         document.getElementById('edit_nombre').value = promo.producto;
         document.getElementById('edit_precio_promo').value = parseFloat(promo.precio_venta).toFixed(2);
         document.getElementById('edit_cantidad_unidades').value = promo.cantidad_unidades || 2;
         document.getElementById('edit_activo').value = promo.activo ? '1' : '0';
 
-        // Cargar lista de productos base
         if (cacheProductosBase.length === 0) {
-            cargarProductosBase().then(() => {
-                llenarSelectProductosBase(promo.id_producto_base);
-            });
+            cargarProductosBase().then(() => llenarSelectProductosBase(promo.id_producto_base));
         } else {
             llenarSelectProductosBase(promo.id_producto_base);
         }
-
-        // Mostrar submodal
         document.getElementById('submodalPromo').style.display = 'flex';
     }
 
     function llenarSelectProductosBase(idProductoBase) {
         const select = document.getElementById('edit_id_producto_base');
-        select.innerHTML = '<option value="">Cargando...</option>';
-        
-        if (cacheProductosBase.length === 0) {
-            select.innerHTML = '<option value="">No hay productos</option>';
-            return;
-        }
-
-        let options = '<option value="">Seleccionar...</option>';
+        select.innerHTML = '<option value="">Seleccionar...</option>';
         cacheProductosBase.forEach(p => {
-            options += `<option value="${p.id_producto}" ${p.id_producto == idProductoBase ? 'selected' : ''}>${p.producto}</option>`;
+            select.innerHTML += `<option value="${p.id_producto}" ${p.id_producto == idProductoBase ? 'selected' : ''}>${p.producto}</option>`;
         });
-        select.innerHTML = options;
     }
 
-    // Cerrar submodal
     function cerrarSubmodalPromo() {
         document.getElementById('submodalPromo').style.display = 'none';
     }
 
-    // Guardar cambios
     document.getElementById('formEditarPromo')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const data = {
             id_promo: document.getElementById('edit_id_promo').value,
             nombre: document.getElementById('edit_nombre').value.trim(),
@@ -771,42 +831,36 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-
             const result = await res.json();
             if (result.success) {
-                alert('✅ Promoción actualizada con éxito');
-                location.reload();
+                showToast("✅ Promoción actualizada", "success");
+                cerrarSubmodalPromo();
+                cargarProductos();
             } else {
-                alert('❌ Error: ' + (result.message || 'No se pudo guardar'));
+                showToast('❌ Error: ' + (result.message || 'No se pudo guardar'), "error");
             }
         } catch (err) {
             console.error(err);
-            alert('❌ Error de conexión al guardar');
+            showToast('❌ Error de conexión', "error");
         }
     });
-
-   
-        
 
     function limpiarForm() {
       document.getElementById('producto-form').reset();
       document.getElementById('id_producto').value = '';
       document.getElementById('form-title').textContent = 'Agregar Producto';
-      actualizarGenerados();
+      document.getElementById('porc_utilidad').value = '0';
     }
 
-    document.addEventListener('DOMContentLoaded', cargarProductos);
-
-    let cacheProductosBase = [];
-
-    // Cargar lista de productos base al inicio
     async function cargarProductosBase() {
       const res = await fetch('/api/admin/listar_productos_base.php');
       cacheProductosBase = await res.json();
     }
 
-    // Inicializar
-    cargarProductosBase();
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarProductos();
+        cargarProductosBase();
+    });
   </script>
 </body>
 </html>
