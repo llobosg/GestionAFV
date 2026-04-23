@@ -29,7 +29,7 @@ try {
     // Buscamos en la tabla productos_promo. 
     // Asumimos que la PK de productos_promo también se llama id_producto o id_promo. 
     // Si tu tabla usa 'id_promo', cambia la columna abajo.
-    $stmt_check_promo = $pdo->prepare("SELECT id_producto FROM productos_promo WHERE id_promo = ? AND id_negocio = ?");
+    $stmt_check_promo = $pdo->prepare("SELECT id_promo FROM productos_promo WHERE id_promo = ? AND id_negocio = ?");
     $stmt_check_promo->execute([$id_promo, $id_negocio]);
     $es_promo = $stmt_check_promo->fetch();
 
