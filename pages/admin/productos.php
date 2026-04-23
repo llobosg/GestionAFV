@@ -685,15 +685,12 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       aplicarFiltros();
     }
 
-    // === GUARDAR PRODUCTO (CORREGIDO) ===
     document.getElementById('producto-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // Obtener valores
       const precioCompra = parseFloat(document.getElementById('precio_compra').value) || 0;
       const precioVenta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
       
-      // Recalcular utilidad para asegurar precisión al guardar
       let porcUtilidad = 0;
       if (precioCompra > 0) {
           porcUtilidad = ((precioVenta - precioCompra) / precioCompra) * 100;
@@ -707,10 +704,11 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         subfamilia: document.getElementById('subfamilia').value,
         unidad_medida: document.getElementById('unidad_medida').value,
         precio_compra: precioCompra,
-        precio_venta: precioVenta, // Clave corregida (sin guiones)
-        porc_utilidad: porcUtilidad.toFixed(2), // Enviar utilidad calculada
+        precio_venta: precioVenta,
+        porc_utilidad: porcUtilidad.toFixed(2),
         stock_actual: document.getElementById('stock_actual').value || 0,
-        stock_critico: document.getElementById('stock_critico').value || 10
+        // ASEGÚRATE DE ENVIAR ESTO:
+        stock_critico: document.getElementById('stock_critico').value || 10 
       };
 
       try {
@@ -725,7 +723,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         if (result.success) {
             showToast("✅ Producto guardado correctamente", "success");
             limpiarForm();
-            cargarProductos(); // Recargar tabla
+            cargarProductos();
         } else {
             showToast("❌ Error: " + (result.message || "No se pudo guardar"), "error");
         }
@@ -736,6 +734,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
     });
 
     // === EDICIÓN ===
+        // Edición
     async function editarProducto(id) {
       const producto = productosCache.find(p => p.id_producto == id);
       if (!producto) return;
@@ -747,15 +746,15 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       document.getElementById('unidad_medida').value = producto.unidad_medida;
       document.getElementById('precio_compra').value = producto.precio_compra;
       document.getElementById('precio_venta-generado').value = producto.precio_venta;
-      document.getElementById('stock_actual').value = producto.stock_actual;
-      document.getElementById('stock_critico').value = producto.stock_critico;
       
-      // Calcular utilidad visualmente
-      actualizarGenerados();
+      // CORRECCIÓN: Usar || 10 para evitar undefined
+      document.getElementById('stock_actual').value = producto.stock_actual || 0;
+      document.getElementById('stock_critico').value = producto.stock_critico || 10; 
       
       document.getElementById('form-title').textContent = 'Editar Producto';
-      // Scroll hacia el formulario en móvil
-      document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+      
+      // Recalcular utilidad visualmente
+      actualizarGenerados();
     }
 
     // === ELIMINACIÓN CON TOAST ===

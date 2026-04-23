@@ -26,6 +26,7 @@ try {
             porc_utilidad,
             precio_venta,
             stock_actual,
+            stock_critico,
             'normal' AS tipo_registro
         FROM productos 
         WHERE id_negocio = ? AND activo = 1
@@ -36,7 +37,7 @@ try {
 
     // 2. Productos promocionales
     // Nota: Asumimos que ya agregaste la columna id_negocio a productos_promo
-    $stmt_promo = $pdo->prepare("
+        $stmt_promo = $pdo->prepare("
         SELECT 
             pp.id_promo AS id_producto,
             CONCAT(p.producto, ' (', pp.cantidad_unidades, 'x$', FORMAT(pp.precio_promo, 0), ')') AS producto,
@@ -48,6 +49,7 @@ try {
             p.porc_utilidad,
             pp.precio_promo AS precio_venta,
             p.stock_actual,
+            p.stock_critico, -- <--- ¡AGREGA ESTO TAMBIÉN!
             'promo' AS tipo_registro,
             pp.id_producto_base,
             pp.cantidad_unidades,
