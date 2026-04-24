@@ -414,23 +414,22 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
           <div class="form-row">
             <div class="form-group">
               <label>Precio Compra ($)*</label>
-              <input type="number" step="0.01" id="precio_compra" required min="0">
+              <input type="number" step="1" id="precio_compra" required min="0">
             </div>
             <div class="form-group">
               <label>Precio Venta ($)</label>
-              <input type="text" id="precio_venta-generado" required>
+              <input type="number" step="1" id="precio_venta-generado" required min="0">
             </div>
-          </div>
 
           <!-- Fila 5: Stock Actual + Crítico -->
           <div class="form-row">
             <div class="form-group">
               <label>Stock Actual</label>
-              <input type="number" step="0.01" id="stock_actual">
+              <input type="number" step="1" id="stock_actual" min="0" value="0">
             </div>
             <div class="form-group">
               <label>Stock Crítico</label>
-              <input type="number" step="0.01" id="stock_critico">
+              <input type="number" step="1" id="stock_critico" min="0" value="10">
             </div>
           </div>
 
@@ -639,12 +638,16 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         tbody.innerHTML = '';
 
         const filtrados = productosCache.filter(p => {
+            // Excluir productos inactivos y promos si no se desean mostrar
+            if (p.activo === 0) return false;
+            
             const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
             const matchTipo = !tipo || p.tipo === tipo;
             const matchFamilia = !familia || (p.familia && p.familia.toLowerCase().includes(familia));
             const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
             const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
             return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
+        });
         }).sort((a, b) => a.producto.localeCompare(b.producto));
 
         tbody.innerHTML = filtrados.map(p => {
@@ -703,12 +706,11 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         familia: document.getElementById('familia').value,
         subfamilia: document.getElementById('subfamilia').value,
         unidad_medida: document.getElementById('unidad_medida').value,
-        precio_compra: precioCompra,
-        precio_venta: precioVenta,
+        precio_compra: Math.round(precioCompra),
+        precio_venta: Math.round(precioVenta),
         porc_utilidad: porcUtilidad.toFixed(2),
-        stock_actual: document.getElementById('stock_actual').value || 0,
-        // ASEGÚRATE DE ENVIAR ESTO:
-        stock_critico: document.getElementById('stock_critico').value || 10 
+        stock_actual: Math.round(parseFloat(document.getElementById('stock_actual').value) || 0),
+        stock_critico: Math.round(parseFloat(document.getElementById('stock_critico').value) || 10)
       };
 
       try {
@@ -771,10 +773,10 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         const result = await res.json();
         
         if (result.success) {
-            showToast("🗑️ Producto eliminado", "success");
-            cargarProductos(); // Recargar tabla para reflejar cambio
+            showToast("✅ Producto desactivado (no se eliminará del historial)", "success");
+            cargarProductos();
         } else {
-            showToast("❌ Error al eliminar: " + (result.message || ""), "error");
+            showToast("❌ Error: " + (result.message || ""), "error");
         }
       } catch (error) {
         console.error(error);

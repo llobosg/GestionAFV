@@ -1,8 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/config.php';
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['id_negocio'])) {
     echo json_encode(['success' => false, 'message' => 'Sesión no válida']);
     exit;
@@ -11,53 +11,41 @@ if (!isset($_SESSION['id_negocio'])) {
 try {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
-
-    if (!$data) {
-        throw new Exception("Datos inválidos");
-    }
+    if (!$data) throw new Exception("Datos inválidos");
 
     $id_negocio = $_SESSION['id_negocio'];
     $isUpdate = !empty($data['id_producto']);
 
-    // Asegurar valores por defecto
-    $stock_actual = isset($data['stock_actual']) ? floatval($data['stock_actual']) : 0;
-    $stock_critico = isset($data['stock_critico']) ? floatval($data['stock_critico']) : 10; // Default 10 si no viene
+    // === REDONDEOS CORRECTOS ===
+    $precio_compra = round(floatval($data['precio_compra'] ?? 0), 0);
+    $porc_utilidad = round(floatval($data['porc_utilidad'] ?? 0), 0); // 1 decimal para %
+    $stock_actual = round(floatval($data['stock_actual'] ?? 0), 0);
+    $stock_critico = round(floatval($data['stock_critico'] ?? 10), 0); // default 10 si no se envía
+    
+    // precio_venta es GENERATED, pero si lo enviamos, lo redondeamos
+    $precio_venta = isset($data['precio_venta']) ? round(floatval($data['precio_venta']), 2) : null;
 
     if ($isUpdate) {
-        // === ACTUALIZAR ===
+        // UPDATE: precio_venta se ignora si es GENERATED, se recalcula automáticamente
         $stmt = $pdo->prepare("
             UPDATE productos 
-            SET 
-                tipo = ?, 
-                familia = ?, 
-                subfamilia = ?, 
-                unidad_medida = ?, 
-                precio_compra = ?, 
-                porc_utilidad = ?, 
-                stock_actual = ?, 
-                stock_critico = ?  -- <--- AGREGADO
+            SET tipo = ?, familia = ?, subfamilia = ?, unidad_medida = ?, 
+                precio_compra = ?, porc_utilidad = ?, 
+                stock_actual = ?, stock_critico = ?
             WHERE id_producto = ? AND id_negocio = ?
         ");
-        
         $stmt->execute([
-            $data['tipo'],
-            $data['familia'],
-            $data['subfamilia'],
-            $data['unidad_medida'],
-            $data['precio_compra'],
-            $data['porc_utilidad'],
-            $stock_actual,
-            $stock_critico,
-            $data['id_producto'],
-            $id_negocio
+            $data['tipo'], $data['familia'], $data['subfamilia'], $data['unidad_medida'],
+            $precio_compra, $porc_utilidad,
+            $stock_actual, $stock_critico,
+            $data['id_producto'], $id_negocio
         ]);
-
     } else {
-        // === INSERTAR ===
-        $tipoCode = strtoupper(substr($data['tipo'] ?? 'GEN', 0, 3));
-        $famCode = strtoupper(str_replace(' ', '', $data['familia'] ?? 'OTROS'));
-        $subCode = strtoupper(str_replace(' ', '', $data['subfamilia'] ?? 'GEN'));
-        $codigo = $tipoCode . '-' . $famCode . '-' . $subCode . '-' . uniqid();
+        // INSERT: precio_venta se genera automáticamente por la BD
+        $codigo = strtoupper(substr($data['tipo'] ?? 'GEN', 0, 3)) . '-' . 
+                  strtoupper(str_replace(' ', '', $data['familia'] ?? 'OTROS')) . '-' . 
+                  strtoupper(str_replace(' ', '', $data['subfamilia'] ?? 'GEN')) . '-' . 
+                  uniqid();
 
         $stmt = $pdo->prepare("
             INSERT INTO productos (
@@ -66,49 +54,12 @@ try {
                 stock_actual, stock_critico
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
         $stmt->execute([
-            $codigo,
-            $data['tipo'],
-            $id_negocio,
-            $data['familia'],
-            $data['subfamilia'],
-            $data['unidad_medida'],
-            $data['precio_compra'],
-            $data['porc_utilidad'],
-            $stock_actual,
-            $stock_critico // <--- AGREGADO
+            $codigo, $data['tipo'], $id_negocio,
+            $data['familia'], $data['subfamilia'], $data['unidad_medida'],
+            $precio_compra, $porc_utilidad,
+            $stock_actual, $stock_critico
         ]);
-
-        $id_producto = $pdo->lastInsertId();
-
-        // Si hay cantidad inicial, registrar ingreso
-        if (isset($data['cantidad']) && $data['cantidad'] > 0) {
-            $stmtIngreso = $pdo->prepare("
-                INSERT INTO ingresos_stock (
-                    id_producto, id_negocio, cantidad, precio_compra_unitario,
-                    nro_factura, proveedor, fecha_factura, monto_factura, 
-                    estado_factura, fechapago_factura
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $stmtIngreso->execute([
-                $id_producto,
-                $id_negocio,
-                $data['cantidad'],
-                $data['precio_compra'],
-                $data['nro_factura'] ?? null,
-                $data['proveedor'] ?? null,
-                $data['fecha_factura'] ?? null,
-                $data['monto_factura'] ?? null,
-                $data['estado_factura'] ?? 'pendiente',
-                $data['fecha_pago'] ?? null
-            ]);
-
-            // Actualizar stock
-            $pdo->prepare("UPDATE productos SET stock_actual = stock_actual + ? WHERE id_producto = ?")
-                ->execute([$data['cantidad'], $id_producto]);
-        }
     }
 
     echo json_encode(['success' => true, 'message' => 'Guardado correctamente']);
