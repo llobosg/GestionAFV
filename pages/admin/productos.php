@@ -628,51 +628,50 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
     }
 
     function aplicarFiltros() {
-        const busqueda = document.getElementById('buscador-global').value.toLowerCase();
-        const tipo = document.getElementById('filtro-tipo').value;
-        const familia = document.getElementById('filtro-familia').value.toLowerCase();
-        const producto = document.getElementById('filtro-producto').value.toLowerCase();
-        const stockMin = parseFloat(document.getElementById('filtro-stock').value) || -1;
+      const busqueda = document.getElementById('buscador-global').value.toLowerCase();
+      const tipo = document.getElementById('filtro-tipo').value;
+      const familia = document.getElementById('filtro-familia').value.toLowerCase();
+      const producto = document.getElementById('filtro-producto').value.toLowerCase();
+      const stockMin = parseFloat(document.getElementById('filtro-stock').value) || -1;
 
-        const tbody = document.querySelector('#tabla-productos tbody');
-        tbody.innerHTML = '';
+      const tbody = document.querySelector('#tabla-productos tbody');
+      tbody.innerHTML = '';
 
-        const filtrados = productosCache.filter(p => {
-            // Excluir productos inactivos y promos si no se desean mostrar
-            if (p.activo === 0) return false;
-            
-            const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
-            const matchTipo = !tipo || p.tipo === tipo;
-            const matchFamilia = !familia || (p.familia && p.familia.toLowerCase().includes(familia));
-            const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
-            const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
-            return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
-        });
-        }).sort((a, b) => a.producto.localeCompare(b.producto));
+      const filtrados = productosCache.filter(p => {
+          // Excluir productos inactivos
+          if (p.activo === 0) return false;
+          
+          const matchBusqueda = !busqueda || p.producto.toLowerCase().includes(busqueda);
+          const matchTipo = !tipo || p.tipo === tipo;
+          const matchFamilia = !familia || (p.familia && p.familia.toLowerCase().includes(familia));
+          const matchProducto = !producto || p.producto.toLowerCase().includes(producto);
+          const matchStock = stockMin <= 0 || parseFloat(p.stock_actual) >= stockMin;
+          return matchBusqueda && matchTipo && matchFamilia && matchProducto && matchStock;
+      }).sort((a, b) => a.producto.localeCompare(b.producto)); // <-- ✅ Sin paréntesis extra
 
-        tbody.innerHTML = filtrados.map(p => {
-            const onClickEditar = p.tipo_registro === 'promo' 
-                ? `abrirEditarPromo(${p.id_producto})` 
-                : `editarProducto(${p.id_producto})`;
+      tbody.innerHTML = filtrados.map(p => {
+          const onClickEditar = p.tipo_registro === 'promo' 
+              ? `abrirEditarPromo(${p.id_producto})` 
+              : `editarProducto(${p.id_producto})`;
 
-            return `
-              <tr>
-                <td>${p.producto}</td>
-                <td>${p.tipo || '-'}</td>
-                <td>${p.familia || '-'}</td>
-                <td>${p.subfamilia || '-'}</td>
-                <td>${p.unidad_medida || '-'}</td>
-                <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
-                <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
-                <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
-                <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
-                <td class="acciones">
-                  <button onclick="${onClickEditar}">✏️ Editar</button>
-                  <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
-                </td>
-              </tr>
-            `;
-        }).join('');
+          return `
+            <tr>
+              <td>${p.producto}</td>
+              <td>${p.tipo || '-'}</td>
+              <td>${p.familia || '-'}</td>
+              <td>${p.subfamilia || '-'}</td>
+              <td>${p.unidad_medida || '-'}</td>
+              <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
+              <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
+              <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
+              <td class="acciones">
+                <button onclick="${onClickEditar}">✏️ Editar</button>
+                <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
+              </td>
+            </tr>
+          `;
+      }).join('');
     }
 
     ['buscador-global', 'filtro-tipo', 'filtro-familia', 'filtro-producto', 'filtro-stock'].forEach(id => {
