@@ -436,7 +436,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
 
           <div class="btn-group">
             <button type="submit" class="btn btn-save">Guardar</button>
-            <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar</button>
+            <button type="button" onclick="limpiarForm()" class="btn btn-cancel">Cancelar / Limpiar</button>
           </div>
         </form>
       </div>
@@ -493,7 +493,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
           </select>
         </div>
         <button type="submit" class="btn btn-primary">Guardar</button>
-        <button type="button" onclick="cerrarSubmodalPromo()" class="btn btn-secondary" style="margin-left:0.5rem;">Cancelar</button>
+        <button type="button" onclick="cerrarSubmodalPromo()" class="btn btn-secondary" style="margin-left:0.5rem;">Cancelar / Limpiar</button>
       </form>
     </div>
   </div>
@@ -660,13 +660,13 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               <td>${p.familia || '-'}</td>
               <td>${p.subfamilia || '-'}</td>
               <td>${p.unidad_medida || '-'}</td>
-              <td>$${parseInt(p.precio_compra || 0).toLocaleString()}</td>
-              <td>$${parseInt(p.precio_venta || 0).toLocaleString()}</td>
+              <td>$${parseInt(p.precio_compra || 0).toLocaleString('es-CL')}</td>
+              <td>$${parseInt(p.precio_venta || 0).toLocaleString('es-CL')}</td>
               <td>${parseInt(p.porc_utilidad || 0)}%</td>
               <td>${parseInt(p.stock_actual || 0).toLocaleString()}</td>
               <td class="acciones" onclick="event.stopPropagation()">
                 <!-- Solo botón Eliminar, Editar se activa con click en fila -->
-                <button onclick="eliminarProducto(${p.id_producto})" style="background:#ff4444; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">🗑️</button>
+                <button onclick="eliminarProducto(${p.id_producto})" style="color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">🗑️</button>
               </td>
             </tr>
           `;
