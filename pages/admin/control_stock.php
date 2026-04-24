@@ -97,8 +97,8 @@ $email = $_SESSION['email'] ?? '';
         <tr>
           <td>${p.producto}</td>
           <td>${p.tipo}</td>
-          <td>${parseFloat(p.stock_actual).toFixed(2)}</td>
-          <td>${parseFloat(p.stock_critico).toFixed(2)}</td>
+          <td>${parseInt(p.stock_actual || 0).toLocaleString()}</td>
+          <td>${parseInt(p.stock_critico || 0).toLocaleString()}</td>
         </tr>
       `).join('');
     }
