@@ -420,6 +420,7 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               <label>Precio Venta ($)</label>
               <input type="number" step="1" id="precio_venta-generado" required min="0">
             </div>
+          </div>
 
           <!-- Fila 5: Stock Actual + Crítico -->
           <div class="form-row">
