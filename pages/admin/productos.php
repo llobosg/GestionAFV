@@ -335,8 +335,8 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               <th>Subfamilia</th>
               <th>UM</th>
               <th>Compra</th>
-              <th>% Util.</th>
               <th>Venta</th>
+              <th>% Util.</th>
               <th>Stock</th>
               <th class="acciones">Acciones</th>
             </tr>
@@ -410,19 +410,19 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
             </div>
           </div>
 
-          <!-- Fila 4: Precio Compra + Precio Venta -->
+          <!-- Fila 4: Precio Compra + Precio Venta (ENTEROS) -->
           <div class="form-row">
             <div class="form-group">
               <label>Precio Compra ($)*</label>
-              <input type="number" step="1" id="precio_compra" required min="0">
+              <input type="number" step="1" id="precio_compra" required min="0" placeholder="Ej: 1500">
             </div>
             <div class="form-group">
               <label>Precio Venta ($)</label>
-              <input type="number" step="1" id="precio_venta-generado" required min="0">
+              <input type="number" step="1" id="precio_venta-generado" required min="0" placeholder="Ej: 1990">
             </div>
           </div>
 
-          <!-- Fila 5: Stock Actual + Crítico -->
+          <!-- Fila 5: Stock Actual + Crítico (ENTEROS) -->
           <div class="form-row">
             <div class="form-group">
               <label>Stock Actual</label>
@@ -528,19 +528,17 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
         }, 3000);
     }
 
-    // === CÁLCULO DE UTILIDAD ===
+    // === CÁLCULO DE UTILIDAD (ENTERO) ===
     function actualizarGenerados() {
-      const compra = parseFloat(document.getElementById('precio_compra').value) || 0;
-      // Usamos el ID correcto del input
-      const ventaInput = document.getElementById('precio_venta-generado');
-      const venta = parseFloat(ventaInput.value) || 0;
+      const compra = parseInt(document.getElementById('precio_compra').value) || 0;
+      const venta = parseInt(document.getElementById('precio_venta-generado').value) || 0;
       
       let utilidad = 0;
       if (compra > 0) {
-          utilidad = ((venta - compra) / compra) * 100;
+          utilidad = Math.round(((venta - compra) / compra) * 100); // Redondear a entero
       }
       
-      document.getElementById('porc_utilidad').value = utilidad.toFixed(2);
+      document.getElementById('porc_utilidad').value = utilidad;
     }
 
     // Escuchar cambios en Precio Venta para recalcular %
@@ -656,19 +654,19 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
               : `editarProducto(${p.id_producto})`;
 
           return `
-            <tr>
+            <tr style="cursor: pointer;" onclick="editarProducto(${p.id_producto})">
               <td>${p.producto}</td>
               <td>${p.tipo || '-'}</td>
               <td>${p.familia || '-'}</td>
               <td>${p.subfamilia || '-'}</td>
               <td>${p.unidad_medida || '-'}</td>
-              <td>$${parseFloat(p.precio_compra || 0).toFixed(2)}</td>
-              <td>${parseFloat(p.porc_utilidad || 0).toFixed(1)}%</td>
-              <td>$${parseFloat(p.precio_venta || 0).toFixed(2)}</td>
-              <td>${parseFloat(p.stock_actual || 0).toFixed(2)}</td>
-              <td class="acciones">
-                <button onclick="${onClickEditar}">✏️ Editar</button>
-                <button onclick="eliminarProducto(${p.id_producto})">🗑️</button>
+              <td>$${parseInt(p.precio_compra || 0).toLocaleString()}</td>
+              <td>$${parseInt(p.precio_venta || 0).toLocaleString()}</td>
+              <td>${parseInt(p.porc_utilidad || 0)}%</td>
+              <td>${parseInt(p.stock_actual || 0).toLocaleString()}</td>
+              <td class="acciones" onclick="event.stopPropagation()">
+                <!-- Solo botón Eliminar, Editar se activa con click en fila -->
+                <button onclick="eliminarProducto(${p.id_producto})" style="background:#ff4444; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">🗑️</button>
               </td>
             </tr>
           `;
@@ -688,57 +686,50 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       aplicarFiltros();
     }
 
-    document.getElementById('producto-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const precioCompra = parseFloat(document.getElementById('precio_compra').value) || 0;
-      const precioVenta = parseFloat(document.getElementById('precio_venta-generado').value) || 0;
-      
-      let porcUtilidad = 0;
-      if (precioCompra > 0) {
-          porcUtilidad = ((precioVenta - precioCompra) / precioCompra) * 100;
-      }
+  // === SUBMIT DEL FORMULARIO (ENVÍO DE ENTEROS) ===
+  document.getElementById('producto-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Convertir todo a enteros explícitamente
+    const data = {
+      id_producto: document.getElementById('id_producto').value || null,
+      id_negocio: <?= $id_negocio ?>,
+      tipo: document.getElementById('tipo').value,
+      familia: document.getElementById('familia').value,
+      subfamilia: document.getElementById('subfamilia').value,
+      unidad_medida: document.getElementById('unidad_medida').value,
+      precio_compra: parseInt(document.getElementById('precio_compra').value) || 0,
+      precio_venta: parseInt(document.getElementById('precio_venta-generado').value) || 0,
+      porc_utilidad: parseInt(document.getElementById('porc_utilidad').value) || 0,
+      stock_actual: parseInt(document.getElementById('stock_actual').value) || 0,
+      stock_critico: parseInt(document.getElementById('stock_critico').value) || 10
+    };
 
-      const data = {
-        id_producto: document.getElementById('id_producto').value || null,
-        id_negocio: <?= $id_negocio ?>,
-        tipo: document.getElementById('tipo').value,
-        familia: document.getElementById('familia').value,
-        subfamilia: document.getElementById('subfamilia').value,
-        unidad_medida: document.getElementById('unidad_medida').value,
-        precio_compra: Math.round(precioCompra),
-        precio_venta: Math.round(precioVenta),
-        porc_utilidad: porcUtilidad.toFixed(2),
-        stock_actual: Math.round(parseFloat(document.getElementById('stock_actual').value) || 0),
-        stock_critico: Math.round(parseFloat(document.getElementById('stock_critico').value) || 10)
-      };
-
-      try {
-        const res = await fetch('/api/admin/guardar_producto.php', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(data)
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-            showToast("✅ Producto guardado correctamente", "success");
-            limpiarForm();
-            cargarProductos();
-        } else {
-            showToast("❌ Error: " + (result.message || "No se pudo guardar"), "error");
-        }
-      } catch (error) {
-        console.error(error);
-        showToast("❌ Error de conexión", "error");
+    try {
+      const res = await fetch('/api/admin/guardar_producto.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      
+      const result = await res.json();
+      
+      if (result.success) {
+          showToast("✅ Producto guardado correctamente", "success");
+          limpiarForm();
+          cargarProductos();
+      } else {
+          showToast("❌ Error: " + (result.message || "No se pudo guardar"), "error");
       }
-    });
+    } catch (error) {
+      console.error(error);
+      showToast("❌ Error de conexión", "error");
+    }
+  });
 
     // === EDICIÓN ===
-        // Edición
     async function editarProducto(id) {
-      const producto = productosCache.find(p => p.id_producto == id);
+    const producto = productosCache.find(p => p.id_producto == id);
       if (!producto) return;
 
       document.getElementById('id_producto').value = producto.id_producto;
@@ -746,17 +737,20 @@ error_log("🛒 POS Cargado para Negocio ID: $id_negocio");
       document.getElementById('familia').value = producto.familia;
       document.getElementById('subfamilia').value = producto.subfamilia;
       document.getElementById('unidad_medida').value = producto.unidad_medida;
-      document.getElementById('precio_compra').value = producto.precio_compra;
-      document.getElementById('precio_venta-generado').value = producto.precio_venta;
       
-      // CORRECCIÓN: Usar || 10 para evitar undefined
-      document.getElementById('stock_actual').value = producto.stock_actual || 0;
-      document.getElementById('stock_critico').value = producto.stock_critico || 10; 
-      
-      document.getElementById('form-title').textContent = 'Editar Producto';
+      // Cargar valores como enteros
+      document.getElementById('precio_compra').value = parseInt(producto.precio_compra) || 0;
+      document.getElementById('precio_venta-generado').value = parseInt(producto.precio_venta) || 0;
+      document.getElementById('stock_actual').value = parseInt(producto.stock_actual) || 0;
+      document.getElementById('stock_critico').value = parseInt(producto.stock_critico) || 10;
       
       // Recalcular utilidad visualmente
       actualizarGenerados();
+      
+      document.getElementById('form-title').textContent = 'Editar Producto';
+      
+      // Scroll suave hacia el formulario en móvil
+      document.querySelector('.form-container')?.scrollIntoView({ behavior: 'smooth' });
     }
 
     // === ELIMINACIÓN CON TOAST ===
