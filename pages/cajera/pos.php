@@ -866,7 +866,7 @@ async function imprimirTicket(venta) {
       document.getElementById('metodo-pago').value = 'efectivo';
     }
 
-    async function finalizarVenta() {
+        async function finalizarVenta() {
       if (carrito.length === 0) {
         showToast('El carrito está vacío', 'warning');
         return;
@@ -891,40 +891,54 @@ async function imprimirTicket(venta) {
         });
 
         const result = await res.json();
+        
         if (result.success) {
           showToast('✅ Venta registrada con éxito');
           
-          // En lugar de descargar PDF
-          if (result.success) {
-            showToast('✅ Venta registrada');
+          // 1. Limpiar carrito inmediatamente para agilizar la siguiente venta
+          const idVentaGenerada = result.id_venta;
+          carrito = [];
+          renderizarCarrito();
+          limpiarFormulario();
 
-            /*
-            // Preparar datos para impresión
-            const ventaData = {
-              id_venta: result.id_venta,
-              nombre_negocio: "<?= htmlspecialchars($nombre_negocio) ?>",
-              cajero: "<?= htmlspecialchars($nombre_completo) ?>",
-              total: carrito.reduce((sum, item) => sum + item.subtotal, 0),
-              neto: $venta['total'] / 1.19,
-              iva: $venta['total'] - $neto,
-              metodo_pago: document.getElementById('metodo-pago').value === 'efectivo' ? 'Efectivo' : 'Tarjeta',
-              detalles: carrito
-            };
-
-            // Imprimir en impresora local
-            imprimirTicket(ventaData);
-            */
-
-            // Limpiar
-            carrito = [];
-            renderizarCarrito();
-            limpiarFormulario();
+          // 2. Disparar impresión
+          if (idVentaGenerada) {
+            imprimirTicketLocal(idVentaGenerada);
           }
+
         } else {
           showToast('❌ Error: ' + (result.message || 'No se pudo registrar'), 'error');
         }
       } catch (err) {
-        showToast('❌ Error de conexión', 'error');
+        console.error(err);
+        showToast('❌ Error de conexión con el servidor', 'error');
+      }
+    }
+
+    // Nueva función para manejar la impresión
+    function imprimirTicketLocal(idVenta) {
+      // Construir la URL absoluta o relativa al endpoint de impresión
+      // Nota: Asegúrate de que la ruta sea correcta según tu estructura
+      const urlImpresion = `/api/cajera/imprimir_ticket.php?id_venta=${idVenta}`;
+      
+      // Abrir en una ventana nueva pequeña
+      const ventanaImpresion = window.open(urlImpresion, 'ImprimirTicket', 'width=350,height=600');
+      
+      if (ventanaImpresion) {
+        // Esperar a que cargue el PDF y luego imprimir
+        ventanaImpresion.onload = function() {
+          ventanaImpresion.print();
+        };
+        // Fallback: si onload no dispara rápido (común en PDFs), intentamos después de 1 seg
+        setTimeout(() => {
+            try {
+                ventanaImpresion.print();
+            } catch(e) {
+                console.log("Esperando carga del PDF...");
+            }
+        }, 1000);
+      } else {
+        showToast('⚠️ Permite las ventanas emergentes para imprimir', 'warning');
       }
     }
 

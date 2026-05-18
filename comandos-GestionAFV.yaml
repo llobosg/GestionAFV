@@ -40,5 +40,5 @@ mysql://root:WugMxfRGVHoNZQzwmNpormqREZxOoHNH@caboose.proxy.rlwy.net:44626/railw
 
 
 git add .
-git commit -m "feat: imprimir ticket,6"
+git commit -m "feat: imprimir ticket,7"
 git push
