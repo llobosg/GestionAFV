@@ -124,6 +124,8 @@ $pdf->Ln(15);
 $pdf->SetFont('', 'I', 7);
 $pdf->Cell(0, 4, 'powered by NegocioUP', 0, 1, 'C');
 
-$pdf->Output("ticket_{$venta['id_venta']}.pdf", 'D');
+// 'I' muestra el PDF en el navegador, permitiendo que window.print() funcione
+// 'D' fuerza la descarga, lo cual NO permite impresión automática directa desde JS fácilmente
+$pdf->Output("ticket_{$venta['id_venta']}.pdf", 'I'); 
 exit;
 ?>
